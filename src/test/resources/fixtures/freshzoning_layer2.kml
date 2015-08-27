@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document><Folder><name>OGRGeoJSON</name>
+<Schema name="OGRGeoJSON" id="OGRGeoJSON">
+	<SimpleField name="name" type="string"></SimpleField>
+	<SimpleField name="description" type="string"></SimpleField>
+</Schema>
+  <Placemark>
+	<name>geo_w9uz-8epq-1.1</name>
+	<description>&lt;h4&gt;geo_w9uz-8epq-1&lt;/h4&gt;
+
+&lt;ul class=&quot;textattributes&quot;&gt;
+
+  &lt;li&gt;&lt;strong&gt;&lt;span class=&quot;atr-name&quot;&gt;NAME&lt;/span&gt;:&lt;/strong&gt; &lt;span class=&quot;atr-value&quot;&gt;Zoning and discretionary tax incentives&lt;/span&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;&lt;span class=&quot;atr-name&quot;&gt;_SocrataID&lt;/span&gt;:&lt;/strong&gt; &lt;span class=&quot;atr-value&quot;&gt;9pfg-m6xb&lt;/span&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+	<ExtendedData><SchemaData schemaUrl="#OGRGeoJSON">
+		<SimpleData name="name">geo_w9uz-8epq-1.1</SimpleData>
+		<SimpleData name="description">&lt;h4&gt;geo_w9uz-8epq-1&lt;/h4&gt;
+
+&lt;ul class=&quot;textattributes&quot;&gt;
+
+  &lt;li&gt;&lt;strong&gt;&lt;span class=&quot;atr-name&quot;&gt;NAME&lt;/span&gt;:&lt;/strong&gt; &lt;span class=&quot;atr-value&quot;&gt;Zoning and discretionary tax incentives&lt;/span&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;&lt;span class=&quot;atr-name&quot;&gt;_SocrataID&lt;/span&gt;:&lt;/strong&gt; &lt;span class=&quot;atr-value&quot;&gt;9pfg-m6xb&lt;/span&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-73.772559221977502,40.67157334517406</coordinates></Point>
+  </Placemark>
+</Folder></Document></kml>
