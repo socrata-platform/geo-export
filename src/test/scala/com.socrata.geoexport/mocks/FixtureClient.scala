@@ -34,8 +34,8 @@ class FixtureClient extends MockitoSugar {
 
       override def inputStream(maximumSizeBetweenAcks: Long): InputStream with Acknowledgeable = {
         val request = builder(RequestBuilder(""))
-        val uid = (request.builder.path.toList)(1) match {
-          case uidAndFormat =>
+        val uid = request.builder.path.toList match {
+          case Seq("export", uidAndFormat) =>
             (uidAndFormat.toString.split("\\.").toList)(0)
         }
         new FixtureInputStream(uid)

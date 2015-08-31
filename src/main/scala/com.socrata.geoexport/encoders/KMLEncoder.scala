@@ -2,22 +2,25 @@ package com.socrata.geoexport.encoders
 
 import java.io.{OutputStream, OutputStreamWriter, Writer}
 
+import com.rojoma.json.v3.ast.{JNumber, JString}
+import com.socrata.geoexport.encoders.KMLMapper._
+import com.socrata.soql.SoQLPackIterator
+import com.socrata.soql.types._
 import com.vividsolutions.jts.geom._
-import org.apache.commons.io.output.{ByteArrayOutputStream, WriterOutputStream}
 import org.opengis.feature.`type`.AttributeDescriptor
-import org.opengis.feature.simple.SimpleFeature
 
-import scala.collection.JavaConversions._
 import scala.language.implicitConversions
-import KMLMapper._
 import scala.xml.{Node, XML}
 
 //Convert to XML nodes: https://developers.google.com/kml/documentation/kmlreference
 //functions in here should take a value or seq of values and return a single Node
 object KMLMapper {
+
+
+  case class MultipleGeometriesFoundException(val message: String) extends Exception
+  case class UnknownGeometryException(val message: String) extends Exception
   type Attributes = Seq[AttributeDescriptor]
-  type Collection = Iterator[SimpleFeature]
-  type Layers = Iterable[Collection]
+  type Layers = Iterable[SoQLPackIterator]
 
   def genKML(layers: Layers): Node = {
     <kml xmlns:kml="http://earth.google.com/kml/2.2">
@@ -27,17 +30,31 @@ object KMLMapper {
     </kml>
   }
 
-  private def kml(collection: Collection): Node = {
+  private def kml(collection: SoQLPackIterator): Node = {
     <Folder>
-      { collection.map(kml(_)) }
+      {
+        collection.map { feature: Array[SoQLValue] =>
+          kml(collection.schema, feature)
+        }
+      }
     </Folder>
   }
 
-  private def kml(feature: SimpleFeature): Node = {
-    val attrs = feature.getType.getAttributeDescriptors.toList
-    .map(_.getLocalName)
-    .filter(name => name != feature.getType.getGeometryDescriptor.getLocalName)
-    .map(name => (name, feature.getAttribute(name)))
+  private def isGeometry(kind: SoQLType) = {
+    List(SoQLPoint, SoQLLine, SoQLPolygon, SoQLMultiPoint, SoQLMultiLine, SoQLMultiPolygon).contains(kind)
+  }
+
+  private def kml(schema: Seq[(String, SoQLType)], fields: Array[SoQLValue]): Node = {
+
+    val (geoms, attrs) = schema
+      .zip(fields)
+      .map { case ((name, kind), value) => (name, kind, value) }
+      .partition { case (_name, kind, _value) => isGeometry(kind)}
+
+    val geom = geoms match {
+      case Seq(g) => g
+      case _ => throw new MultipleGeometriesFoundException("Too many geometry columns!")
+    }
 
     <Placemark>
       <ExtendedData>
@@ -45,25 +62,39 @@ object KMLMapper {
           {attrs.map(kml(_))}
         </SchemaData>
       </ExtendedData>
-      { feature.getDefaultGeometry match { case geom: Geometry => geomToKML(geom) } }
+      { geomToKML(geom) }
     </Placemark>
   }
 
-  private def geomToKML(geo: Geometry): Node = {
-    geo match {
+  private def geomToKML(simpleData: (String, SoQLType, SoQLValue)): Node = {
+    val (_name, _kind, value) = simpleData
+    value match {
       //ugh this is goofy..have to force everything into its canonical type
-      case point: Point => kml(point)
-      case line: LineString => kml(line)
-      case poly: Polygon => kml(poly)
-      //kml composes collections within a MultiGeometry tag, which is nice
-      //because it simplifies everything
-      case many: GeometryCollection => kml(many)
+      case v: SoQLPoint => kml(v.value)
+      case l: SoQLLine => kml(l.value)
+      case p: SoQLPolygon => kml(p.value)
+      case mp: SoQLMultiPoint => kml(mp.value)
+      case ml: SoQLMultiLine => kml(ml.value)
+      case mp: SoQLMultiPolygon => kml(mp.value)
+      case other => throw UnknownGeometryException(s"${other} is not a serializable geometry")
     }
   }
 
-  private def kml(simpleData: (String, AnyRef)): Node = {
-    val (name, value) = simpleData
-    <SimpleData name={name}>{value}</SimpleData>
+  private def kml(simpleData: (String, SoQLType, Any)): Node = {
+    val (name, kind, value) = simpleData
+    val xmlVal = value match {
+      case SoQLText(t) => t
+      case SoQLDouble(d) => d
+      case SoQLNumber(n) => n
+      case SoQLMoney(m) => m
+      case SoQLBoolean(b) => b
+      case SoQLFixedTimestamp(ts) => SoQLFixedTimestamp.StringRep(ts)
+      case SoQLFloatingTimestamp(fts) => SoQLFloatingTimestamp.StringRep(fts)
+      case SoQLTime(dt) => SoQLTime.StringRep(dt)
+      case SoQLDate(d) => SoQLDate.StringRep(d)
+      case other => other.toString
+    }
+    <SimpleData name={name}>{xmlVal}</SimpleData>
   }
 
   ///Shape to KML transforms
@@ -76,7 +107,7 @@ object KMLMapper {
       }
     }
     <coordinates>
-      {coordinates.map(toStr(_)).mkString(",\n")}
+      {coordinates.map(toStr(_)).mkString("\n")}
     </coordinates>
   }
 
@@ -104,7 +135,11 @@ object KMLMapper {
     <MultiGeometry>
       {
         Range(0, shapes.getNumGeometries).map { i =>
-          geomToKML(shapes.getGeometryN(i))
+          shapes.getGeometryN(i) match {
+            case p: Point => kml(p)
+            case l: LineString => kml(l)
+            case p: Polygon => kml(p)
+          }
         }
       }
     </MultiGeometry>
@@ -118,7 +153,6 @@ class KMLEncoder extends GeoEncoder {
   }
 
   def encode(layers: Layers, outStream: OutputStream) : Either[String, OutputStream] = {
-
     val writer = new OutputStreamWriter(outStream)
 
     try {
@@ -130,6 +164,8 @@ class KMLEncoder extends GeoEncoder {
 
     return Right(outStream)
   }
+
+
 }
 
 

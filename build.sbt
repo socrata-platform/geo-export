@@ -29,6 +29,8 @@ libraryDependencies ++= Seq(
   "commons-codec"            % "commons-codec"            % "1.10",
   "commons-io"               % "commons-io"               % "2.4",
   "org.apache.curator"       % "curator-x-discovery"      % "2.7.0",
+  "com.socrata"             %% "soql-pack"                % "0.6.0",
+
 
 
   "org.geotools"      % "gt-shapefile"      % "12.4",

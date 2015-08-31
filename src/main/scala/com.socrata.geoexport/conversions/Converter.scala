@@ -1,28 +1,35 @@
 package com.socrata.geoexport.conversions
 
-import java.io.{InputStream, OutputStream}
-import com.socrata.geoexport.encoders.GeoEncoder
-import com.socrata.geoexport.util.GeoIterator
-import org.geotools.geojson.feature.FeatureJSON
+import java.io._
+import java.nio.charset.StandardCharsets
 
+import com.rojoma.json.v3.io.JsonReader
+import com.socrata.geoexport.CJson
+import com.socrata.geoexport.encoders.GeoEncoder
+import com.socrata.soql.types.SoQLPoint
+import com.socrata.soql.{SoQLPackIterator, SoQLPackDecoder}
+import com.socrata.thirdparty.geojson.{FeatureCollectionJson, GeoJson}
 
 object Converter {
+
+
+
   def execute(layerStreams: Iterable[InputStream], tasks: List[GeoConversion], encoder: GeoEncoder, os: OutputStream) : Either[String, OutputStream] = {
 
     val featureStreams = layerStreams.map { instream =>
-      val deserializer = new FeatureJSON()
-      new GeoIterator(deserializer.streamFeatureCollection(instream))
+      new SoQLPackIterator(new DataInputStream(instream))
     }
 
-    tasks.foldLeft(Right(featureStreams)) {
-      (acc, task) =>
-        acc match {
-          case Right(collections) => Right(collections)
-          case error => error
-        }
-    } match {
-      case Right(newFeatures) => encoder.encode(newFeatures, os)
-      case error => Left("FIXME")
-    }
+    encoder.encode(featureStreams, os)
+//    tasks.foldLeft(Right(featureStreams)) {
+//      (acc, task) =>
+//        acc match {
+//          case Right(collections) => Right(collections)
+//          case error => error
+//        }
+//    } match {
+//      case Right(transformedFeatures: Iterable[FeatureCollectionJson]) =>
+//      case error => Left("FIXME")
+//    }
   }
 }

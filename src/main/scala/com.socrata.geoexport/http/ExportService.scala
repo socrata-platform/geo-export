@@ -4,6 +4,7 @@ import java.net.URLDecoder
 
 import com.socrata.geoexport.http.ExportService._
 import com.socrata.http.client.RequestBuilder
+import org.apache.commons.io.IOUtils
 import org.apache.http.HttpStatus
 import org.joda.time.DateTime
 import com.rojoma.json.v3.codec.JsonEncode
@@ -22,6 +23,7 @@ import com.socrata.http.server.routing.TypedPathComponent
 import com.socrata.http.server.responses._
 import com.socrata.http.server.routing.SimpleResource
 import com.socrata.thirdparty.curator.CuratedServiceClient
+
 
 
 object ExportService {
@@ -43,13 +45,17 @@ class ExportService(sodaClient: CuratedServiceClient) extends SimpleResource {
     fxfs.map { fbf =>
       val reqBuilder = {
         base: RequestBuilder =>
-          val req = base.path(Seq("resource", s"_${fbf}.geojson")).get
-          log.info(URLDecoder.decode(req.toString, "UTF-8"))
+          val req = base
+            .path(Seq("export", s"_${fbf}.geojson"))
+            .addParameter(("crs", "crs84"))
+            .get
+          log.info(s"""SodaFountain <<< ${URLDecoder.decode(req.toString, "UTF-8")}""")
           req
       }
       sodaClient.execute(reqBuilder,  { response =>
         response.resultCode match {
           case HttpStatus.SC_OK =>
+            // println(IOUtils.toString(response.inputStream()))
             Right((fbf, response.inputStream()))
           case statusCode =>
             Left(response)
