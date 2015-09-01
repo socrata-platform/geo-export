@@ -9,12 +9,11 @@ import com.socrata.geoexport.encoders.GeoEncoder
 import com.socrata.soql.types.SoQLPoint
 import com.socrata.soql.{SoQLPackIterator, SoQLPackDecoder}
 import com.socrata.thirdparty.geojson.{FeatureCollectionJson, GeoJson}
+import scala.util.{Try, Success, Failure}
 
 object Converter {
 
-
-
-  def execute(layerStreams: Iterable[InputStream], tasks: List[GeoConversion], encoder: GeoEncoder, os: OutputStream) : Either[String, OutputStream] = {
+  def execute(layerStreams: Iterable[InputStream], tasks: List[GeoConversion], encoder: GeoEncoder, os: OutputStream) : Try[OutputStream] = {
 
     val featureStreams = layerStreams.map { instream =>
       new SoQLPackIterator(new DataInputStream(instream))

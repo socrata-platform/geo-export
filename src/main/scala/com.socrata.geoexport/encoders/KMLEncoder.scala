@@ -11,6 +11,7 @@ import org.opengis.feature.`type`.AttributeDescriptor
 
 import scala.language.implicitConversions
 import scala.xml.{Node, XML}
+import scala.util.{Try, Success, Failure}
 
 //Convert to XML nodes: https://developers.google.com/kml/documentation/kmlreference
 //functions in here should take a value or seq of values and return a single Node
@@ -22,7 +23,12 @@ object KMLMapper {
   type Attributes = Seq[AttributeDescriptor]
   type Layers = Iterable[SoQLPackIterator]
 
-  def genKML(layers: Layers): Node = {
+  def genKML(layers: Layers): Try[Node] = {
+    Try(kml(layers))
+  }
+
+
+  private def kml(layers: Layers): Node = {
     <kml xmlns:kml="http://earth.google.com/kml/2.2">
       <Document id="featureCollection">
         { layers.map(kml(_)) }
@@ -123,9 +129,14 @@ object KMLMapper {
       {
         polygon.getNumInteriorRing match {
           case 0 => ""
-          case count => Range(0, count).map { i =>
-            <LinearRing>{kml(polygon.getInteriorRingN(i).getCoordinates)}</LinearRing>
-          }
+          case count =>
+            <innerBoundaryIs>
+              {
+                Range(0, count).map { i =>
+                  <LinearRing>{kml(polygon.getInteriorRingN(i).getCoordinates)}</LinearRing>
+                }
+              }
+            </innerBoundaryIs>
         }
       }
     </Polygon>
@@ -148,21 +159,21 @@ object KMLMapper {
 
 class KMLEncoder extends GeoEncoder {
 
-  def writeKML(kml: Node, writer: Writer): Unit = {
-    XML.write(writer, kml, "UTF-8", true, null)
-  }
-
-  def encode(layers: Layers, outStream: OutputStream) : Either[String, OutputStream] = {
+  def writeKML(kml: Node, outStream: OutputStream): Try[OutputStream] = {
     val writer = new OutputStreamWriter(outStream)
-
-    try {
-      val kml = KMLMapper.genKML(layers)
-      writeKML(kml, writer)
+    Try(try {
+      XML.write(writer, kml, "UTF-8", true, null)
+      outStream
     } finally {
       writer.close()
-    }
+    })
+  }
 
-    return Right(outStream)
+  def encode(layers: Layers, outStream: OutputStream) : Try[OutputStream] = {
+    KMLMapper.genKML(layers) match {
+      case Success(kml) => writeKML(kml, outStream)
+      case Failure(f) => Failure(f)
+    }
   }
 
 

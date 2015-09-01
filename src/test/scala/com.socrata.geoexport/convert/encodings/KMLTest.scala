@@ -1,13 +1,14 @@
 package com.socrata.geoexport
-package convert.tasks
+
 
 import java.math.BigDecimal
 
 import com.socrata.soql.types._
 import com.vividsolutions.jts.geom._
 import org.joda.time.{LocalTime, LocalDateTime, DateTime}
-
+import scala.util.{Try, Success, Failure}
 import scala.xml.Utility.{trim => xmltrim}
+import com.socrata.geoexport.encoders.KMLMapper._
 
 class KMLTest extends TestBase {
   val ldt = LocalDateTime.parse("2015-03-22T01:23")
@@ -33,7 +34,19 @@ class KMLTest extends TestBase {
     SoQLMoney((new BigDecimal(42.00)))
   )
 
+  test("cannot convert multi column geo to kml") {
+    val line = wkt("LINESTRING (30 10, 10 30, 40 40)").asInstanceOf[LineString]
+    val poly = wkt("POLYGON ((30.0 10, 40 40, 20 40, 10 20, 30 10))").asInstanceOf[Polygon]
 
+    val invalidSchema = simpleSchema :+ (("a_line", SoQLLine)) :+ (("a_poly", SoQLPolygon))
+    val invalidRows = simpleRows :+ SoQLLine(line) :+ SoQLPolygon(poly)
+
+    val layer = pack(invalidSchema, List(invalidRows.toArray))
+
+    //convert is a TestBase function that loads the outputstream back into a string and
+    //then into a DOM. It also raises exceptions on matching a Try Failure.
+    an [MultipleGeometriesFoundException] should be thrownBy convert(List(layer))
+  }
 
   test("can convert a stream of a point soqlpack to kml") {
     val p = wkt("POINT (0 1)").asInstanceOf[Point]
@@ -72,7 +85,6 @@ class KMLTest extends TestBase {
       </kml>
     ))
   }
-
 
   test("can convert a stream of a linestring soqlpack to kml") {
     val p = wkt("LINESTRING (30 10, 10 30, 40 40)").asInstanceOf[LineString]
@@ -162,6 +174,56 @@ class KMLTest extends TestBase {
     ))
   }
 
+  test("can convert a stream of polygons with donut shapes (mmm donuts) to kml") {
+    val p = wkt("POLYGON ((35 10, 45 45, 15 40, 10 20, 35 10),(20 30, 35 35, 30 20, 20 30))").asInstanceOf[Polygon]
+
+    val schema = simpleSchema :+ (("a_poly", SoQLPolygon))
+    val items = simpleRows :+ SoQLPolygon(p)
+    val packed = pack(schema, List(items.toArray))
+
+    val layers = List(packed)
+    val actual = convert(layers)
+
+    xmltrim(actual) must be(xmltrim(
+      <kml xmlns:kml="http://earth.google.com/kml/2.2">
+        <Document id="featureCollection">
+          <Folder>
+            <Placemark>
+              <ExtendedData>
+                <SchemaData>
+                  <SimpleData name="a_name">this is a name</SimpleData>
+                  <SimpleData name="a_number">42</SimpleData>
+                  <SimpleData name="a_bool">true</SimpleData>
+                  <SimpleData name="a_ts">2015-03-22T20:00:00.000Z</SimpleData>
+                  <SimpleData name="a_floating_ts">2015-03-22T02:23:00.000</SimpleData>
+                  <SimpleData name="a_time">01:23:00.000</SimpleData>
+                  <SimpleData name="a_date">2015-03-22</SimpleData>
+                  <SimpleData name="a_money">42</SimpleData>
+                </SchemaData>
+              </ExtendedData>
+              <Polygon>
+                <outerBoundaryIs>
+                  <LinearRing>
+                    <coordinates>
+                      35.0,10.0
+                      45.0,45.0
+                      15.0,40.0
+                      10.0,20.0
+                      35.0,10.0
+                    </coordinates>
+                  </LinearRing>
+                </outerBoundaryIs>
+                <innerBoundaryIs>
+                  <LinearRing><coordinates>20.0,30.0 35.0,35.0 30.0,20.0 20.0,30.0</coordinates></LinearRing>
+                </innerBoundaryIs>
+              </Polygon>
+            </Placemark>
+          </Folder>
+        </Document>
+      </kml>
+    ))
+  }
+
   test("can convert a stream of a multipoint soqlpack to kml") {
     val p = wkt("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))").asInstanceOf[MultiPoint]
 
@@ -203,7 +265,6 @@ class KMLTest extends TestBase {
     ))
   }
 
-
   test("can convert a stream of a multilines soqlpack to kml") {
     val p = wkt("MULTILINESTRING ((10 10, 20 20, 10 40), (40 40, 30 30, 40 20, 30 10))").asInstanceOf[MultiLineString]
 
@@ -242,7 +303,7 @@ class KMLTest extends TestBase {
     ))
   }
 
- test("can convert a stream of a multipolygon soqlpack to kml") {
+  test("can convert a stream of a multipolygon soqlpack to kml") {
     val p = wkt("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))").asInstanceOf[MultiPolygon]
 
     val schema = simpleSchema :+ (("a_multipoint", SoQLMultiPolygon))
