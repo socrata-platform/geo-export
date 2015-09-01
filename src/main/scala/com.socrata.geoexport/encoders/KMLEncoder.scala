@@ -8,42 +8,45 @@ import com.socrata.soql.SoQLPackIterator
 import com.socrata.soql.types._
 import com.vividsolutions.jts.geom._
 import org.opengis.feature.`type`.AttributeDescriptor
+import org.slf4j.LoggerFactory
 
 import scala.language.implicitConversions
 import scala.xml.{Node, XML}
+import com.rojoma.simplearm.util._
 import scala.util.{Try, Success, Failure}
 
 //Convert to XML nodes: https://developers.google.com/kml/documentation/kmlreference
 //functions in here should take a value or seq of values and return a single Node
 object KMLMapper {
-
+ lazy val log = LoggerFactory.getLogger(getClass)
 
   case class MultipleGeometriesFoundException(val message: String) extends Exception
   case class UnknownGeometryException(val message: String) extends Exception
   type Attributes = Seq[AttributeDescriptor]
   type Layers = Iterable[SoQLPackIterator]
 
-  def genKML(layers: Layers): Try[Node] = {
-    Try(kml(layers))
+  def genKML(layers: Layers, writer: OutputStreamWriter): Unit = {
+    kml(layers, writer)
   }
 
 
-  private def kml(layers: Layers): Node = {
-    <kml xmlns:kml="http://earth.google.com/kml/2.2">
-      <Document id="featureCollection">
-        { layers.map(kml(_)) }
-      </Document>
-    </kml>
+  private def kml(layers: Layers, writer: OutputStreamWriter): Unit = {
+
+    writer.write("""<?xml version='1.0' encoding='UTF-8'?>
+      |<kml xmlns:kml="http://earth.google.com/kml/2.2">
+      |  <Document id="featureCollection">""".stripMargin)
+    layers.foreach(kml(_, writer))
+    writer.write("""  </Document>
+    </kml>""".stripMargin)
   }
 
-  private def kml(collection: SoQLPackIterator): Node = {
-    <Folder>
-      {
-        collection.map { feature: Array[SoQLValue] =>
-          kml(collection.schema, feature)
-        }
-      }
-    </Folder>
+  private def kml(collection: SoQLPackIterator, writer: OutputStreamWriter): Unit = {
+    writer.write("<Folder>")
+    collection.foreach { feature: Array[SoQLValue] =>
+      val featureXML = kml(collection.schema, feature)
+      XML.write(writer, featureXML, "UTF-8", false, null)
+    }
+    writer.write("</Folder>")
   }
 
   private def isGeometry(kind: SoQLType) = {
@@ -113,7 +116,7 @@ object KMLMapper {
       }
     }
     <coordinates>
-      {coordinates.map(toStr(_)).mkString("\n")}
+      {coordinates.map(toStr(_)).mkString(" \n")}
     </coordinates>
   }
 
@@ -159,20 +162,16 @@ object KMLMapper {
 
 class KMLEncoder extends GeoEncoder {
 
-  def writeKML(kml: Node, outStream: OutputStream): Try[OutputStream] = {
-    val writer = new OutputStreamWriter(outStream)
-    Try(try {
-      XML.write(writer, kml, "UTF-8", true, null)
-      outStream
-    } finally {
-      writer.close()
-    })
-  }
 
   def encode(layers: Layers, outStream: OutputStream) : Try[OutputStream] = {
-    KMLMapper.genKML(layers) match {
-      case Success(kml) => writeKML(kml, outStream)
-      case Failure(f) => Failure(f)
+    val writer = new OutputStreamWriter(outStream)
+    try {
+      KMLMapper.genKML(layers, writer)
+      Success(outStream)
+    } catch {
+      case e: Exception => Failure(e)
+    } finally {
+      writer.close()
     }
   }
 

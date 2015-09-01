@@ -30,8 +30,10 @@ object Geoexport extends App {
                                              HttpClientHttpClient.
                                                defaultOptions.
                                                withUserAgent("geoexport")))
+    curator <- CuratorFromConfig(GeoexportConfig.broker.curator)
+    discovery <- DiscoveryFromConfig(classOf[Void], curator, GeoexportConfig.broker.discovery)
     broker <- DiscoveryBrokerFromConfig(GeoexportConfig.broker, http)
-    upstream <- broker.clientFor(GeoexportConfig.upstream)
+    upstream <- new UnmanagedDiscoveryBroker(discovery, http).clientFor(GeoexportConfig.upstream)
   } {
 
     val exportService = new ExportService(upstream)

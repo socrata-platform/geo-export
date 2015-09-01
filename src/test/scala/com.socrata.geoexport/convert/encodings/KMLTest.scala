@@ -1,6 +1,7 @@
 package com.socrata.geoexport
 
 
+import java.io._
 import java.math.BigDecimal
 
 import com.socrata.soql.types._
@@ -9,6 +10,10 @@ import org.joda.time.{LocalTime, LocalDateTime, DateTime}
 import scala.util.{Try, Success, Failure}
 import scala.xml.Utility.{trim => xmltrim}
 import com.socrata.geoexport.encoders.KMLMapper._
+import com.socrata.geoexport.conversions.Converter
+import org.apache.commons.io.output.ByteArrayOutputStream
+import scala.xml.{NodeSeq, XML, Node}
+import com.socrata.geoexport.encoders.KMLEncoder
 
 class KMLTest extends TestBase {
   val ldt = LocalDateTime.parse("2015-03-22T01:23")
@@ -34,6 +39,17 @@ class KMLTest extends TestBase {
     SoQLMoney((new BigDecimal(42.00)))
   )
 
+  private def convertKML(layers: List[InputStream]): Node = {
+    val outStream = new ByteArrayOutputStream()
+    val result = Converter.execute(layers, List(), new KMLEncoder(), outStream) match {
+      case Success(outstream) =>
+        outStream.flush()
+        outStream.toString("UTF-8")
+      case Failure(err) => throw err
+    }
+    XML.loadString(result)
+  }
+
   test("cannot convert multi column geo to kml") {
     val line = wkt("LINESTRING (30 10, 10 30, 40 40)").asInstanceOf[LineString]
     val poly = wkt("POLYGON ((30.0 10, 40 40, 20 40, 10 20, 30 10))").asInstanceOf[Polygon]
@@ -43,9 +59,9 @@ class KMLTest extends TestBase {
 
     val layer = pack(invalidSchema, List(invalidRows.toArray))
 
-    //convert is a TestBase function that loads the outputstream back into a string and
-    //then into a DOM. It also raises exceptions on matching a Try Failure.
-    an [MultipleGeometriesFoundException] should be thrownBy convert(List(layer))
+    // convert is a TestBase function that loads the outputstream back into a string and
+    // then into a DOM. It also raises exceptions on matching a Try Failure.
+    an[MultipleGeometriesFoundException] should be thrownBy convertKML(List(layer))
   }
 
   test("can convert a stream of a point soqlpack to kml") {
@@ -57,7 +73,7 @@ class KMLTest extends TestBase {
     val packed = pack(schema, List(items.toArray))
 
     val layers = List(packed)
-    val actual = convert(layers)
+    val actual = convertKML(layers)
 
     xmltrim(actual) must be(xmltrim(
       <kml xmlns:kml="http://earth.google.com/kml/2.2">
@@ -94,7 +110,7 @@ class KMLTest extends TestBase {
     val packed = pack(schema, List(items.toArray))
 
     val layers = List(packed)
-    val actual = convert(layers)
+    val actual = convertKML(layers)
 
     xmltrim(actual) must be(xmltrim(
       <kml xmlns:kml="http://earth.google.com/kml/2.2">
@@ -135,7 +151,7 @@ class KMLTest extends TestBase {
     val packed = pack(schema, List(items.toArray))
 
     val layers = List(packed)
-    val actual = convert(layers)
+    val actual = convertKML(layers)
 
     xmltrim(actual) must be(xmltrim(
       <kml xmlns:kml="http://earth.google.com/kml/2.2">
@@ -182,7 +198,7 @@ class KMLTest extends TestBase {
     val packed = pack(schema, List(items.toArray))
 
     val layers = List(packed)
-    val actual = convert(layers)
+    val actual = convertKML(layers)
 
     xmltrim(actual) must be(xmltrim(
       <kml xmlns:kml="http://earth.google.com/kml/2.2">
@@ -232,7 +248,7 @@ class KMLTest extends TestBase {
     val packed = pack(schema, List(items.toArray))
 
     val layers = List(packed)
-    val actual = convert(layers)
+    val actual = convertKML(layers)
 
     xmltrim(actual) must be(xmltrim(
       <kml xmlns:kml="http://earth.google.com/kml/2.2">
@@ -273,7 +289,7 @@ class KMLTest extends TestBase {
     val packed = pack(schema, List(items.toArray))
 
     val layers = List(packed)
-    val actual = convert(layers)
+    val actual = convertKML(layers)
 
     xmltrim(actual) must be(xmltrim(
       <kml xmlns:kml="http://earth.google.com/kml/2.2">
@@ -311,7 +327,7 @@ class KMLTest extends TestBase {
     val packed = pack(schema, List(items.toArray))
 
     val layers = List(packed)
-    val actual = convert(layers)
+    val actual = convertKML(layers)
 
     xmltrim(actual) must be(xmltrim(
       <kml xmlns:kml="http://earth.google.com/kml/2.2">
@@ -366,7 +382,7 @@ class KMLTest extends TestBase {
     val layerTwoPack = pack(polySchema, List(polyItems.toArray))
 
     val layers = List(layerOnePack, layerTwoPack)
-    val actual = convert(layers)
+    val actual = convertKML(layers)
 
     xmltrim(actual) must be(xmltrim(
       <kml xmlns:kml="http://earth.google.com/kml/2.2">

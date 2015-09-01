@@ -22,6 +22,7 @@ class Router(export: ExportService) {
                                                  "X-Socrata-Resource"))) _
 
   val availableFormats = ExportService.formats
+  println(availableFormats)
   /** Routing table. */
   val routes = Routes(
     Route("/version", VersionService),
