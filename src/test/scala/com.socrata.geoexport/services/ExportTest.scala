@@ -135,5 +135,18 @@ class ExportTest extends TestBase with MockitoSugar {
     verify(resp).setContentType("application/zip")
   }
 
+  test("kmz export has mimetype application/vnd.google-earth.kmz") {
+    val fixtureClient = new FixtureClient
+    val req = mock[HttpRequest]
+    val outputStream = new mocks.ByteArrayServletOutputStream
+    val resp = outputStream.responseFor
+
+    val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-77dn", "kmz"))
+    service.get(req)(resp)
+
+    verify(resp).setStatus(200)
+    verify(resp).setContentType("application/vnd.google-earth.kmz")
+  }
+
 
 }

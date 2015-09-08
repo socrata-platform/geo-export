@@ -178,20 +178,10 @@ class IDRep(soqlName: String) extends ShapeRep[SoQLID] {
 object ShapefileEncoder extends GeoEncoder {
 
   case class FeatureCollectionException(val message: String) extends Exception
+
   type SoQLColumn = (String, SoQLType)
-  type SoQLSchema = Seq[SoQLColumn]
-
-
   type IntermediarySchema = Seq[ShapeRep[_ <: SoQLValue]]
   type IntermediaryValues = Seq[(_ <: SoQLValue, ShapeRep[_ <: SoQLValue])]
-
-  type ShapeColumn = (String, Class[_])
-  type ShapeSchema = Seq[ShapeColumn]
-
-
-
-  type ShapeAttr = (String, Object)
-  type ShapeAttrs = Seq[ShapeAttr]
 
 
   val shapefileExts = Seq("shp", "shx", "prj", "fix", "dbf")
