@@ -38,16 +38,157 @@ import com.rojoma.simplearm.util._
 import scala.util.{Try, Success, Failure}
 import scala.collection.JavaConversions._
 
+abstract class ShapeRep[T] {
+
+  def normalizeName(name: String) = {
+    if (name.length > 10) name.substring(0, 10) else name
+  }
+  def toAttrNames: Seq[String]
+  def toAttrBindings: Seq[Class[_]]
+  def toAttrValues(soql: T): Seq[Object]
+}
+
+class PointRep(soqlName: String) extends ShapeRep[SoQLPoint] {
+  def toAttrNames = Seq(normalizeName(soqlName))
+  def toAttrBindings = Seq(classOf[Point])
+  def toAttrValues(soql: SoQLPoint): Seq[Object] = Seq(soql.value)
+}
+
+class MultiPointRep(soqlName: String) extends ShapeRep[SoQLMultiPoint] {
+  def toAttrNames = Seq(normalizeName(soqlName))
+  def toAttrBindings = Seq(classOf[MultiPoint])
+  def toAttrValues(soql: SoQLMultiPoint) = Seq(soql.value)
+}
+
+class LineRep(soqlName: String) extends ShapeRep[SoQLLine] {
+  def toAttrNames = Seq(normalizeName(soqlName))
+  def toAttrBindings = Seq(classOf[LineString])
+  def toAttrValues(soql: SoQLLine) = Seq(soql.value)
+}
+
+class MultiLineRep(soqlName: String) extends ShapeRep[SoQLMultiLine] {
+  def toAttrNames = Seq(normalizeName(soqlName))
+  def toAttrBindings = Seq(classOf[MultiLineString])
+  def toAttrValues(soql: SoQLMultiLine) = Seq(soql.value)
+}
+
+class PolygonRep(soqlName: String) extends ShapeRep[SoQLPolygon] {
+  def toAttrNames = Seq(normalizeName(soqlName))
+  def toAttrBindings = Seq(classOf[Polygon])
+  def toAttrValues(soql: SoQLPolygon) = Seq(soql.value)
+}
+
+class MultiPolygonRep(soqlName: String) extends ShapeRep[SoQLMultiPolygon] {
+  def toAttrNames = Seq(normalizeName(soqlName))
+  def toAttrBindings = Seq(classOf[MultiPolygon])
+  def toAttrValues(soql: SoQLMultiPolygon) = Seq(soql.value)
+}
+
+class DateRep(soqlName: String) extends ShapeRep[SoQLDate] {
+  def toAttrNames = Seq(normalizeName(soqlName))
+  def toAttrBindings = Seq(classOf[Date])
+  def toAttrValues(soql: SoQLDate) = Seq(soql.value.toDate)
+}
+
+class TimeRep(soqlName: String) extends ShapeRep[SoQLTime] {
+  def toAttrNames = Seq(normalizeName(soqlName))
+  def toAttrBindings = Seq(classOf[String])
+  def toAttrValues(soql: SoQLTime) = {
+    val utc = soql.value.toDateTimeToday(DateTimeZone.UTC)
+    val TIME_FORMAT = "HH:mm:ss.SSS"
+    val fmt = DateTimeFormat.forPattern(TIME_FORMAT);
+    val time = fmt.print(utc)
+    Seq(time)
+  }
+}
 
 
-class ShapefileEncoder extends GeoEncoder {
-  private val TIME_FORMAT = "HH:mm:ss.SSS"
+class FloatingTimestampRep(soqlName: String) extends ShapeRep[SoQLFloatingTimestamp] {
+  def toAttrNames = {
+    val dateName = s"date_${soqlName}"
+    val timeName = s"time_${soqlName}"
+    Seq(normalizeName(dateName), normalizeName(timeName))
+  }
+  def toAttrBindings = Seq(classOf[Date], classOf[String])
+  def toAttrValues(soql: SoQLFloatingTimestamp) = {
+    val TIME_FORMAT = "HH:mm:ss.SSS"
+    val date = soql.value.toDate()
+    val fmt = DateTimeFormat.forPattern(TIME_FORMAT);
+    val time = fmt.print(soql.value)
 
+    Seq(date, time)
+  }
+}
+
+class FixedTimestampRep(soqlName: String) extends ShapeRep[SoQLFixedTimestamp] {
+  def toAttrNames = {
+    val dateName = s"date_${soqlName}"
+    val timeName = s"time_${soqlName}"
+    Seq(normalizeName(dateName), normalizeName(timeName))
+  }
+  def toAttrBindings = Seq(classOf[Date], classOf[String])
+  def toAttrValues(soql: SoQLFixedTimestamp) = {
+    val TIME_FORMAT = "HH:mm:ss.SSS"
+    val utc = new DateTime(soql.value, DateTimeZone.UTC)
+    val date = utc.toDate()
+    val fmt = DateTimeFormat.forPattern(TIME_FORMAT);
+    val time = fmt.print(utc)
+    Seq(date, time)
+  }
+}
+
+class NumberRep(soqlName: String) extends ShapeRep[SoQLNumber] {
+  def toAttrNames = Seq(normalizeName(soqlName))
+  def toAttrBindings = Seq(classOf[BigDecimal])
+  def toAttrValues(soql: SoQLNumber) = Seq(soql.value)
+}
+
+class TextRep(soqlName: String) extends ShapeRep[SoQLText] {
+  def toAttrNames = Seq(normalizeName(soqlName))
+  def toAttrBindings = Seq(classOf[String])
+  def toAttrValues(soql: SoQLText) = Seq(soql.value)
+}
+
+class MoneyRep(soqlName: String) extends ShapeRep[SoQLMoney] {
+  def toAttrNames = Seq(normalizeName(soqlName))
+  def toAttrBindings = Seq(classOf[BigDecimal])
+  def toAttrValues(soql: SoQLMoney) = Seq(soql.value)
+}
+
+class BooleanRep(soqlName: String) extends ShapeRep[SoQLBoolean] {
+  def toAttrNames = Seq(normalizeName(soqlName))
+  def toAttrBindings = Seq(classOf[java.lang.Boolean])
+  def toAttrValues(soql: SoQLBoolean) = Seq(soql.value: java.lang.Boolean)
+}
+
+class VersionRep(soqlName: String) extends ShapeRep[SoQLVersion] {
+  def toAttrNames = Seq(normalizeName(soqlName))
+  def toAttrBindings = Seq(classOf[java.lang.Long])
+  def toAttrValues(soql: SoQLVersion) = Seq(soql.value: java.lang.Long)
+}
+
+class IDRep(soqlName: String) extends ShapeRep[SoQLID] {
+  def toAttrNames = Seq(normalizeName(soqlName))
+  def toAttrBindings = Seq(classOf[java.lang.Long])
+  def toAttrValues(soql: SoQLID) = Seq(soql.value: java.lang.Long)
+}
+
+
+
+object ShapefileEncoder extends GeoEncoder {
+
+  case class FeatureCollectionException(val message: String) extends Exception
   type SoQLColumn = (String, SoQLType)
   type SoQLSchema = Seq[SoQLColumn]
 
+
+  type IntermediarySchema = Seq[ShapeRep[_ <: SoQLValue]]
+  type IntermediaryValues = Seq[(_ <: SoQLValue, ShapeRep[_ <: SoQLValue])]
+
   type ShapeColumn = (String, Class[_])
   type ShapeSchema = Seq[ShapeColumn]
+
+
 
   type ShapeAttr = (String, Object)
   type ShapeAttrs = Seq[ShapeAttr]
@@ -62,132 +203,111 @@ class ShapefileEncoder extends GeoEncoder {
     }
   }
 
+  private def repFor(col: SoQLColumn): ShapeRep[_ <: SoQLValue] = {
+    col match {
+      case (name, SoQLPoint) => new PointRep(name)
+      case (name, SoQLMultiPoint) => new MultiPointRep(name)
+      case (name, SoQLLine) => new LineRep(name)
+      case (name, SoQLMultiLine) => new MultiLineRep(name)
+      case (name, SoQLPolygon) => new PolygonRep(name)
+      case (name, SoQLMultiPolygon) => new MultiPolygonRep(name)
+      case (name, SoQLDate) => new DateRep(name)
+      case (name, SoQLTime) => new TimeRep(name)
+      case (name, SoQLFloatingTimestamp) => new FloatingTimestampRep(name)
+      case (name, SoQLFixedTimestamp) => new FixedTimestampRep(name)
+      case (name, SoQLNumber) => new NumberRep(name)
+      case (name, SoQLText) => new TextRep(name)
+      case (name, SoQLMoney) => new MoneyRep(name)
+      case (name, SoQLBoolean) => new BooleanRep(name)
+      case (name, SoQLVersion) => new VersionRep(name)
+      case (name, SoQLID) => new IDRep(name)
 
-  private def getBindings(soqlCol: SoQLColumn): ShapeSchema = {
-    val (name, soqlType) = soqlCol
-    soqlType match {
-      case SoQLPoint => Seq((name, classOf[Point]))
-      case SoQLMultiPoint => Seq((name, classOf[MultiPoint]))
-      case SoQLLine =>
-        Seq((name, classOf[LineString]))
-      case SoQLMultiLine => Seq((name, classOf[MultiLineString]))
-      case SoQLPolygon => Seq((name, classOf[Polygon]))
-      case SoQLMultiPolygon => Seq((name, classOf[MultiPolygon]))
-      case SoQLDate =>
-        Seq((name, classOf[Date]))
-      case SoQLTime =>
-        Seq((name, classOf[String]))
-      case SoQLFloatingTimestamp =>
-        val dateName = s"${name}_date"
-        val timeName = s"${name}_time"
-        Seq((dateName, classOf[Date]), (timeName, classOf[String]))
-      case SoQLFixedTimestamp =>
-        val dateName = s"${name}_date"
-        val timeName = s"${name}_time"
-        Seq((dateName, classOf[Date]), (timeName, classOf[String]))
-      case SoQLNumber => Seq((name, classOf[BigDecimal]))
-      case SoQLText => Seq((name, classOf[String]))
-      case SoQLMoney => Seq((name, classOf[BigDecimal]))
-      case SoQLBoolean => Seq((name, classOf[java.lang.Boolean]))
-      case v => throw new Exception(s"Unknown type ${v}")
+      case (name, SoQLArray) => ???
+      case (name, SoQLDouble) => ???
+      case (name, SoQLJson) => ???
+      case (name, SoQLNull) => ???
+      case (name, SoQLObject) => ???
     }
   }
 
+  private def toIntermediaryReps(schema: Seq[SoQLColumn]) = schema.map(repFor(_))
 
-  private def toShapeSchema(schema: SoQLSchema): ShapeSchema = {
-    schema.flatMap(getBindings(_))
-  }
-
-  private def formatTime(dt: DateTime): String = {
-    val fmt = DateTimeFormat.forPattern(TIME_FORMAT);
-    fmt.print(dt)
-  }
-
-  private def splitTimish(name: String, dt: LocalDate): ShapeAttrs = {
-    val date = dt.toDate()
-    Seq((s"${name}_date", date))
-  }
-
-  private def splitTimish(name: String, dt: LocalDateTime): ShapeAttrs = {
-    val date = dt.toDate()
-    val fmt = DateTimeFormat.forPattern(TIME_FORMAT);
-    val time = fmt.print(dt)
-    Seq((s"${name}_date", date), (s"${name}_time", time))
-  }
-
-  private def splitTimish(name: String, dt: DateTime): ShapeAttrs = {
-    val utc = new DateTime(dt, DateTimeZone.UTC)
-    val date = utc.toDate()
-    val time = formatTime(utc)
-    Seq((s"${name}_date", date), (s"${name}_time", time))
-  }
-
-  private def splitTimish(name: String, dt: LocalTime): ShapeAttrs = {
-    val utc = dt.toDateTimeToday(DateTimeZone.UTC)
-    val time = formatTime(utc)
-    Seq((s"${name}_time", time))
-  }
-
-  //despite making you jump through 37 layers of indirection, at the end of the day
-  //you everything you set/get in geotools is no more specific than `Object`
-  private def toGeotoolsTypes(name: String, soql: SoQLValue): ShapeAttrs = {
-
-    soql match {
-      case v: SoQLPoint => Seq((name, v.value))
-      case v: SoQLMultiPoint => Seq((name, v.value))
-      case v: SoQLLine => Seq((name, v.value))
-      case v: SoQLMultiLine => Seq((name, v.value))
-      case v: SoQLPolygon => Seq((name, v.value))
-      case v: SoQLMultiPolygon => Seq((name, v.value))
-      case v: SoQLDate => splitTimish(name, v.value)
-      case v: SoQLFloatingTimestamp => splitTimish(name, v.value)
-      case v: SoQLFixedTimestamp => splitTimish(name, v.value)
-      case v: SoQLTime => splitTimish(name, v.value)
-      case v: SoQLMoney => Seq((name, v.value))
-      case v: SoQLBoolean => Seq((name, v.value: java.lang.Boolean))
-      case v: SoQLNumber => Seq((name, v.value))
-      case v: SoQLText => Seq((name, v.value))
-      case v: SoQLValue => Seq((name, v.toString))
-    }
-  }
-
-  private def buildFeatureType(schema: ShapeSchema): SimpleFeatureType = {
+  private def buildFeatureType(schema: IntermediarySchema): SimpleFeatureType = {
     val builder = new SimpleFeatureTypeBuilder();
 
     builder.setCRS(DefaultGeographicCRS.WGS84);
     builder.setName("FeatureType")
 
-    schema.foreach { case (bindingName, binding) =>
+    val addedNames = schema
+    .filter {
+      case r: IDRep => false
+      case _ => true
+    }.flatMap { rep =>
       val restrictions = seqAsJavaList(List[Filter]())
 
-      if (classOf[Geometry].isAssignableFrom(binding)) {
-        val attrName = new NameImpl("the_geom")
-        val geomType = new GeometryTypeImpl(attrName, binding, DefaultGeographicCRS.WGS84, true, false, seqAsJavaList(List()), null, null)
-        val geomDescriptor = new GeometryDescriptorImpl(geomType, attrName, Int.MinValue, Int.MaxValue, true, null)
-        builder.add(geomDescriptor)
-      } else {
-        val attrName = new NameImpl(binding.toString())
-        val attrType = new AttributeTypeImpl(attrName, binding, true, false, restrictions, null, null)
-        val descriptor = new AttributeDescriptorImpl(attrType, new NameImpl(bindingName), Int.MinValue, Int.MaxValue, true, null)
-        builder.add(descriptor)
+      val attrNames = rep.toAttrNames
+      val bindings = rep.toAttrBindings
+
+      if(attrNames.size != bindings.size) {
+        throw new Exception("Attribute names:bindings mapping must be 1:1 in the intermediary representation")
       }
+
+      attrNames.zip(bindings).foreach { case (attrName, binding) =>
+        if (classOf[Geometry].isAssignableFrom(binding)) {
+          val attrName = new NameImpl("the_geom")
+          val geomType = new GeometryTypeImpl(attrName, binding, DefaultGeographicCRS.WGS84, true, false, seqAsJavaList(List()), null, null)
+          val geomDescriptor = new GeometryDescriptorImpl(geomType, attrName, Int.MinValue, Int.MaxValue, true, null)
+          builder.add(geomDescriptor)
+        } else {
+          val bindingName = new NameImpl(binding.toString())
+          val attrType = new AttributeTypeImpl(bindingName, binding, true, false, restrictions, null, null)
+          val descriptor = new AttributeDescriptorImpl(attrType, new NameImpl(attrName), Int.MinValue, Int.MaxValue, true, null)
+          builder.add(descriptor)
+        }
+      }
+      attrNames
     }
+    log.debug(s"Added names ${addedNames.size}  ${addedNames}")
     builder.buildFeatureType()
   }
 
+  private def buildFeature(featureId: Int, featureType: SimpleFeatureType, attributes: IntermediaryValues): SimpleFeature = {
 
-  private def buildFeature(featureType: SimpleFeatureType, soqlRep: SoQLSchema,
-    shapeRep: ShapeSchema, attributes: Array[SoQLValue]): SimpleFeature = {
+    val id = new FeatureIdImpl(featureId.toString)
 
-    val id = new FeatureIdImpl(":id")
+    val nonIds = attributes.filter { v =>
+      v match {
+        case (_: SoQLID, _) => false
+        case _ => true
+      }
+    }
 
-    val values = seqAsJavaList(soqlRep.zip(attributes).flatMap { case ((soqlName, soqlType), soqlValue) =>
-      toGeotoolsTypes(soqlName, soqlValue)
-    }).map { case (_newName, geoValue) => geoValue}
+    val values = seqAsJavaList(nonIds.flatMap { why =>
+        //what in the fuck there has to be a better way to do this...
+        //except not because dependent types
+        why match {
+          case (value: SoQLPoint, intermediary: PointRep) => intermediary.toAttrValues(value)
+          case (value: SoQLMultiPoint, intermediary: MultiPointRep) => intermediary.toAttrValues(value)
+          case (value: SoQLLine, intermediary: LineRep) => intermediary.toAttrValues(value)
+          case (value: SoQLMultiLine, intermediary: MultiLineRep) => intermediary.toAttrValues(value)
+          case (value: SoQLPolygon, intermediary: PolygonRep) => intermediary.toAttrValues(value)
+          case (value: SoQLMultiPolygon, intermediary: MultiPolygonRep) => intermediary.toAttrValues(value)
+          case (value: SoQLDate, intermediary: DateRep) => intermediary.toAttrValues(value)
+          case (value: SoQLTime, intermediary: TimeRep) => intermediary.toAttrValues(value)
+          case (value: SoQLFloatingTimestamp, intermediary: FloatingTimestampRep) => intermediary.toAttrValues(value)
+          case (value: SoQLFixedTimestamp, intermediary: FixedTimestampRep) => intermediary.toAttrValues(value)
+          case (value: SoQLNumber, intermediary: NumberRep) => intermediary.toAttrValues(value)
+          case (value: SoQLText, intermediary: TextRep) => intermediary.toAttrValues(value)
+          case (value: SoQLMoney, intermediary: MoneyRep) => intermediary.toAttrValues(value)
+          case (value: SoQLBoolean, intermediary: BooleanRep) => intermediary.toAttrValues(value)
+          case (value: SoQLVersion, intermediary: VersionRep) => intermediary.toAttrValues(value)
+          case (value: SoQLID, intermediary: IDRep) => intermediary.toAttrValues(value)
+          case _ => ???
+        }
+    }.asInstanceOf[Seq[Object]])
 
     new SimpleFeatureImpl(values, featureType, id)
   }
-
 
   def encode(layers: Layers, outStream: OutputStream) : Try[OutputStream] = {
 
@@ -204,9 +324,9 @@ class ShapefileEncoder extends GeoEncoder {
         val dataStore = shapefileFactory.createNewDataStore(mapAsJavaMap(meta.asInstanceOf[Map[String, Serializable]]))
 
         //split the SoQLSchema into a potentially longer ShapeSchema
-        val shapeSchema = toShapeSchema(layer.schema)
+        val reps = toIntermediaryReps(layer.schema)
         //build the feature type out of a schema that is representable by a ShapeFile
-        val featureType = buildFeatureType(shapeSchema)
+        val featureType = buildFeatureType(reps)
         dataStore.createSchema(featureType)
 
         dataStore.getFeatureSource((dataStore.getTypeNames.toList)(0)) match {
@@ -217,9 +337,15 @@ class ShapefileEncoder extends GeoEncoder {
 
                 featureStore.setTransaction(trans)
                 val collection = new DefaultFeatureCollection()
-                layer.foreach { attrs =>
-                  collection.add(buildFeature(featureType, layer.schema, shapeSchema, attrs))
+                layer.foldLeft(0) { (id, attrs) =>
+
+                  val intermediary = attrs.zip(reps)
+                  if(!collection.add(buildFeature(id, featureType, intermediary))) {
+                    throw new FeatureCollectionException(s"Failed to add feature ${attrs} to Geotools DefaultFeatureCollection")
+                  }
+                  id + 1
                 }
+                log.debug(s"Added ${collection.size()} features to feature collection")
                 featureStore.addFeatures(collection)
               } finally {
                 trans.commit()
@@ -249,7 +375,8 @@ class ShapefileEncoder extends GeoEncoder {
     }
   }
 
-
+  def encodes = Set("shp")
+  def encodedMIME = "application/zip"
 }
 
 

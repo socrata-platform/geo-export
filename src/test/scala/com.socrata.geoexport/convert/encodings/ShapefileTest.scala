@@ -59,7 +59,7 @@ class ShapefileTest extends TestBase {
   private def convertShapefile(layers: List[InputStream]): File = {
     val archive = new File(s"/tmp/test_geo_export_${UUID.randomUUID()}.zip")
     val outStream = new FileOutputStream(archive)
-    Converter.execute(layers, List(), new ShapefileEncoder(), outStream) match {
+    Converter.execute(layers, ShapefileEncoder, outStream) match {
       case Success(outstream) =>
         outStream.flush()
         archive
@@ -73,50 +73,18 @@ class ShapefileTest extends TestBase {
           .map { p => (p.getX, p.getY)}.toList
   }
 
-  private def readArchive(archive: File): Seq[(SimpleFeatureType, Seq[SimpleFeature])] = {
 
-    val zip = new ZipFile(archive)
-    val entries = zip.entries()
-    val it = new Iterator[ZipEntry] { def hasNext = entries.hasMoreElements; def next = entries.nextElement }
-
-    it.map { entry =>
-      val in = zip.getInputStream(entry)
-      val file = new File(s"/tmp/read_${entry.getName}")
-      val out = new FileOutputStream(file)
-      IOUtils.copy(in, out)
-      IOUtils.closeQuietly(in)
-      out.close()
-      file
-    }.toList.filter{_.getName.endsWith(".shp")}.map { f =>
-
-      val store = new ShapefileDataStore(new URL("File", "", f.getAbsolutePath))
-
-      try {
-        val shapeFeatureSource: SimpleFeatureSource = store.getFeatureSource
-        // Get the shape schema, also known as the feature type
-        val it = new GeoIterator(shapeFeatureSource.getFeatures.features)
-        try {
-          (shapeFeatureSource.getSchema, it.toList)
-        } finally {
-          it.close()
-        }
-      } finally {
-        store.dispose()
-        f.delete()
-      }
-    }
-  }
 
   private def verifyFeature(feature: SimpleFeature) = {
     feature.getAttribute("a_name").toString must be("this is a name")
     feature.getAttribute("a_number") must be(42.00)
     feature.getAttribute("a_bool") must be(java.lang.Boolean.TRUE)
 
-    feature.getAttribute("a_ts_date").asInstanceOf[Date] must be(ldt.withTime(0, 0, 0, 0).toDate)
-    feature.getAttribute("a_ts_time") must be("20:00:00.000")
+    feature.getAttribute("date_a_ts").asInstanceOf[Date] must be(ldt.withTime(0, 0, 0, 0).toDate)
+    feature.getAttribute("time_a_ts") must be("20:00:00.000")
 
-    feature.getAttribute("a_fts_date").asInstanceOf[Date] must be(ldt.withTime(0, 0, 0, 0).toDate)
-    feature.getAttribute("a_fts_time") must be("02:23:00.000")
+    feature.getAttribute("date_a_fts").asInstanceOf[Date] must be(ldt.withTime(0, 0, 0, 0).toDate)
+    feature.getAttribute("time_a_fts") must be("02:23:00.000")
 
     feature.getAttribute("a_time") must be("01:23:00.000")
     feature.getAttribute("a_date") must be(ldt.withTime(0, 0, 0, 0).toDate)
@@ -134,7 +102,7 @@ class ShapefileTest extends TestBase {
 
     val layers = List(packed)
     val archive = convertShapefile(layers)
-    readArchive(archive) match {
+    readShapeArchive(archive) match {
       case Seq((schema, features)) =>
 
         features.size must be(1)
@@ -154,7 +122,7 @@ class ShapefileTest extends TestBase {
 
     val layers = List(packed)
     val archive = convertShapefile(layers)
-    readArchive(archive) match {
+    readShapeArchive(archive) match {
       case Seq((schema, features)) =>
         features.size must be(1)
         val feature = features(0)
@@ -173,7 +141,7 @@ class ShapefileTest extends TestBase {
 
     val layers = List(packed)
     val archive = convertShapefile(layers)
-    readArchive(archive) match {
+    readShapeArchive(archive) match {
       case Seq((schema, features)) =>
 
         features.size must be(1)
@@ -192,7 +160,7 @@ class ShapefileTest extends TestBase {
 
     val layers = List(packed)
     val archive = convertShapefile(layers)
-    readArchive(archive) match {
+    readShapeArchive(archive) match {
       case Seq((schema, features)) =>
         features.size must be(1)
 
@@ -212,7 +180,7 @@ class ShapefileTest extends TestBase {
 
     val layers = List(packed)
     val archive = convertShapefile(layers)
-    readArchive(archive) match {
+    readShapeArchive(archive) match {
       case Seq((schema, features)) =>
         features.size must be(1)
 
@@ -234,7 +202,7 @@ class ShapefileTest extends TestBase {
 
     val layers = List(packed)
     val archive = convertShapefile(layers)
-    readArchive(archive) match {
+    readShapeArchive(archive) match {
       case Seq((schema, features)) =>
         features.size must be(1)
         val feature = features(0)
@@ -255,7 +223,7 @@ class ShapefileTest extends TestBase {
 
     val layers = List(packed)
     val archive = convertShapefile(layers)
-    readArchive(archive) match {
+    readShapeArchive(archive) match {
       case Seq((schema, features)) =>
         features.size must be(1)
 
@@ -284,7 +252,7 @@ class ShapefileTest extends TestBase {
 
     val layers = List(packedMultipoints, packedPolys)
     val archive = convertShapefile(layers)
-    readArchive(archive) match {
+    readShapeArchive(archive) match {
       case Seq((pointSchema, pointFeatures), (polySchema, polyFeatures)) =>
         pointFeatures.size must be(1)
         polyFeatures.size must be(1)

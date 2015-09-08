@@ -9,4 +9,6 @@ import scala.util.{Try, Success, Failure}
 
 trait GeoEncoder {
   def encode(layers: Iterable[SoQLPackIterator], outStream: OutputStream) : Try[OutputStream]
+  def encodes: Set[String]
+  def encodedMIME: String
 }

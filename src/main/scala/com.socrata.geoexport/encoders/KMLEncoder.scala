@@ -20,8 +20,8 @@ import scala.util.{Try, Success, Failure}
 object KMLMapper {
  lazy val log = LoggerFactory.getLogger(getClass)
 
-  case class MultipleGeometriesFoundException(val message: String) extends Exception
-  case class UnknownGeometryException(val message: String) extends Exception
+  case class MultipleGeometriesFoundException(message: String) extends Exception
+  case class UnknownGeometryException(message: String) extends Exception
   type Attributes = Seq[AttributeDescriptor]
   type Layers = Iterable[SoQLPackIterator]
 
@@ -160,7 +160,7 @@ object KMLMapper {
   }
 }
 
-class KMLEncoder extends GeoEncoder {
+object KMLEncoder extends GeoEncoder {
 
 
   def encode(layers: Layers, outStream: OutputStream) : Try[OutputStream] = {
@@ -175,7 +175,8 @@ class KMLEncoder extends GeoEncoder {
     }
   }
 
-
+  def encodes = Set("kml")
+  def encodedMIME = "application/vnd.google-earth.kml+xml"
 }
 
 

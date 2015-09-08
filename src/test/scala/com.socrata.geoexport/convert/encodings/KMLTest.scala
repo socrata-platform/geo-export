@@ -41,7 +41,7 @@ class KMLTest extends TestBase {
 
   private def convertKML(layers: List[InputStream]): Node = {
     val outStream = new ByteArrayOutputStream()
-    val result = Converter.execute(layers, List(), new KMLEncoder(), outStream) match {
+    val result = Converter.execute(layers, KMLEncoder, outStream) match {
       case Success(outstream) =>
         outStream.flush()
         outStream.toString("UTF-8")

@@ -1,9 +1,14 @@
 package com.socrata.geoexport
 
 import java.io._
+import java.net.URL
+import java.util.zip.{ZipEntry, ZipFile}
 
 import com.socrata.soql.SoQLPackWriter
 import com.socrata.soql.types.{SoQLValue, SoQLType}
+import org.geotools.data.shapefile.ShapefileDataStore
+import org.geotools.data.simple.SimpleFeatureSource
+import org.opengis.feature.simple.{SimpleFeature, SimpleFeatureType}
 import scala.xml.{NodeSeq, XML, Node}
 import com.vividsolutions.jts.geom.{GeometryFactory, PrecisionModel, Geometry}
 import com.vividsolutions.jts.io.WKTReader
@@ -79,6 +84,39 @@ trait TestBase
     println(printer.format(node))
   }
 
+  def readShapeArchive(archive: File): Seq[(SimpleFeatureType, Seq[SimpleFeature])] = {
+
+    val zip = new ZipFile(archive)
+    val entries = zip.entries()
+    val it = new Iterator[ZipEntry] { def hasNext = entries.hasMoreElements; def next = entries.nextElement }
+
+    it.map { entry =>
+      val in = zip.getInputStream(entry)
+      val file = new File(s"/tmp/read_${entry.getName}")
+      val out = new FileOutputStream(file)
+      IOUtils.copy(in, out)
+      IOUtils.closeQuietly(in)
+      out.close()
+      file
+    }.toList.filter{_.getName.endsWith(".shp")}.map { f =>
+
+      val store = new ShapefileDataStore(new URL("File", "", f.getAbsolutePath))
+
+      try {
+        val shapeFeatureSource: SimpleFeatureSource = store.getFeatureSource
+        // Get the shape schema, also known as the feature type
+        val it = new GeoIterator(shapeFeatureSource.getFeatures.features)
+        try {
+          (shapeFeatureSource.getSchema, it.toList)
+        } finally {
+          it.close()
+        }
+      } finally {
+        store.dispose()
+        f.delete()
+      }
+    }
+  }
 
 
 }

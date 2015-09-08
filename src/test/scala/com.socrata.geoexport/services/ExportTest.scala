@@ -1,6 +1,8 @@
 package com.socrata.geoexport
 package http
 
+import java.io.{FileOutputStream, File}
+import java.util.UUID
 import javax.servlet.http.HttpServletResponse.{SC_OK => ScOk}
 
 import com.socrata.geoexport.mocks.FixtureClient
@@ -54,6 +56,47 @@ class ExportTest extends TestBase with MockitoSugar {
   }
 
 
+  test("can get a single Shapefile dataset") {
+
+    val fixtureClient = new FixtureClient
+
+    val req = mock[HttpRequest]
+
+    val fileName = s"/tmp/export_test_${UUID.randomUUID()}.zip"
+    val file = new File(fileName)
+
+    val outputStream = new mocks.FileServletOutputStream(file)
+    val resp = outputStream.responseFor
+
+    val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-77dn", "shp"))
+    service.get(req)(resp)
+    verify(resp).setStatus(200)
+
+    readShapeArchive(file) match {
+      case Seq((featureType, features)) =>
+        println(s"FOUND ${features.size}")
+        features.size must be(77)
+    }
+
+
+  }
+
+
+  test("can get a multi layer Shapefile dataset") {
+    val fixtureClient = new FixtureClient
+
+    val req = mock[HttpRequest]
+    val outputStream = new mocks.ByteArrayServletOutputStream
+    val resp = outputStream.responseFor
+
+    val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-77dn,vt5y-77do", "shp"))
+    service.get(req)(resp)
+
+    verify(resp).setStatus(200)
+
+
+  }
+
   test("a 400 is returned on an invalid 4x4") {
     val fixtureClient = new FixtureClient
     val req = mock[HttpRequest]
@@ -63,22 +106,34 @@ class ExportTest extends TestBase with MockitoSugar {
     val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-77dn,vt", "kml"))
     service.get(req)(resp)
 
-    println(outputStream.getString)
-
     verify(resp).setStatus(400)
   }
 
-
-  test("a soqlpack error is returned when requesting malformed soqlpack") {
+  test("kml export has mimetype application/vnd.google-earth.kml+xml") {
     val fixtureClient = new FixtureClient
     val req = mock[HttpRequest]
     val outputStream = new mocks.ByteArrayServletOutputStream
     val resp = outputStream.responseFor
 
-    val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("nope-nope", "kml"))
+    val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-77dn", "kml"))
     service.get(req)(resp)
-    println(outputStream.getString)
-    verify(resp).setStatus(200)
 
+    verify(resp).setStatus(200)
+    verify(resp).setContentType("application/vnd.google-earth.kml+xml")
   }
+
+  test("shp export has mimetype application/zip") {
+    val fixtureClient = new FixtureClient
+    val req = mock[HttpRequest]
+    val outputStream = new mocks.ByteArrayServletOutputStream
+    val resp = outputStream.responseFor
+
+    val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-77dn", "shp"))
+    service.get(req)(resp)
+
+    verify(resp).setStatus(200)
+    verify(resp).setContentType("application/zip")
+  }
+
+
 }

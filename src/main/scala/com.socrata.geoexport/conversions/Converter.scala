@@ -14,27 +14,17 @@ import scala.util.{Try, Success, Failure}
 
 object Converter {
 
-  def execute(layerStreams: Iterable[InputStream], tasks: List[GeoConversion], encoder: GeoEncoder, os: OutputStream) : Try[OutputStream] = {
-
+  /**
+    Take some layers streams and merge them into thte outputstream using the encoder
+    This will merge the layers into whatever representation the encoder decides to represent
+    layers as.
+  */
+  def execute(layerStreams: Iterable[InputStream], encoder: GeoEncoder, os: OutputStream) : Try[OutputStream] = {
     Try(layerStreams.map { instream =>
       new SoQLPackIterator(new DataInputStream(instream))
     }) match {
       case Success(featureStreams) => encoder.encode(featureStreams, os)
       case Failure(f) => Failure(f)
     }
-
-
-
-
-//    tasks.foldLeft(Right(featureStreams)) {
-//      (acc, task) =>
-//        acc match {
-//          case Right(collections) => Right(collections)
-//          case error => error
-//        }
-//    } match {
-//      case Right(transformedFeatures: Iterable[FeatureCollectionJson]) =>
-//      case error => Left("FIXME")
-//    }
   }
 }
