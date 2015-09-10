@@ -80,8 +80,17 @@ class KMLIshTest extends TestBase {
     xmltrim(actual) must be(xmltrim(
       <kml xmlns:kml="http://earth.google.com/kml/2.2">
         <Document id="featureCollection">
+          <Style id="defaultStyle">
+            <LineStyle>
+              <width>1.5</width>
+            </LineStyle>
+            <PolyStyle>
+              <color>7dff0000</color>
+            </PolyStyle>
+          </Style>
           <Folder>
             <Placemark>
+              <styleUrl>#defaultStyle</styleUrl>
               <ExtendedData>
                 <SchemaData>
                   <SimpleData name="a_name">this is a name</SimpleData>
@@ -117,8 +126,17 @@ class KMLIshTest extends TestBase {
     xmltrim(actual) must be(xmltrim(
       <kml xmlns:kml="http://earth.google.com/kml/2.2">
         <Document id="featureCollection">
+          <Style id="defaultStyle">
+            <LineStyle>
+              <width>1.5</width>
+            </LineStyle>
+            <PolyStyle>
+              <color>7dff0000</color>
+            </PolyStyle>
+          </Style>
           <Folder>
             <Placemark>
+              <styleUrl>#defaultStyle</styleUrl>
               <ExtendedData>
                 <SchemaData>
                   <SimpleData name="a_name">this is a name</SimpleData>
@@ -158,8 +176,17 @@ class KMLIshTest extends TestBase {
     xmltrim(actual) must be(xmltrim(
       <kml xmlns:kml="http://earth.google.com/kml/2.2">
         <Document id="featureCollection">
+          <Style id="defaultStyle">
+            <LineStyle>
+              <width>1.5</width>
+            </LineStyle>
+            <PolyStyle>
+              <color>7dff0000</color>
+            </PolyStyle>
+          </Style>
           <Folder>
             <Placemark>
+              <styleUrl>#defaultStyle</styleUrl>
               <ExtendedData>
                 <SchemaData>
                   <SimpleData name="a_name">this is a name</SimpleData>
@@ -205,8 +232,17 @@ class KMLIshTest extends TestBase {
     xmltrim(actual) must be(xmltrim(
       <kml xmlns:kml="http://earth.google.com/kml/2.2">
         <Document id="featureCollection">
+          <Style id="defaultStyle">
+            <LineStyle>
+              <width>1.5</width>
+            </LineStyle>
+            <PolyStyle>
+              <color>7dff0000</color>
+            </PolyStyle>
+          </Style>
           <Folder>
             <Placemark>
+              <styleUrl>#defaultStyle</styleUrl>
               <ExtendedData>
                 <SchemaData>
                   <SimpleData name="a_name">this is a name</SimpleData>
@@ -255,8 +291,17 @@ class KMLIshTest extends TestBase {
     xmltrim(actual) must be(xmltrim(
       <kml xmlns:kml="http://earth.google.com/kml/2.2">
         <Document id="featureCollection">
+          <Style id="defaultStyle">
+            <LineStyle>
+              <width>1.5</width>
+            </LineStyle>
+            <PolyStyle>
+              <color>7dff0000</color>
+            </PolyStyle>
+          </Style>
           <Folder>
             <Placemark>
+              <styleUrl>#defaultStyle</styleUrl>
               <ExtendedData>
                 <SchemaData>
                   <SimpleData name="a_name">this is a name</SimpleData>
@@ -296,8 +341,17 @@ class KMLIshTest extends TestBase {
     xmltrim(actual) must be(xmltrim(
       <kml xmlns:kml="http://earth.google.com/kml/2.2">
         <Document id="featureCollection">
+          <Style id="defaultStyle">
+            <LineStyle>
+              <width>1.5</width>
+            </LineStyle>
+            <PolyStyle>
+              <color>7dff0000</color>
+            </PolyStyle>
+          </Style>
           <Folder>
             <Placemark>
+              <styleUrl>#defaultStyle</styleUrl>
               <ExtendedData>
                 <SchemaData>
                   <SimpleData name="a_name">this is a name</SimpleData>
@@ -334,8 +388,17 @@ class KMLIshTest extends TestBase {
     xmltrim(actual) must be(xmltrim(
       <kml xmlns:kml="http://earth.google.com/kml/2.2">
         <Document id="featureCollection">
+          <Style id="defaultStyle">
+            <LineStyle>
+              <width>1.5</width>
+            </LineStyle>
+            <PolyStyle>
+              <color>7dff0000</color>
+            </PolyStyle>
+          </Style>
           <Folder>
             <Placemark>
+              <styleUrl>#defaultStyle</styleUrl>
               <ExtendedData>
                 <SchemaData>
                   <SimpleData name="a_name">this is a name</SimpleData>
@@ -389,8 +452,17 @@ class KMLIshTest extends TestBase {
     xmltrim(actual) must be(xmltrim(
       <kml xmlns:kml="http://earth.google.com/kml/2.2">
         <Document id="featureCollection">
+          <Style id="defaultStyle">
+            <LineStyle>
+              <width>1.5</width>
+            </LineStyle>
+            <PolyStyle>
+              <color>7dff0000</color>
+            </PolyStyle>
+          </Style>
           <Folder>
             <Placemark>
+              <styleUrl>#defaultStyle</styleUrl>
               <ExtendedData>
                 <SchemaData>
                   <SimpleData name="a_name">this is a name</SimpleData>
@@ -414,6 +486,7 @@ class KMLIshTest extends TestBase {
           </Folder>
           <Folder>
             <Placemark>
+              <styleUrl>#defaultStyle</styleUrl>
               <ExtendedData>
                 <SchemaData>
                   <SimpleData name="a_name">this is a name</SimpleData>

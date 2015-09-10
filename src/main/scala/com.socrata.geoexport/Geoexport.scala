@@ -30,20 +30,26 @@ object Geoexport extends App {
                                              HttpClientHttpClient.
                                                defaultOptions.
                                                withUserAgent("geoexport")))
+
+    broker <- DiscoveryBrokerFromConfig(GeoexportConfig.broker, http)
     curator <- CuratorFromConfig(GeoexportConfig.broker.curator)
     discovery <- DiscoveryFromConfig(classOf[Void], curator, GeoexportConfig.broker.discovery)
-    broker <- DiscoveryBrokerFromConfig(GeoexportConfig.broker, http)
     upstream <- new UnmanagedDiscoveryBroker(discovery, http).clientFor(GeoexportConfig.upstream)
   } {
 
+
+    val wat = new CuratorBroker(discovery, GeoexportConfig.broker.discovery.address, GeoexportConfig.broker.discovery.name, None)
+    wat.register(GeoexportConfig.port)
+
     val exportService = new ExportService(upstream)
+
 
     val router = new Router(exportService)
 
     val server = new SocrataServerJetty(
       handler = router.handler,
       options = SocrataServerJetty.defaultOptions.
-        withPort(7777).
+        withPort(GeoexportConfig.port).
         withPoolOptions(SocrataServerJetty.Pool(GeoexportConfig.threadpool)))
 
     logger.info("Starting Geoexport")

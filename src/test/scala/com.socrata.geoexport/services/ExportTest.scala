@@ -55,7 +55,6 @@ class ExportTest extends TestBase with MockitoSugar {
     (folders(1) \ "Placemark").size must be(77)
   }
 
-
   test("can get a single Shapefile dataset") {
 
     val fixtureClient = new FixtureClient
@@ -74,13 +73,9 @@ class ExportTest extends TestBase with MockitoSugar {
 
     readShapeArchive(file) match {
       case Seq((featureType, features)) =>
-        println(s"FOUND ${features.size}")
         features.size must be(77)
     }
-
-
   }
-
 
   test("can get a multi layer Shapefile dataset") {
     val fixtureClient = new FixtureClient
@@ -93,8 +88,6 @@ class ExportTest extends TestBase with MockitoSugar {
     service.get(req)(resp)
 
     verify(resp).setStatus(200)
-
-
   }
 
   test("a 400 is returned on an invalid 4x4") {
@@ -107,6 +100,20 @@ class ExportTest extends TestBase with MockitoSugar {
     service.get(req)(resp)
 
     verify(resp).setStatus(400)
+  }
+
+  test("a 502 is returned on an unknown 4x4 and the error message is helpful") {
+    val fixtureClient = new FixtureClient
+    val req = mock[HttpRequest]
+    val outputStream = new mocks.ByteArrayServletOutputStream
+    val resp = outputStream.responseFor
+
+    val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-zzzz", "kml"))
+    service.get(req)(resp)
+
+    verify(resp).setStatus(502)
+
+    outputStream.getString must be("""{"reason":[{"status":404,"reason":{"mock":"reason"}}]}""")
   }
 
   test("kml export has mimetype application/vnd.google-earth.kml+xml") {

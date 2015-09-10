@@ -29,7 +29,7 @@ object ExportService {
   val FourbyFour = "[\\w0-9]{4}-[\\w0-9]{4}"
   val encoders = List(KMLEncoder, ShapefileEncoder, KMZEncoder)
   val formats: Set[String] = encoders.flatMap(_.encodes).toSet
-  type LayerFailure = (Int, String)
+  type LayerFailure = (Int, JValue)
 
   private def isValidFourByFour(s: String) = s.matches(FourbyFour)
 
@@ -52,21 +52,15 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
 
   private def mergeUpstreamErrors(errors: Seq[LayerFailure]): HttpResponse = {
     val reasons = JsonEncode.toJValue[Seq[JValue]](errors.map { case (status, reason) =>
-      Try(JsonReader.fromString(reason)) match {
-        case Success(js) =>
-          log.warn(s"SodaFountain returned an error ${status} ${reason}")
-          JsonEncode.toJValue[Map[String, JValue]](Map(
-            "status" -> JNumber(status),
-            "reason" -> js
-          ))
-        case Failure(exc) =>
-          log.warn(s"Unable to parse SodaFountain error as json ${exc.toString}")
-          JsonEncode.toJValue[String](reason)
-      }
+      log.warn(s"SodaFountain returned an error ${status} ${reason}")
+      JsonEncode.toJValue[Map[String, JValue]](Map(
+        "status" -> JNumber(status),
+        "reason" -> reason
+      ))
     })
 
     log.warn("SodaFountain failures, returning a 502")
-    BadGateway ~> Json(JsonUtil.renderJson(JsonEncode.toJValue(Map("reason" -> reasons))))
+    BadGateway ~> Json(JsonEncode.toJValue(Map("reason" -> reasons)))
   }
 
   private def getUpstreamLayers(fxfs: Seq[String]): Either[HttpResponse, Seq[Response with Closeable]] = {
@@ -83,9 +77,20 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
         case Success(response) =>
           response.resultCode match {
             case 200 => Right(response)
-            case err => Left((err, IOUtils.toString(response.inputStream(), UTF_8)))
+            case status =>
+              val body = IOUtils.toString(response.inputStream(), UTF_8)
+              val err = Try(JsonReader.fromString(body)) match {
+                case Success(js) => js
+                case Failure(_) =>
+                  log.warn(s"Unable to parse SodaFountain error as json")
+                  JsonEncode.toJValue[String]("Unknown upstream error")
+              }
+              Left((status, err))
           }
-        case Failure(exc) => Left((404, s""""reason": ${exc.getMessage}"""))
+        case Failure(exc) =>
+          exc.printStackTrace()
+          log.error(s"Failed to contact SodaFountain: ${exc.getMessage}")
+          Left((404, JsonEncode.toJValue[String](s"${exc.getMessage}")))
       }
     }.partition(_.isLeft) match {
       case (Seq(), successes)  => Right(successes.map(_.right.get))

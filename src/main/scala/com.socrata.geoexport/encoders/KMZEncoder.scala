@@ -22,7 +22,7 @@ object KMZEncoder extends GeoEncoder {
 
   def encode(layers: Layers, outStream: OutputStream) : Try[OutputStream] = {
     val zipStream = new ZipOutputStream(outStream)
-    val entry = new ZipEntry("export.kmz")
+    val entry = new ZipEntry("export.kml")
     zipStream.putNextEntry(entry)
     KMLEncoder.encode(layers, zipStream) match {
       case Success(_) => Success(zipStream)

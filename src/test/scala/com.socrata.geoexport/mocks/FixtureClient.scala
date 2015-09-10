@@ -1,26 +1,31 @@
 package com.socrata.geoexport.mocks
 
-import com.socrata.geoexport.http.ExportService
-import com.socrata.http.server.routing.TypedPathComponent
-import com.typesafe.config.Config
-import java.io.InputStream
-import java.nio.charset.{StandardCharsets, Charset}
+import java.io.{Closeable, InputStream}
+import java.nio.charset.{Charset, StandardCharsets}
+
 import com.socrata.geoexport.UnmanagedCuratedServiceClient
-import com.socrata.http.common.util.Acknowledgeable
-import com.socrata.thirdparty.curator.{CuratedClientConfig, CuratedServiceClient}
 import com.socrata.http.client.{RequestBuilder, Response, SimpleHttpRequest}
-import com.socrata.thirdparty.curator.ServerProvider
+import com.socrata.http.common.util.Acknowledgeable
+import com.socrata.thirdparty.curator.{CuratedClientConfig, ServerProvider}
+import com.typesafe.config.Config
+import org.apache.commons.io.IOUtils
 import org.scalatest.mock.MockitoSugar
-import java.io.Closeable
 
 
 
 
 class FixtureClient extends MockitoSugar {
 
+  def getStream(fixtureName: String) = Option(getClass.getResourceAsStream(s"/fixtures/http/${fixtureName}"))
+
   class FixtureInputStream(fixtureName: String) extends InputStream with Acknowledgeable {
-    println(s"Loading features /fixtures/http/${fixtureName}")
-    val underlying = getClass.getResourceAsStream(s"/fixtures/http/${fixtureName}")
+    val underlying = {
+      getStream(fixtureName) match {
+        case Some(is) => is
+        case None =>
+          IOUtils.toInputStream("""{"mock": "reason"}""")
+      }
+    }
     override def acknowledge(): Unit = ()
     override def read(): Int = underlying.read
   }
@@ -30,19 +35,29 @@ class FixtureClient extends MockitoSugar {
 
     new Response with Closeable {
 
+      var status: Int = 200
+
+      private def getFilename: String = {
+        val request = builder(RequestBuilder(""))
+        request.builder.path.toList match {
+          case Seq("export", uidAndFormat) => uidAndFormat
+        }
+      }
+
       override def charset: Charset = StandardCharsets.UTF_8
 
       override def streamCreated: Boolean = true
 
       override def inputStream(maximumSizeBetweenAcks: Long): InputStream with Acknowledgeable = {
-        val request = builder(RequestBuilder(""))
-        val filename = request.builder.path.toList match {
-          case Seq("export", uidAndFormat) => uidAndFormat
-        }
-        new FixtureInputStream(filename)
+        new FixtureInputStream(this.getFilename)
       }
 
-      override def resultCode: Int = 200
+      override def resultCode: Int = {
+        getStream(this.getFilename) match {
+          case Some(_) => 200
+          case _ => 404
+        }
+      }
 
       override def close: Unit = None
 

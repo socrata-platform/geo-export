@@ -2,9 +2,9 @@ package com.socrata.geoexport.config
 
 import com.typesafe.config.ConfigFactory
 
-import com.socrata.thirdparty.curator.{CuratedClientConfig, DiscoveryBrokerConfig}
+import com.socrata.thirdparty.curator.{DiscoveryConfig, CuratedClientConfig, DiscoveryBrokerConfig}
 
-// $COVERAGE-OFF$ 
+// $COVERAGE-OFF$
 object GeoexportConfig {
   private lazy val config = ConfigFactory.load().getConfig("com.socrata")
 

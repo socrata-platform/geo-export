@@ -29,12 +29,22 @@ object KMLMapper {
     kml(layers, writer)
   }
 
+  val defaultStyle = <Style id="defaultStyle">
+      <LineStyle>
+        <width>1.5</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>7dff0000</color>
+      </PolyStyle>
+    </Style>
+
 
   private def kml(layers: Layers, writer: OutputStreamWriter): Unit = {
 
     writer.write("""<?xml version='1.0' encoding='UTF-8'?>
       |<kml xmlns:kml="http://earth.google.com/kml/2.2">
       |  <Document id="featureCollection">""".stripMargin)
+   XML.write(writer, defaultStyle, "UTF-8", false, null)
     layers.foreach(kml(_, writer))
     writer.write("""  </Document>
     </kml>""".stripMargin)
@@ -66,6 +76,7 @@ object KMLMapper {
     }
 
     <Placemark>
+      <styleUrl>#defaultStyle</styleUrl>
       <ExtendedData>
         <SchemaData>
           {attrs.map(kml(_))}
