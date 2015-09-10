@@ -3,12 +3,12 @@ GeoExport
 
 ## Running
 
-### Dependencies
+#### Dependencies
 * You need to have `zookeeper` running.
 * You need to have `soda-fountain` running.
 * `soda-fountain` must be registered in `zookeeper` and responding to requests
 
-### From the console
+#### From the console
 `sbt run`
 
 this will start the service on the default port (7777)
@@ -18,16 +18,16 @@ You shouldn't need anything fancy to test. Just run `sbt test`
 
 ## Using
 
-### Endpoints
+#### Endpoints
 
-##### /version
+##### `/version`
 ```
 GET /version
 ````
 get the version of the service
 
 
-##### /export
+##### `/export`
 ```
 GET /export/{uid_0},{uid_1},...,{uid_n}.{format}
 ```
