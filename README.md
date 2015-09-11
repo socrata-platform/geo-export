@@ -1,6 +1,9 @@
 GeoExport
 ----
 
+## Testing
+You shouldn't need anything fancy to test. Just run `sbt test`
+
 ## Running
 
 #### Dependencies
@@ -12,9 +15,6 @@ GeoExport
 `sbt run`
 
 this will start the service on the default port (7777)
-
-## Testing
-You shouldn't need anything fancy to test. Just run `sbt test`
 
 ## Using
 

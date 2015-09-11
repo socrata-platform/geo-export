@@ -30,8 +30,8 @@ object KMZEncoder extends GeoEncoder {
     }
   }
 
-  def encodes = Set("kmz")
-  def encodedMIME = "application/vnd.google-earth.kmz"
+  def encodes: Set[String] = Set("kmz")
+  def encodedMIME: String = "application/vnd.google-earth.kmz"
 }
 
 

@@ -25,8 +25,6 @@ class Router(export: ExportService) {
   /** Routing table. */
   val routes = Routes(
     Route("/version", VersionService),
-
-    //wrapped services
     Route("/export/{{String!availableFormats}}", export.service _)
   )
 

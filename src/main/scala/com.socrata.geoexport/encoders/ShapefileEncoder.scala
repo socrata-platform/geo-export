@@ -7,9 +7,10 @@ import java.util.zip.{ZipEntry, ZipOutputStream}
 import com.rojoma.simplearm.util._
 import com.socrata.geoexport.encoders.KMLMapper._
 import com.socrata.geoexport.shapefile.intermediates._
+import com.socrata.soql.SoQLPackIterator
 import com.socrata.soql.types._
 import com.vividsolutions.jts.geom._
-import org.geotools.data.DefaultTransaction
+import org.geotools.data.{DataStore, DefaultTransaction}
 import org.geotools.data.shapefile.ShapefileDataStoreFactory
 import org.geotools.data.simple.SimpleFeatureStore
 import org.geotools.feature.`type`._
@@ -24,26 +25,36 @@ import scala.collection.JavaConversions._
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
-
-
 object ShapefileEncoder extends GeoEncoder {
-
   case class FeatureCollectionException(val message: String) extends Exception
 
   type SoQLColumn = (String, SoQLType)
   type IntermediarySchema = Seq[ShapeRep[_ <: SoQLValue]]
   type IntermediaryValues = Seq[(_ <: SoQLValue, ShapeRep[_ <: SoQLValue])]
 
+  val shapefileExt = "shp"
+  val spatialIndexExt = "shx"
+  val dbaseExt = "dbf"
+  val shpFixExt = "fix"
+  val projExt = "prj"
 
-  val shapefileExts = Seq("shp", "shx", "prj", "fix", "dbf")
+  val shapeArchiveExts = Seq(
+    shapefileExt,
+    spatialIndexExt,
+    dbaseExt,
+    shpFixExt,
+    projExt
+  )
   private def getShapefileMinions(shpFile: File): Seq[File] = {
     shpFile.getName.split("\\.") match {
-      case Array(name, ext) => shapefileExts.map { other =>
+      case Array(name, ext) => shapeArchiveExts.map { other =>
         new File(shpFile.getParent, s"${name}.${other}")
       }
     }
   }
 
+  // TODO: make things less gross
+  // scalastyle:off
   private def repFor(col: SoQLColumn): ShapeRep[_ <: SoQLValue] = {
     col match {
       case (name, SoQLPoint) => new PointRep(name)
@@ -70,13 +81,14 @@ object ShapefileEncoder extends GeoEncoder {
       case (name, SoQLObject) => ???
     }
   }
+  // scalastyle:on
 
   private def toIntermediaryReps(schema: Seq[SoQLColumn]) = schema.map(repFor(_))
 
   private def buildFeatureType(schema: IntermediarySchema): SimpleFeatureType = {
-    val builder = new SimpleFeatureTypeBuilder();
+    val builder = new SimpleFeatureTypeBuilder()
 
-    builder.setCRS(DefaultGeographicCRS.WGS84);
+    builder.setCRS(DefaultGeographicCRS.WGS84)
     builder.setName("FeatureType")
 
     val addedNames = schema
@@ -94,6 +106,8 @@ object ShapefileEncoder extends GeoEncoder {
       }
 
       attrNames.zip(bindings).foreach { case (attrName, binding) =>
+        // geotools is dumb
+        // scalastyle:off
         if (classOf[Geometry].isAssignableFrom(binding)) {
           val attrName = new NameImpl("the_geom")
           val geomType = new GeometryTypeImpl(attrName, binding, DefaultGeographicCRS.WGS84, true, false, seqAsJavaList(List()), null, null)
@@ -105,6 +119,7 @@ object ShapefileEncoder extends GeoEncoder {
           val descriptor = new AttributeDescriptorImpl(attrType, new NameImpl(attrName), Int.MinValue, Int.MaxValue, true, null)
           builder.add(descriptor)
         }
+        // scalastyle:on
       }
       attrNames
     }
@@ -112,7 +127,11 @@ object ShapefileEncoder extends GeoEncoder {
     builder.buildFeatureType()
   }
 
-  private def buildFeature(featureId: Int, featureType: SimpleFeatureType, attributes: IntermediaryValues): SimpleFeature = {
+  // scalastyle:off
+  private def buildFeature(
+    featureId: Int,
+    featureType: SimpleFeatureType,
+    attributes: IntermediaryValues): SimpleFeature = {
 
     val id = new FeatureIdImpl(featureId.toString)
 
@@ -122,8 +141,8 @@ object ShapefileEncoder extends GeoEncoder {
         case _ => true
       }
     }
-    //what in the fuck there has to be a better way to do this...
-    //except not because dependent types
+    // what in the actual .... there has to be a better way to do this...
+    // except not because dependent types
     val values = seqAsJavaList(nonIds.flatMap {
         case (value: SoQLPoint, intermediary: PointRep) => intermediary.toAttrValues(value)
         case (value: SoQLMultiPoint, intermediary: MultiPointRep) => intermediary.toAttrValues(value)
@@ -145,6 +164,38 @@ object ShapefileEncoder extends GeoEncoder {
     })
     new SimpleFeatureImpl(values, featureType, id)
   }
+  // scalastyle:on
+  private def addFeatures(layer: SoQLPackIterator, featureType: SimpleFeatureType, file: File,
+                          dataStore: DataStore, reps:Seq[ShapeRep[_ <: SoQLValue]]) = {
+    dataStore.getFeatureSource((dataStore.getTypeNames.toList)(0)) match {
+      case featureStore: SimpleFeatureStore =>
+
+        for { trans <- managed(new DefaultTransaction(file.getName)) } {
+          try {
+
+            featureStore.setTransaction(trans)
+            val collection = new DefaultFeatureCollection()
+            layer.foldLeft(0) { (id, attrs) =>
+
+              val intermediary = attrs.zip(reps)
+              if(!collection.add(buildFeature(id, featureType, intermediary))) {
+                throw new FeatureCollectionException(
+                  s"Failed to add feature ${attrs} to Geotools DefaultFeatureCollection"
+                )
+              }
+              id + 1
+            }
+            log.debug(s"Added ${collection.size()} features to feature collection")
+            featureStore.addFeatures(collection)
+          } finally {
+            trans.commit()
+            dataStore.dispose()
+          }
+        }
+    }
+    file
+  }
+
 
   def encode(layers: Layers, outStream: OutputStream) : Try[OutputStream] = {
 
@@ -152,7 +203,7 @@ object ShapefileEncoder extends GeoEncoder {
       layers.map { layer =>
         val file = new File(s"/tmp/geo_export_${UUID.randomUUID()}.shp")
 
-        //factories, stores, and sources, oh my
+        // factories, stores, and sources, oh my
         val shapefileFactory = new ShapefileDataStoreFactory()
         val meta = Map[String, AnyRef](
           "create spatial index" -> java.lang.Boolean.TRUE,
@@ -160,37 +211,13 @@ object ShapefileEncoder extends GeoEncoder {
         )
         val dataStore = shapefileFactory.createNewDataStore(mapAsJavaMap(meta.asInstanceOf[Map[String, Serializable]]))
 
-        //split the SoQLSchema into a potentially longer ShapeSchema
+        // split the SoQLSchema into a potentially longer ShapeSchema
         val reps = toIntermediaryReps(layer.schema)
-        //build the feature type out of a schema that is representable by a ShapeFile
+        // build the feature type out of a schema that is representable by a ShapeFile
         val featureType = buildFeatureType(reps)
         dataStore.createSchema(featureType)
+        addFeatures(layer, featureType, file, dataStore, reps)
 
-        dataStore.getFeatureSource((dataStore.getTypeNames.toList)(0)) match {
-          case featureStore: SimpleFeatureStore =>
-
-            for { trans <- managed(new DefaultTransaction(file.getName)) } {
-              try {
-
-                featureStore.setTransaction(trans)
-                val collection = new DefaultFeatureCollection()
-                layer.foldLeft(0) { (id, attrs) =>
-
-                  val intermediary = attrs.zip(reps)
-                  if(!collection.add(buildFeature(id, featureType, intermediary))) {
-                    throw new FeatureCollectionException(s"Failed to add feature ${attrs} to Geotools DefaultFeatureCollection")
-                  }
-                  id + 1
-                }
-                log.debug(s"Added ${collection.size()} features to feature collection")
-                featureStore.addFeatures(collection)
-              } finally {
-                trans.commit()
-                dataStore.dispose()
-              }
-            }
-        }
-        file
       }.foldLeft(new ZipOutputStream(outStream)) { (zipStream, shpFile) =>
         getShapefileMinions(shpFile).foreach { file =>
           zipStream.putNextEntry(new ZipEntry(file.getName))
@@ -212,8 +239,8 @@ object ShapefileEncoder extends GeoEncoder {
     }
   }
 
-  def encodes = Set("shp")
-  def encodedMIME = "application/zip"
+  def encodes: Set[String] = Set(shapefileExt)
+  def encodedMIME: String  = "application/zip"
 }
 
 

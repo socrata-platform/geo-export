@@ -15,8 +15,8 @@ import scala.xml.{Node, XML}
 import com.rojoma.simplearm.util._
 import scala.util.{Try, Success, Failure}
 
-//Convert to XML nodes: https://developers.google.com/kml/documentation/kmlreference
-//functions in here should take a value or seq of values and return a single Node
+// Convert to XML nodes: https://developers.google.com/kml/documentation/kmlreference
+// functions in here should take a value or seq of values and return a single Node
 object KMLMapper {
  lazy val log = LoggerFactory.getLogger(getClass)
 
@@ -44,7 +44,10 @@ object KMLMapper {
     writer.write("""<?xml version='1.0' encoding='UTF-8'?>
       |<kml xmlns:kml="http://earth.google.com/kml/2.2">
       |  <Document id="featureCollection">""".stripMargin)
-   XML.write(writer, defaultStyle, "UTF-8", false, null)
+    // no scalastyle. how about avoid using null scala XML
+    // scalastyle:off
+    XML.write(writer, defaultStyle, "UTF-8", false, null)
+    // scalastyle:on
     layers.foreach(kml(_, writer))
     writer.write("""  </Document>
     </kml>""".stripMargin)
@@ -54,7 +57,9 @@ object KMLMapper {
     writer.write("<Folder>")
     collection.foreach { feature: Array[SoQLValue] =>
       val featureXML = kml(collection.schema, feature)
+      // scalastyle:off
       XML.write(writer, featureXML, "UTF-8", false, null)
+      // scalastyle:on
     }
     writer.write("</Folder>")
   }
@@ -89,17 +94,18 @@ object KMLMapper {
   private def geomToKML(simpleData: (String, SoQLType, SoQLValue)): Node = {
     val (_name, _kind, value) = simpleData
     value match {
-      //ugh this is goofy..have to force everything into its canonical type
+      // ugh this is goofy..have to force everything into its canonical type
       case v: SoQLPoint => kml(v.value)
       case l: SoQLLine => kml(l.value)
       case p: SoQLPolygon => kml(p.value)
       case mp: SoQLMultiPoint => kml(mp.value)
       case ml: SoQLMultiLine => kml(ml.value)
       case mp: SoQLMultiPolygon => kml(mp.value)
-      case other => throw UnknownGeometryException(s"${other} is not a serializable geometry")
+      case other: Any => throw UnknownGeometryException(s"${other} is not a serializable geometry")
     }
   }
 
+  // scalastyle:off
   private def kml(simpleData: (String, SoQLType, Any)): Node = {
     val (name, kind, value) = simpleData
     val xmlVal = value match {
@@ -112,12 +118,13 @@ object KMLMapper {
       case SoQLFloatingTimestamp(fts) => SoQLFloatingTimestamp.StringRep(fts)
       case SoQLTime(dt) => SoQLTime.StringRep(dt)
       case SoQLDate(d) => SoQLDate.StringRep(d)
-      case other => other.toString
+      case other: Any => other.toString
     }
     <SimpleData name={name}>{xmlVal}</SimpleData>
   }
+  // scalastyle:on
 
-  ///Shape to KML transforms
+  // Shape to KML transforms
   private def kml(coordinates: Array[Coordinate]): Node = {
     def toStr(c: Coordinate): String = {
       (c.x, c.y, c.z) match {
@@ -143,7 +150,7 @@ object KMLMapper {
       {
         polygon.getNumInteriorRing match {
           case 0 => ""
-          case count =>
+          case count: Int =>
             <innerBoundaryIs>
               {
                 Range(0, count).map { i =>
@@ -186,8 +193,8 @@ object KMLEncoder extends GeoEncoder {
     }
   }
 
-  def encodes = Set("kml")
-  def encodedMIME = "application/vnd.google-earth.kml+xml"
+  def encodes: Set[String] = Set("kml")
+  def encodedMIME: String  = "application/vnd.google-earth.kml+xml"
 }
 
 

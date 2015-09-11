@@ -21,11 +21,17 @@ import org.slf4j.LoggerFactory
 import com.socrata.http.server.implicits._
 import com.socrata.http.server.responses._
 import com.socrata.geoexport.encoders.GeoEncoder
-
+import javax.servlet.http.HttpServletResponse.{
+  SC_OK => ScOk,
+  SC_NOT_FOUND => ScNotFound,
+  SC_BAD_GATEWAY => ScBadGateway
+}
 
 import scala.util.{Failure, Success, Try}
 
 object ExportService {
+  // to appease the scala linter.. ಠ_ಠ
+  val errorKey = "reason"
   val FourbyFour = "[\\w0-9]{4}-[\\w0-9]{4}"
   val encoders = List(KMLEncoder, ShapefileEncoder, KMZEncoder)
   val formats: Set[String] = encoders.flatMap(_.encodes).toSet
@@ -38,7 +44,7 @@ object ExportService {
     layers.partition(isValidFourByFour(_)) match {
       case (_valid, invalid) if invalid.size > 0 =>
         Left(BadRequest ~> Json(JsonUtil.renderJson(Map(
-          "reason" -> s"""${invalid.mkString(", ")} is not a valid dataset identifier"""
+          errorKey -> s"""${invalid.mkString(", ")} is not a valid dataset identifier"""
         ))))
       case (valid, _) =>
         Right(valid)
@@ -55,12 +61,12 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
       log.warn(s"SodaFountain returned an error ${status} ${reason}")
       JsonEncode.toJValue[Map[String, JValue]](Map(
         "status" -> JNumber(status),
-        "reason" -> reason
+        errorKey -> reason
       ))
     })
 
     log.warn("SodaFountain failures, returning a 502")
-    BadGateway ~> Json(JsonEncode.toJValue(Map("reason" -> reasons)))
+    BadGateway ~> Json(JsonEncode.toJValue(Map(errorKey -> reasons)))
   }
 
   private def getUpstreamLayers(fxfs: Seq[String]): Either[HttpResponse, Seq[Response with Closeable]] = {
@@ -76,8 +82,8 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
       Try(sodaClient.execute(reqBuilder)) match {
         case Success(response) =>
           response.resultCode match {
-            case 200 => Right(response)
-            case status =>
+            case ScOk => Right(response)
+            case status: Int =>
               val body = IOUtils.toString(response.inputStream(), UTF_8)
               val err = Try(JsonReader.fromString(body)) match {
                 case Success(js) => js
@@ -90,7 +96,7 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
         case Failure(exc) =>
           exc.printStackTrace()
           log.error(s"Failed to contact SodaFountain: ${exc.getMessage}")
-          Left((404, JsonEncode.toJValue[String](s"${exc.getMessage}")))
+          Left((ScNotFound, JsonEncode.toJValue[String](s"${exc.getMessage}")))
       }
     }.partition(_.isLeft) match {
       case (Seq(), successes)  => Right(successes.map(_.right.get))
@@ -137,7 +143,7 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
         }
       case None =>
         BadRequest ~> Json(JsonUtil.renderJson(Map(
-          "reason" -> s"""${format} is not a valid dataset encoding"""
+          errorKey -> s"""${format} is not a valid dataset encoding"""
         )))
 
     }

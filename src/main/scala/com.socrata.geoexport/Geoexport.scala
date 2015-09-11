@@ -17,7 +17,7 @@ import com.socrata.thirdparty.curator._
 import http.{VersionService, ExportService}
 import config.GeoexportConfig
 
-// $COVERAGE-OFF$ Disabled because ... . .. ...
+// $COVERAGE-OFF$
 object Geoexport extends App {
 
   implicit val shutdownTimeout = Resource.executorShutdownNoTimeout
@@ -37,7 +37,7 @@ object Geoexport extends App {
     upstream <- new UnmanagedDiscoveryBroker(discovery, http).clientFor(GeoexportConfig.upstream)
   } {
 
-    //could wrap this in simple arm stuff but there are more important things in life and this is simple
+    // could wrap this in simple arm stuff but there are more important things in life and this is simple
     val advertisement = new CuratorBroker(
       discovery,
       GeoexportConfig.broker.discovery.address,
@@ -63,4 +63,4 @@ object Geoexport extends App {
     }
   }
 }
-  // $COVERAGE-ON$
+// $COVERAGE-ON$

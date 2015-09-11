@@ -31,16 +31,7 @@ libraryDependencies ++= Seq(
   "org.apache.curator"       % "curator-x-discovery"      % "2.7.0",
   "com.socrata"             %% "soql-pack"                % "0.6.0",
 
-
-
-  "org.geotools"      % "gt-shapefile"      % "12.4",
-  "org.geotools"      % "gt-geojson"        % "12.4",
-  "org.geotools"      % "gt-epsg-hsql"      % "12.4",
-  "org.geotools"      % "gt-epsg-extension" % "12.4",
-  "org.geotools"      % "gt-render"         % "12.4",
-  "org.geotools"      % "gt-xml"            % "12.4",
-  "org.geotools.xsd"  % "gt-xsd-kml"        % "12.4",
-  "org.geotools.xsd"  % "gt-xsd-core"       % "12.4"
+  "org.geotools"      % "gt-shapefile"      % "12.4"
 
 )
 
@@ -58,5 +49,4 @@ testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, TestOptionNoTrac
 // Setup revolver.
 Revolver.settings
 
-// Require full coverage.
-// ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 100
+
