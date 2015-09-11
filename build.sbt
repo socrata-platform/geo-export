@@ -1,4 +1,4 @@
-name := "geoexport"
+name := "geo-export"
 
 resolvers ++= Seq(
   "ecc" at "https://github.com/ElectronicChartCentre/ecc-mvn-repo/raw/master/releases",
