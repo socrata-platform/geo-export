@@ -6,7 +6,8 @@ import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import com.rojoma.simplearm.util._
 import com.socrata.geoexport.encoders.KMLMapper._
-import com.socrata.geoexport.shapefile.intermediates._
+import com.socrata.geoexport.intermediates.shapefile._
+import com.socrata.geoexport.intermediates._
 import com.socrata.soql.SoQLPackIterator
 import com.socrata.soql.types._
 import com.vividsolutions.jts.geom._
@@ -53,37 +54,7 @@ object ShapefileEncoder extends GeoEncoder {
     }
   }
 
-  // TODO: make things less gross
-  // scalastyle:off
-  private def repFor(col: SoQLColumn): ShapeRep[_ <: SoQLValue] = {
-    col match {
-      case (name, SoQLPoint) => new PointRep(name)
-      case (name, SoQLMultiPoint) => new MultiPointRep(name)
-      case (name, SoQLLine) => new LineRep(name)
-      case (name, SoQLMultiLine) => new MultiLineRep(name)
-      case (name, SoQLPolygon) => new PolygonRep(name)
-      case (name, SoQLMultiPolygon) => new MultiPolygonRep(name)
-      case (name, SoQLDate) => new DateRep(name)
-      case (name, SoQLTime) => new TimeRep(name)
-      case (name, SoQLFloatingTimestamp) => new FloatingTimestampRep(name)
-      case (name, SoQLFixedTimestamp) => new FixedTimestampRep(name)
-      case (name, SoQLNumber) => new NumberRep(name)
-      case (name, SoQLText) => new TextRep(name)
-      case (name, SoQLMoney) => new MoneyRep(name)
-      case (name, SoQLBoolean) => new BooleanRep(name)
-      case (name, SoQLVersion) => new VersionRep(name)
-      case (name, SoQLID) => new IDRep(name)
-
-      case (name, SoQLArray) => ???
-      case (name, SoQLDouble) => ???
-      case (name, SoQLJson) => ???
-      case (name, SoQLNull) => ???
-      case (name, SoQLObject) => ???
-    }
-  }
-  // scalastyle:on
-
-  private def toIntermediaryReps(schema: Seq[SoQLColumn]) = schema.map(repFor(_))
+  private def toIntermediaryReps(schema: Seq[SoQLColumn]) = schema.map(ShapeRep.repFor(_, ShapefileRepMapper))
 
   private def buildFeatureType(schema: IntermediarySchema): SimpleFeatureType = {
     val builder = new SimpleFeatureTypeBuilder()
@@ -144,23 +115,7 @@ object ShapefileEncoder extends GeoEncoder {
     // what in the actual .... there has to be a better way to do this...
     // except not because dependent types
     val values = seqAsJavaList(nonIds.flatMap {
-        case (value: SoQLPoint, intermediary: PointRep) => intermediary.toAttrValues(value)
-        case (value: SoQLMultiPoint, intermediary: MultiPointRep) => intermediary.toAttrValues(value)
-        case (value: SoQLLine, intermediary: LineRep) => intermediary.toAttrValues(value)
-        case (value: SoQLMultiLine, intermediary: MultiLineRep) => intermediary.toAttrValues(value)
-        case (value: SoQLPolygon, intermediary: PolygonRep) => intermediary.toAttrValues(value)
-        case (value: SoQLMultiPolygon, intermediary: MultiPolygonRep) => intermediary.toAttrValues(value)
-        case (value: SoQLDate, intermediary: DateRep) => intermediary.toAttrValues(value)
-        case (value: SoQLTime, intermediary: TimeRep) => intermediary.toAttrValues(value)
-        case (value: SoQLFloatingTimestamp, intermediary: FloatingTimestampRep) => intermediary.toAttrValues(value)
-        case (value: SoQLFixedTimestamp, intermediary: FixedTimestampRep) => intermediary.toAttrValues(value)
-        case (value: SoQLNumber, intermediary: NumberRep) => intermediary.toAttrValues(value)
-        case (value: SoQLText, intermediary: TextRep) => intermediary.toAttrValues(value)
-        case (value: SoQLMoney, intermediary: MoneyRep) => intermediary.toAttrValues(value)
-        case (value: SoQLBoolean, intermediary: BooleanRep) => intermediary.toAttrValues(value)
-        case (value: SoQLVersion, intermediary: VersionRep) => intermediary.toAttrValues(value)
-        case (value: SoQLID, intermediary: IDRep) => intermediary.toAttrValues(value)
-        case _ => ???
+      thing => ShapefileRepMapper.toAttr(thing)
     })
     new SimpleFeatureImpl(values, featureType, id)
   }
