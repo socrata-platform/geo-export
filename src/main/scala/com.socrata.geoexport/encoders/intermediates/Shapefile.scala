@@ -24,7 +24,14 @@ abstract class ShapefileRep[T](name: String) extends ShapeRep[T] {
   }
 
   def toAttrNames: Seq[String] = Seq(normalizeName(name))
+}
 
+trait GeoDatum {
+  def isGeometry: Boolean = true
+}
+
+trait DBFDatum {
+  def isGeometry: Boolean = false
 }
 
 trait SplitDatetime {
@@ -35,56 +42,49 @@ trait SplitDatetime {
   }
 }
 
-class PointRep(soqlName: String) extends ShapefileRep[SoQLPoint](soqlName: String) {
+class PointRep(soqlName: String) extends ShapefileRep[SoQLPoint](soqlName: String) with GeoDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[Point])
   def toAttrValues(soql: SoQLPoint): Seq[Object] = Seq(soql.value)
-  def isGeometry = true
 }
 
-class MultiPointRep(soqlName: String) extends ShapefileRep[SoQLMultiPoint](soqlName: String) {
+class MultiPointRep(soqlName: String) extends ShapefileRep[SoQLMultiPoint](soqlName: String) with GeoDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[MultiPoint])
   def toAttrValues(soql: SoQLMultiPoint): Seq[Object] = Seq(soql.value)
-  def isGeometry = true
 }
 
-class LineRep(soqlName: String) extends ShapefileRep[SoQLLine](soqlName: String) {
+class LineRep(soqlName: String) extends ShapefileRep[SoQLLine](soqlName: String) with GeoDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[LineString])
   def toAttrValues(soql: SoQLLine): Seq[Object] = Seq(soql.value)
-  def isGeometry = true
 }
 
-class MultiLineRep(soqlName: String) extends ShapefileRep[SoQLMultiLine](soqlName: String) {
+class MultiLineRep(soqlName: String) extends ShapefileRep[SoQLMultiLine](soqlName: String) with GeoDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[MultiLineString])
   def toAttrValues(soql: SoQLMultiLine): Seq[Object] = Seq(soql.value)
-  def isGeometry = true
 }
 
-class PolygonRep(soqlName: String) extends ShapefileRep[SoQLPolygon](soqlName: String) {
+class PolygonRep(soqlName: String) extends ShapefileRep[SoQLPolygon](soqlName: String) with GeoDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[Polygon])
   def toAttrValues(soql: SoQLPolygon): Seq[Object] = Seq(soql.value)
-  def isGeometry = true
 }
 
-class MultiPolygonRep(soqlName: String) extends ShapefileRep[SoQLMultiPolygon](soqlName: String) {
+class MultiPolygonRep(soqlName: String) extends ShapefileRep[SoQLMultiPolygon](soqlName: String) with GeoDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[MultiPolygon])
   def toAttrValues(soql: SoQLMultiPolygon): Seq[Object] = Seq(soql.value)
-  def isGeometry = true
 }
 
-class DateRep(soqlName: String) extends ShapefileRep[SoQLDate](soqlName: String) {
+class DateRep(soqlName: String) extends ShapefileRep[SoQLDate](soqlName: String) with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[Date])
   def toAttrValues(soql: SoQLDate): Seq[Object] = Seq(soql.value.toDate)
-  def isGeometry = false
 }
 
-class TimeRep(soqlName: String) extends ShapefileRep[SoQLTime](soqlName: String) {
+class TimeRep(soqlName: String) extends ShapefileRep[SoQLTime](soqlName: String) with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[String])
   def toAttrValues(soql: SoQLTime): Seq[Object] = Seq(SoQLTime.StringRep(soql.value))
-  def isGeometry = false
 }
 
+class FloatingTimestampRep(soqlName: String)
+  extends ShapefileRep[SoQLFloatingTimestamp](soqlName: String) with SplitDatetime with DBFDatum {
 
-class FloatingTimestampRep(soqlName: String) extends ShapefileRep[SoQLFloatingTimestamp](soqlName: String) with SplitDatetime {
   override def toAttrNames: Seq[String] = this.splitNames(soqlName, normalizeName)
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[Date], classOf[String])
   def toAttrValues(soql: SoQLFloatingTimestamp): Seq[Object] = {
@@ -92,10 +92,11 @@ class FloatingTimestampRep(soqlName: String) extends ShapefileRep[SoQLFloatingTi
     val time = SoQLTime.StringRep(soql.value.toLocalTime)
     Seq(date, time)
   }
-  def isGeometry = false
 }
 
-class FixedTimestampRep(soqlName: String) extends ShapefileRep[SoQLFixedTimestamp](soqlName: String) with SplitDatetime {
+class FixedTimestampRep(soqlName: String)
+  extends ShapefileRep[SoQLFixedTimestamp](soqlName: String) with SplitDatetime with DBFDatum {
+
   override def toAttrNames: Seq[String] = this.splitNames(soqlName, normalizeName)
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[Date], classOf[String])
   def toAttrValues(soql: SoQLFixedTimestamp): Seq[Object] = {
@@ -104,71 +105,62 @@ class FixedTimestampRep(soqlName: String) extends ShapefileRep[SoQLFixedTimestam
     val time = SoQLTime.StringRep(utc.toLocalTime)
     Seq(date, time)
   }
-  def isGeometry = false
 }
 
-class NumberRep(soqlName: String) extends ShapefileRep[SoQLNumber](soqlName: String) {
+class NumberRep(soqlName: String) extends ShapefileRep[SoQLNumber](soqlName: String) with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[BigDecimal])
   def toAttrValues(soql: SoQLNumber): Seq[Object] = Seq(soql.value)
-  def isGeometry = false
 }
 
-class TextRep(soqlName: String) extends ShapefileRep[SoQLText](soqlName: String) {
+class TextRep(soqlName: String) extends ShapefileRep[SoQLText](soqlName: String) with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[String])
   def toAttrValues(soql: SoQLText): Seq[Object] = Seq(soql.value)
-  def isGeometry = false
 }
 
-class MoneyRep(soqlName: String) extends ShapefileRep[SoQLMoney](soqlName: String) {
+class MoneyRep(soqlName: String) extends ShapefileRep[SoQLMoney](soqlName: String) with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[BigDecimal])
   def toAttrValues(soql: SoQLMoney): Seq[Object] = Seq(soql.value)
-  def isGeometry = false
 }
 
-class BooleanRep(soqlName: String) extends ShapefileRep[SoQLBoolean](soqlName: String) {
+class BooleanRep(soqlName: String) extends ShapefileRep[SoQLBoolean](soqlName: String) with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[java.lang.Boolean])
   def toAttrValues(soql: SoQLBoolean): Seq[Object] = Seq(soql.value: java.lang.Boolean)
-  def isGeometry = false
 }
 
 // These are both Longs, but you can't represent a Long this large in a DBF,
 // so they'll need to be strings
-class VersionRep(soqlName: String) extends ShapefileRep[SoQLVersion](soqlName: String) with SocrataMetadataRep {
+class VersionRep(soqlName: String)
+  extends ShapefileRep[SoQLVersion](soqlName: String) with SocrataMetadataRep with DBFDatum {
+
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[java.lang.String])
   def toAttrValues(soql: SoQLVersion): Seq[Object] = Seq(soql.value.toString)
-  override def normalizeName(name: String) = super.normalizeName(this.normalizeIdLike(name))
-  def isGeometry = false
+  override protected def normalizeName(name: String) = super.normalizeName(this.normalizeIdLike(name))
 }
 
-class IDRep(soqlName: String) extends ShapefileRep[SoQLID](soqlName: String) with SocrataMetadataRep {
+class IDRep(soqlName: String) extends ShapefileRep[SoQLID](soqlName: String) with SocrataMetadataRep with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[java.lang.String])
   def toAttrValues(soql: SoQLID): Seq[Object] = Seq(soql.value.toString)
-  override def normalizeName(name: String) = super.normalizeName(this.normalizeIdLike(name))
-  def isGeometry = false
+  override protected def normalizeName(name: String) = super.normalizeName(this.normalizeIdLike(name))
 }
-class DoubleRep(soqlName: String) extends ShapefileRep[SoQLDouble](soqlName: String) {
+class DoubleRep(soqlName: String) extends ShapefileRep[SoQLDouble](soqlName: String) with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[java.lang.Double])
   def toAttrValues(soql: SoQLDouble): Seq[Object] = Seq(soql.value: java.lang.Double)
-  def isGeometry = false
 }
 
-//Because there is no way to encode arbitrary types with a rigid schema that DBF enforces,
-//just serialize complex types to strings in JSON form. KML gets away with this because SimpleDatums
-//can be different
-class ArrayRep(soqlName: String) extends ShapefileRep[SoQLArray](soqlName: String) {
+// Because there is no way to encode arbitrary types with a rigid schema that DBF enforces,
+// just serialize complex types to strings in JSON form. KML gets away with this because SimpleDatums
+// can be different
+class ArrayRep(soqlName: String) extends ShapefileRep[SoQLArray](soqlName: String) with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[java.lang.String])
   def toAttrValues(soql: SoQLArray): Seq[Object] = Seq(soql.value.toString)
-  def isGeometry = false
 }
-class JSONRep(soqlName: String) extends ShapefileRep[SoQLJson](soqlName: String) {
+class JSONRep(soqlName: String) extends ShapefileRep[SoQLJson](soqlName: String) with DBFDatum {
   def toAttrValues(soql: SoQLJson): Seq[Object] = Seq(soql.value.toString)
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[String])
-  def isGeometry = false
 }
-class ObjectRep(soqlName: String) extends ShapefileRep[SoQLObject](soqlName: String) {
+class ObjectRep(soqlName: String) extends ShapefileRep[SoQLObject](soqlName: String) with DBFDatum {
   def toAttrValues(soql: SoQLObject): Seq[Object] = Seq(soql.value.toString)
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[String])
-  def isGeometry = false
 }
 
 /**
@@ -195,27 +187,27 @@ class ObjectRep(soqlName: String) extends ShapefileRep[SoQLObject](soqlName: Str
   schema, and then flatten the result into something that we can put in a DBF.
 */
 object ShapefileRepMapper extends RepMapper {
-  def forPoint(name: String) =              new PointRep(name)
-  def forMultiPoint(name: String) =         new MultiPointRep(name)
-  def forLine(name: String) =               new LineRep(name)
-  def forMultiLine(name: String) =          new MultiLineRep(name)
-  def forPolygon(name: String) =            new PolygonRep(name)
-  def forMultiPolygon(name: String) =       new MultiPolygonRep(name)
-  def forDate(name: String) =               new DateRep(name)
-  def forTime(name: String) =               new TimeRep(name)
-  def forFloatingTimestamp(name: String) =  new FloatingTimestampRep(name)
-  def forFixedTimestamp(name: String) =     new FixedTimestampRep(name)
-  def forNumber(name: String) =             new NumberRep(name)
-  def forText(name: String) =               new TextRep(name)
-  def forMoney(name: String) =              new MoneyRep(name)
-  def forBoolean(name: String) =            new BooleanRep(name)
-  def forVersion(name: String) =            new VersionRep(name)
-  def forID(name: String) =                 new IDRep(name)
-  def forArray(name: String) =              new ArrayRep(name)
-  def forDouble(name: String) =             new DoubleRep(name)
-  def forJson(name: String) =               new JSONRep(name)
-  def forObject(name: String) =             new ObjectRep(name)
-
+  def forPoint(name: String): PointRep =                            new PointRep(name)
+  def forMultiPoint(name: String): MultiPointRep =                  new MultiPointRep(name)
+  def forLine(name: String): LineRep =                              new LineRep(name)
+  def forMultiLine(name: String): MultiLineRep =                    new MultiLineRep(name)
+  def forPolygon(name: String): PolygonRep =                        new PolygonRep(name)
+  def forMultiPolygon(name: String): MultiPolygonRep =              new MultiPolygonRep(name)
+  def forDate(name: String): DateRep =                              new DateRep(name)
+  def forTime(name: String): TimeRep =                              new TimeRep(name)
+  def forFloatingTimestamp(name: String): FloatingTimestampRep =    new FloatingTimestampRep(name)
+  def forFixedTimestamp(name: String): FixedTimestampRep =          new FixedTimestampRep(name)
+  def forNumber(name: String): NumberRep =                          new NumberRep(name)
+  def forText(name: String): TextRep =                              new TextRep(name)
+  def forMoney(name: String): MoneyRep =                            new MoneyRep(name)
+  def forBoolean(name: String): BooleanRep =                        new BooleanRep(name)
+  def forVersion(name: String): VersionRep =                        new VersionRep(name)
+  def forID(name: String): IDRep =                                  new IDRep(name)
+  def forArray(name: String): ArrayRep =                            new ArrayRep(name)
+  def forDouble(name: String): DoubleRep =                          new DoubleRep(name)
+  def forJson(name: String): JSONRep =                              new JSONRep(name)
+  def forObject(name: String): ObjectRep =                          new ObjectRep(name)
+  // scalastyle:off
   def toAttr(thing: (SoQLValue, ShapeRep[_ <: SoQLValue])) : Seq[Object] = thing match {
     case (value: SoQLPoint, intermediary: PointRep) => intermediary.toAttrValues(value)
     case (value: SoQLMultiPoint, intermediary: MultiPointRep) => intermediary.toAttrValues(value)
@@ -237,7 +229,8 @@ object ShapefileRepMapper extends RepMapper {
     case (value: SoQLDouble, intermediary: DoubleRep) => intermediary.toAttrValues(value)
     case (value: SoQLJson, intermediary: JSONRep) => intermediary.toAttrValues(value)
     case (value: SoQLObject, intermediary: ObjectRep) => intermediary.toAttrValues(value)
-    case _ => ???
+    case unknown: Any => throw new UnknownSoQLTypeException("Unknown SoQLType ${unknown}")
+    // scalastyle:on
   }
 }
 

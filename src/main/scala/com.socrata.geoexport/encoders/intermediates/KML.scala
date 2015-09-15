@@ -17,7 +17,7 @@ abstract class KMLRep[T](soqlName: String) extends ShapeRep[T] {
     name
   }
 
-  def toAttrBindings = throw new KMLTranslationException("KML doesn't use bindings.")
+  def toAttrBindings: Seq[Class[_]] = throw new KMLTranslationException("KML doesn't use bindings.")
   def toAttrNames: Seq[String] = Seq(normalizeName(soqlName))
 }
 
@@ -73,10 +73,9 @@ trait GeoDatum {
     </MultiGeometry>
   }
 
-  def isGeometry = true
+  def isGeometry: Boolean = true
 }
 
-//At the moment, none of the KML elements split data so..
 trait SimpleDatum {
   def asSimpleData(item: String): Seq[Node] = {
     toAttrNames.zip(List(item)).map { case (name, value) =>
@@ -84,12 +83,12 @@ trait SimpleDatum {
     }
   }
   def toAttrNames: Seq[String]
-  def isGeometry = false
+  def isGeometry: Boolean = false
 }
 
 trait ComplexDatum extends SimpleDatum {
   def fromJValue(soqlName: String, v: JValue): Seq[Node] = v match {
-    case n: JNull => asSimpleData(null)
+    case n: JNull => asSimpleData(null) // scalastyle:ignore
     case JBoolean(b) => asSimpleData(b.booleanValue.toString)
     case JString(s) => asSimpleData(s)
     case n: JNumber => asSimpleData(n.toString)
@@ -150,7 +149,7 @@ class NumberRep(soqlName: String) extends KMLRep[SoQLNumber](soqlName) with Simp
   def toAttrValues(soql: SoQLNumber): Seq[Any] = asSimpleData(soql.value.toString)
 }
 
-//KML hardcodes name and description columns as distinct from simpldata columns
+// KML hardcodes name and description columns as distinct from simpldata columns
 class TextRep(soqlName: String) extends KMLRep[SoQLText](soqlName) with SimpleDatum {
   def toAttrValues(soql: SoQLText): Seq[Any] = {
     toAttrNames.head.toLowerCase match {
@@ -187,7 +186,7 @@ class ArrayRep(soqlName: String) extends KMLRep[SoQLArray](soqlName) with Simple
   def toAttrValues(soql: SoQLArray): Seq[Any] = {
     asSimpleData(soql.value.toArray.map {
       case JString(s) => s
-      case other => other
+      case other: Any => other
     }.mkString(", "))
   }
 }
@@ -218,27 +217,27 @@ class ObjectRep(soqlName: String) extends KMLRep[SoQLObject](soqlName) with Comp
   Maps all the SoQLColumns to intermediate columns
 */
 object KMLRepMapper extends RepMapper {
-  def forPoint(name: String) =              new PointRep(name)
-  def forMultiPoint(name: String) =         new MultiPointRep(name)
-  def forLine(name: String) =               new LineRep(name)
-  def forMultiLine(name: String) =          new MultiLineRep(name)
-  def forPolygon(name: String) =            new PolygonRep(name)
-  def forMultiPolygon(name: String) =       new MultiPolygonRep(name)
-  def forDate(name: String) =               new DateRep(name)
-  def forTime(name: String) =               new TimeRep(name)
-  def forFloatingTimestamp(name: String) =  new FloatingTimestampRep(name)
-  def forFixedTimestamp(name: String) =     new FixedTimestampRep(name)
-  def forNumber(name: String) =             new NumberRep(name)
-  def forText(name: String) =               new TextRep(name)
-  def forMoney(name: String) =              new MoneyRep(name)
-  def forBoolean(name: String) =            new BooleanRep(name)
-  def forVersion(name: String) =            new VersionRep(name)
-  def forID(name: String) =                 new IDRep(name)
-  def forArray(name: String) =              new ArrayRep(name)
-  def forDouble(name: String) =             new DoubleRep(name)
-  def forJson(name: String) =               new JSONRep(name)
-  def forObject(name: String) =             new ObjectRep(name)
-
+  def forPoint(name: String): PointRep =                          new PointRep(name)
+  def forMultiPoint(name: String): MultiPointRep =                new MultiPointRep(name)
+  def forLine(name: String): LineRep =                            new LineRep(name)
+  def forMultiLine(name: String): MultiLineRep =                  new MultiLineRep(name)
+  def forPolygon(name: String): PolygonRep =                      new PolygonRep(name)
+  def forMultiPolygon(name: String): MultiPolygonRep =            new MultiPolygonRep(name)
+  def forDate(name: String): DateRep =                            new DateRep(name)
+  def forTime(name: String): TimeRep =                            new TimeRep(name)
+  def forFloatingTimestamp(name: String): FloatingTimestampRep =  new FloatingTimestampRep(name)
+  def forFixedTimestamp(name: String): FixedTimestampRep =        new FixedTimestampRep(name)
+  def forNumber(name: String): NumberRep =                        new NumberRep(name)
+  def forText(name: String): TextRep =                            new TextRep(name)
+  def forMoney(name: String): MoneyRep =                          new MoneyRep(name)
+  def forBoolean(name: String): BooleanRep =                      new BooleanRep(name)
+  def forVersion(name: String): VersionRep =                      new VersionRep(name)
+  def forID(name: String): IDRep =                                new IDRep(name)
+  def forArray(name: String): ArrayRep =                          new ArrayRep(name)
+  def forDouble(name: String): DoubleRep =                        new DoubleRep(name)
+  def forJson(name: String): JSONRep =                            new JSONRep(name)
+  def forObject(name: String): ObjectRep =                        new ObjectRep(name)
+  // scalastyle:off
   def toAttr(thing: (SoQLValue, ShapeRep[_ <: SoQLValue])) : Seq[Any] = thing match {
     case (value: SoQLPoint, intermediary: PointRep) => intermediary.toAttrValues(value)
     case (value: SoQLMultiPoint, intermediary: MultiPointRep) => intermediary.toAttrValues(value)
@@ -260,7 +259,8 @@ object KMLRepMapper extends RepMapper {
     case (value: SoQLDouble, intermediary: DoubleRep) => intermediary.toAttrValues(value)
     case (value: SoQLJson, intermediary: JSONRep) => intermediary.toAttrValues(value)
     case (value: SoQLObject, intermediary: ObjectRep) => intermediary.toAttrValues(value)
-    case unknown => throw new UnknownSoQLTypeException(s"Unknown SoQL type ${unknown}")
+    case unknown: Any => throw new UnknownSoQLTypeException(s"Unknown SoQL type ${unknown}")
   }
+  // scalastyle:on
 }
 

@@ -51,6 +51,7 @@ trait RepMapper {
 
 
 object ShapeRep {
+  // scalastyle:off
   def repFor(col: (String, SoQLType), repMapper: RepMapper): ShapeRep[_ <: SoQLValue] = col match {
     case (name, SoQLPoint) => repMapper.forPoint(name)
     case (name, SoQLMultiPoint) => repMapper.forMultiPoint(name)
@@ -72,10 +73,11 @@ object ShapeRep {
     case (name, SoQLDouble) => repMapper.forDouble(name)
     case (name, SoQLJson) => repMapper.forJson(name)
     case (name, SoQLObject) => repMapper.forObject(name)
-    case unknown => throw new UnknownSoQLTypeException("Unknown SoQLType ${unknown}")
+    case unknown: Any => throw new UnknownSoQLTypeException("Unknown SoQLType ${unknown}")
   }
+  // scalastyle:on
 }
 
 trait SocrataMetadataRep {
-  def normalizeIdLike(name: String) = name.replaceFirst("^:", "")
+  protected def normalizeIdLike(name: String) = name.replaceFirst("^:", "")
 }
