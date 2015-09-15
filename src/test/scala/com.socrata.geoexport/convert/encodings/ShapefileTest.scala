@@ -5,7 +5,9 @@ import java.math.BigDecimal
 import java.net.URL
 import java.util.{Date, UUID}
 import java.util.zip.{ZipEntry, ZipFile}
-
+import com.rojoma.json.v3.ast._
+import com.rojoma.json.v3.io.JsonReader
+import com.rojoma.json.v3.util.JsonUtil
 import com.socrata.soql.types._
 import com.vividsolutions.jts.geom._
 import org.apache.commons.io.IOUtils
@@ -42,7 +44,14 @@ class ShapefileTest extends TestBase {
     ("a_fts", SoQLFloatingTimestamp),
     ("a_time", SoQLTime),
     ("a_date", SoQLDate),
-    ("a_money", SoQLMoney)
+    ("a_money", SoQLMoney),
+    (":an_id", SoQLID),
+    (":a_version", SoQLVersion),
+    ("a_double", SoQLDouble),
+    ("a_num_arr", SoQLArray),
+    ("a_str_arr", SoQLArray),
+    ("a_json", SoQLJson),
+    ("an_object", SoQLObject)
   )
 
   val simpleRows = List(
@@ -53,7 +62,15 @@ class ShapefileTest extends TestBase {
     SoQLFloatingTimestamp(ldt.plusHours(1)),
     SoQLTime(ldt.toLocalTime),
     SoQLDate(ldt.toLocalDate),
-    SoQLMoney((new BigDecimal(42.00)))
+    SoQLMoney((new BigDecimal(42.00))),
+    SoQLID(42),
+    SoQLVersion(32),
+    SoQLDouble(42.00),
+    SoQLArray(JArray(Seq(JNumber(1), JNumber(2), JNumber(3)))),
+    SoQLArray(JArray(Seq(JString("a"), JString("b"), JString("c")))),
+    SoQLJson(JsonReader.fromString("""{"something": "else", "a_json_number": 1, "nested": {"child": "hello"}}""")),
+    SoQLObject(JsonReader.fromString("""{"something": "wow", "an_object_number": 7, "nested": {"child": "hi"}}""").asInstanceOf[JObject])
+
   )
 
   private def convertShapefile(layers: List[InputStream]): File = {
@@ -90,6 +107,22 @@ class ShapefileTest extends TestBase {
     feature.getAttribute("a_date") must be(ldt.withTime(0, 0, 0, 0).toDate)
 
     feature.getAttribute("a_money") must be(42.00)
+
+    //this is a string because it's too big to represent in a DBF
+    feature.getAttribute("a_version") must be("32")
+
+    feature.getAttribute("a_double") must be(42.0)
+
+    feature.getAttribute("a_num_arr") must be("[ 1, 2, 3 ]")
+    feature.getAttribute("a_str_arr") must be("""[ "a", "b", "c" ]""")
+
+    val actualJs = feature.getAttribute("a_json").asInstanceOf[String].replaceAll("\\s", "")
+    val expectedJs = """{"something": "else", "a_json_number": 1, "nested": {"child": "hello"}}""".replaceAll("\\s", "")
+    actualJs must be(expectedJs)
+
+    val actualObj = feature.getAttribute("an_object").asInstanceOf[String].replaceAll("\\s", "")
+    val expectedObj = """{"something": "wow", "an_object_number": 7, "nested": {"child": "hi"}}""".replaceAll("\\s", "")
+    actualObj must be(expectedObj)
   }
 
 
@@ -216,7 +249,6 @@ class ShapefileTest extends TestBase {
 
   test("can convert a stream of a MultiPolygon soqlpack to shp") {
     val expectedPolys = wkt("MULTIPOLYGON (((30 20, 10 40, 45 40, 30 20)), ((15 5, 5 10, 10 20, 40 10, 15 5)))").asInstanceOf[MultiPolygon]
-
     val soqlSchema = simpleSchema :+ (("a_multipoly", SoQLMultiPolygon))
     val items = simpleRows :+ SoQLMultiPolygon(expectedPolys)
     val packed = pack(soqlSchema, List(items.toArray))
@@ -247,8 +279,6 @@ class ShapefileTest extends TestBase {
     val soqlPolySchema = simpleSchema :+ (("a_multipoly", SoQLMultiPolygon))
     val polyRows = simpleRows :+ SoQLMultiPolygon(expectedPolys)
     val packedPolys = pack(soqlPolySchema, List(polyRows.toArray))
-
-
 
     val layers = List(packedMultipoints, packedPolys)
     val archive = convertShapefile(layers)

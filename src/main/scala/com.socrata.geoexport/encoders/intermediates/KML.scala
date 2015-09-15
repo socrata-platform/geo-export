@@ -10,7 +10,6 @@ import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.DateTimeFormat
 import scala.xml.Node
 
-case class UnknownSoQLTypeException(message: String) extends Exception
 case class KMLTranslationException(message: String) extends Exception
 
 abstract class KMLRep[T](soqlName: String) extends ShapeRep[T] {
@@ -94,11 +93,16 @@ trait ComplexDatum extends SimpleDatum {
     case JBoolean(b) => asSimpleData(b.booleanValue.toString)
     case JString(s) => asSimpleData(s)
     case n: JNumber => asSimpleData(n.toString)
-    case JArray(arr) => ???
-    case JObject(fields) => fields.flatMap { case (name, value) =>
-      val childName = s"${soqlName}.${name}"
-      new JSONRep(childName).fromJValue(childName, value)
-    }.toSeq
+    case JArray(arr) =>
+      arr.zipWithIndex.flatMap { case (elem, index) =>
+        val childName = s"${soqlName}.${index}"
+        new JSONRep(childName).fromJValue(childName, elem)
+      }
+    case JObject(fields) =>
+      fields.flatMap { case (name, value) =>
+        val childName = s"${soqlName}.${name}"
+        new JSONRep(childName).fromJValue(childName, value)
+      }.toSeq
   }
 }
 
@@ -165,20 +169,14 @@ class BooleanRep(soqlName: String) extends KMLRep[SoQLBoolean](soqlName) with Si
   def toAttrValues(soql: SoQLBoolean): Seq[Any] = asSimpleData(soql.value.toString)
 }
 
-class VersionRep(soqlName: String) extends KMLRep[SoQLVersion](soqlName) with SimpleDatum {
+class VersionRep(soqlName: String) extends KMLRep[SoQLVersion](soqlName) with SimpleDatum with SocrataMetadataRep {
   def toAttrValues(soql: SoQLVersion): Seq[Any] = asSimpleData(soql.value.toString)
-
-  override protected def normalizeName(name: String) = {
-    name.replaceFirst("^:", "")
-  }
+  override protected def normalizeName(name: String) = normalizeIdLike(name)
 }
 
-class IDRep(soqlName: String) extends KMLRep[SoQLID](soqlName) with SimpleDatum {
+class IDRep(soqlName: String) extends KMLRep[SoQLID](soqlName) with SimpleDatum with SocrataMetadataRep {
   def toAttrValues(soql: SoQLID): Seq[Any] = asSimpleData(soql.value.toString)
-
-  override protected def normalizeName(name: String) = {
-    name.replaceFirst("^:", "")
-  }
+  override protected def normalizeName(name: String) = normalizeIdLike(name)
 }
 
 class DoubleRep(soqlName: String) extends KMLRep[SoQLDouble](soqlName) with SimpleDatum {
@@ -194,6 +192,20 @@ class ArrayRep(soqlName: String) extends KMLRep[SoQLArray](soqlName) with Simple
   }
 }
 
+/**
+  Complex intermediate mappings.
+
+  If we have
+  ```
+    {"i": "love", {"xml": "jk"}}
+  ```
+
+  That would get mapped and flattened to
+  ```
+    <SimpleData name="i">love</SimpleData>
+    <SimpleData name="i.xml">jk</SimpleData>
+  ```
+*/
 class JSONRep(soqlName: String) extends KMLRep[SoQLJson](soqlName) with ComplexDatum {
   def toAttrValues(soql: SoQLJson): Seq[Any] = fromJValue(soqlName, soql.value)
 }
@@ -202,6 +214,9 @@ class ObjectRep(soqlName: String) extends KMLRep[SoQLObject](soqlName) with Comp
   def toAttrValues(soql: SoQLObject): Seq[Any] = fromJValue(soqlName, soql.value)
 }
 
+/**
+  Maps all the SoQLColumns to intermediate columns
+*/
 object KMLRepMapper extends RepMapper {
   def forPoint(name: String) =              new PointRep(name)
   def forMultiPoint(name: String) =         new MultiPointRep(name)
@@ -224,7 +239,6 @@ object KMLRepMapper extends RepMapper {
   def forJson(name: String) =               new JSONRep(name)
   def forObject(name: String) =             new ObjectRep(name)
 
-
   def toAttr(thing: (SoQLValue, ShapeRep[_ <: SoQLValue])) : Seq[Any] = thing match {
     case (value: SoQLPoint, intermediary: PointRep) => intermediary.toAttrValues(value)
     case (value: SoQLMultiPoint, intermediary: MultiPointRep) => intermediary.toAttrValues(value)
@@ -246,7 +260,7 @@ object KMLRepMapper extends RepMapper {
     case (value: SoQLDouble, intermediary: DoubleRep) => intermediary.toAttrValues(value)
     case (value: SoQLJson, intermediary: JSONRep) => intermediary.toAttrValues(value)
     case (value: SoQLObject, intermediary: ObjectRep) => intermediary.toAttrValues(value)
-    case wat => throw new UnknownSoQLTypeException(s"Unknown SoQL type ${wat}")
+    case unknown => throw new UnknownSoQLTypeException(s"Unknown SoQL type ${unknown}")
   }
 }
 

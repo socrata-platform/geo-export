@@ -5,14 +5,23 @@ import com.vividsolutions.jts.geom._
 import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.DateTimeFormat
 
+/**
+  the object ShapeRep is what's used by the encoder to translate formats.
+
+  ShapeRep the abstract class is implemented for a specific export format
+  for each SoQLType which will translate names/values to those representable
+  by the export format
+
+  RepMapper is a gross workaround for the lack of dependents typing i guess.
+*/
+
+case class UnknownSoQLTypeException(message: String) extends Exception
 
 abstract class ShapeRep[T] {
   def toAttrNames: Seq[String]
   def toAttrBindings: Seq[Class[_]]
   def toAttrValues(soql: T): Seq[Any]
   def isGeometry: Boolean
-  val timeFormat = "HH:mm:ss.SSS"
-
 }
 
 trait RepMapper {
@@ -63,20 +72,10 @@ object ShapeRep {
     case (name, SoQLDouble) => repMapper.forDouble(name)
     case (name, SoQLJson) => repMapper.forJson(name)
     case (name, SoQLObject) => repMapper.forObject(name)
-    case _ => ???
+    case unknown => throw new UnknownSoQLTypeException("Unknown SoQLType ${unknown}")
   }
 }
 
-object TimeishRep {
-  val timeFormat = "HH:mm:ss.SSS"
-}
-
-trait StringTimeRep {
-
-  def toAttrValues(soql: SoQLTime): Seq[Object] = {
-    val utc = soql.value.toDateTimeToday(DateTimeZone.UTC)
-    val fmt = DateTimeFormat.forPattern(TimeishRep.timeFormat)
-    val time = fmt.print(utc)
-    Seq(time)
-  }
+trait SocrataMetadataRep {
+  def normalizeIdLike(name: String) = name.replaceFirst("^:", "")
 }

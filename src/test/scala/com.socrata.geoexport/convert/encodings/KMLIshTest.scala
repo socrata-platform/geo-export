@@ -40,7 +40,8 @@ class KMLIshTest extends TestBase {
     ("description", SoQLText),
     ("a_json", SoQLJson),
     ("an_object", SoQLObject)
-
+    //TODO: nested json crashes SoQLPack
+    // ("a_nested_complex_json", SoQLArray)
   )
 
   val simpleRows = List(
@@ -62,6 +63,8 @@ class KMLIshTest extends TestBase {
     SoQLJson(JsonReader.fromString("""{"something": "else", "a_json_number": 1, "nested": {"child": "hello"}}""")),
     SoQLObject(JsonReader.fromString("""{"something": "wow", "an_object_number": 7, "nested": {"child": "hi"}}""").asInstanceOf[JObject])
 
+    //TODO: this test crashes SoQLPack
+    // SoQLJson(JsonReader.fromString("""{"something": "else", "a_json_number": 1, "nested": {"arr": [1, 2, 3]}}"""))
 
   )
 

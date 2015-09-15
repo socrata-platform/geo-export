@@ -1,6 +1,7 @@
 package com.socrata.geoexport.intermediates.shapefile
 
 import java.util.Date
+import com.rojoma.json.v3.ast._
 import com.socrata.geoexport.intermediates.ShapeRep
 import com.socrata.soql.types._
 import com.vividsolutions.jts.geom._
@@ -9,7 +10,12 @@ import com.socrata.geoexport.intermediates._
 import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.DateTimeFormat
 
+/**
+  Here be the intermediate representations used to map SoQLColumns and SoQLValues
+  into things that we can store in a shapefile/dbf by way of geotools
 
+  See the note above ShapefileRepMapper for why this stuff needs to exist
+*/
 abstract class ShapefileRep[T](name: String) extends ShapeRep[T] {
   val maxDBFColumnLength = 10
 
@@ -71,8 +77,9 @@ class DateRep(soqlName: String) extends ShapefileRep[SoQLDate](soqlName: String)
   def isGeometry = false
 }
 
-class TimeRep(soqlName: String) extends ShapefileRep[SoQLTime](soqlName: String) with StringTimeRep {
+class TimeRep(soqlName: String) extends ShapefileRep[SoQLTime](soqlName: String) {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[String])
+  def toAttrValues(soql: SoQLTime): Seq[Object] = Seq(SoQLTime.StringRep(soql.value))
   def isGeometry = false
 }
 
@@ -82,9 +89,7 @@ class FloatingTimestampRep(soqlName: String) extends ShapefileRep[SoQLFloatingTi
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[Date], classOf[String])
   def toAttrValues(soql: SoQLFloatingTimestamp): Seq[Object] = {
     val date = soql.value.toDate()
-    val fmt = DateTimeFormat.forPattern(this.timeFormat)
-    val time = fmt.print(soql.value)
-
+    val time = SoQLTime.StringRep(soql.value.toLocalTime)
     Seq(date, time)
   }
   def isGeometry = false
@@ -96,8 +101,7 @@ class FixedTimestampRep(soqlName: String) extends ShapefileRep[SoQLFixedTimestam
   def toAttrValues(soql: SoQLFixedTimestamp): Seq[Object] = {
     val utc = new DateTime(soql.value, DateTimeZone.UTC)
     val date = utc.toDate()
-    val fmt = DateTimeFormat.forPattern(this.timeFormat)
-    val time = fmt.print(utc)
+    val time = SoQLTime.StringRep(utc.toLocalTime)
     Seq(date, time)
   }
   def isGeometry = false
@@ -129,20 +133,67 @@ class BooleanRep(soqlName: String) extends ShapefileRep[SoQLBoolean](soqlName: S
 
 // These are both Longs, but you can't represent a Long this large in a DBF,
 // so they'll need to be strings
-class VersionRep(soqlName: String) extends ShapefileRep[SoQLVersion](soqlName: String) {
+class VersionRep(soqlName: String) extends ShapefileRep[SoQLVersion](soqlName: String) with SocrataMetadataRep {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[java.lang.String])
   def toAttrValues(soql: SoQLVersion): Seq[Object] = Seq(soql.value.toString)
+  override def normalizeName(name: String) = super.normalizeName(this.normalizeIdLike(name))
   def isGeometry = false
 }
 
-class IDRep(soqlName: String) extends ShapefileRep[SoQLID](soqlName: String) {
+class IDRep(soqlName: String) extends ShapefileRep[SoQLID](soqlName: String) with SocrataMetadataRep {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[java.lang.String])
   def toAttrValues(soql: SoQLID): Seq[Object] = Seq(soql.value.toString)
+  override def normalizeName(name: String) = super.normalizeName(this.normalizeIdLike(name))
+  def isGeometry = false
+}
+class DoubleRep(soqlName: String) extends ShapefileRep[SoQLDouble](soqlName: String) {
+  def toAttrBindings: Seq[Class[_]] = Seq(classOf[java.lang.Double])
+  def toAttrValues(soql: SoQLDouble): Seq[Object] = Seq(soql.value: java.lang.Double)
   def isGeometry = false
 }
 
+//Because there is no way to encode arbitrary types with a rigid schema that DBF enforces,
+//just serialize complex types to strings in JSON form. KML gets away with this because SimpleDatums
+//can be different
+class ArrayRep(soqlName: String) extends ShapefileRep[SoQLArray](soqlName: String) {
+  def toAttrBindings: Seq[Class[_]] = Seq(classOf[java.lang.String])
+  def toAttrValues(soql: SoQLArray): Seq[Object] = Seq(soql.value.toString)
+  def isGeometry = false
+}
+class JSONRep(soqlName: String) extends ShapefileRep[SoQLJson](soqlName: String) {
+  def toAttrValues(soql: SoQLJson): Seq[Object] = Seq(soql.value.toString)
+  def toAttrBindings: Seq[Class[_]] = Seq(classOf[String])
+  def isGeometry = false
+}
+class ObjectRep(soqlName: String) extends ShapefileRep[SoQLObject](soqlName: String) {
+  def toAttrValues(soql: SoQLObject): Seq[Object] = Seq(soql.value.toString)
+  def toAttrBindings: Seq[Class[_]] = Seq(classOf[String])
+  def isGeometry = false
+}
+
+/**
+  This is a thing to map all the SoQLColumns to an intermediate column which will facilitate
+  the translation into something that will map onto the constraints of a DBF file easily.
+  Everything returns a Seq() because a single SoQLValue must be mapped (split) into
+  multiple DBF columns. DBF only allows you to represent...
+
+    {:code, :name, :size}
+
+    {"C", "Character", 255},
+    {"N", "Number", 18},
+    {"L", "Logical", 1},
+    {"D", "Date",  8},
+    {"F", "Float",  20},
+    {"O", "Double",  8}
+
+    Ah, May of 1984. Things were simpler back then.
 
 
+  For example, since DBF only allows you to store a Date, SoQLDateTime* columns need to
+  be mapped onto two columns, Date and Time, where Time is a Character column. That's why
+  everything here returns Sequences. The encoder will then map the SoQLSchema to the intermediate
+  schema, and then flatten the result into something that we can put in a DBF.
+*/
 object ShapefileRepMapper extends RepMapper {
   def forPoint(name: String) =              new PointRep(name)
   def forMultiPoint(name: String) =         new MultiPointRep(name)
@@ -160,10 +211,10 @@ object ShapefileRepMapper extends RepMapper {
   def forBoolean(name: String) =            new BooleanRep(name)
   def forVersion(name: String) =            new VersionRep(name)
   def forID(name: String) =                 new IDRep(name)
-  def forArray(name: String) = ???
-  def forDouble(name: String) = ???
-  def forJson(name: String) = ???
-  def forObject(name: String) = ???
+  def forArray(name: String) =              new ArrayRep(name)
+  def forDouble(name: String) =             new DoubleRep(name)
+  def forJson(name: String) =               new JSONRep(name)
+  def forObject(name: String) =             new ObjectRep(name)
 
   def toAttr(thing: (SoQLValue, ShapeRep[_ <: SoQLValue])) : Seq[Object] = thing match {
     case (value: SoQLPoint, intermediary: PointRep) => intermediary.toAttrValues(value)
@@ -182,6 +233,10 @@ object ShapefileRepMapper extends RepMapper {
     case (value: SoQLBoolean, intermediary: BooleanRep) => intermediary.toAttrValues(value)
     case (value: SoQLVersion, intermediary: VersionRep) => intermediary.toAttrValues(value)
     case (value: SoQLID, intermediary: IDRep) => intermediary.toAttrValues(value)
+    case (value: SoQLArray, intermediary: ArrayRep) => intermediary.toAttrValues(value)
+    case (value: SoQLDouble, intermediary: DoubleRep) => intermediary.toAttrValues(value)
+    case (value: SoQLJson, intermediary: JSONRep) => intermediary.toAttrValues(value)
+    case (value: SoQLObject, intermediary: ObjectRep) => intermediary.toAttrValues(value)
     case _ => ???
   }
 }
