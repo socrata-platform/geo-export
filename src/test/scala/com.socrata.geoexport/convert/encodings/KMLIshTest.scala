@@ -5,6 +5,9 @@ import java.io._
 import java.math.BigDecimal
 import java.util.zip.ZipInputStream
 
+import com.rojoma.json.v3.ast._
+import com.rojoma.json.v3.io.JsonReader
+import com.rojoma.json.v3.util.JsonUtil
 import com.socrata.soql.types._
 import com.vividsolutions.jts.geom._
 import org.apache.commons.io.IOUtils
@@ -27,7 +30,17 @@ class KMLIshTest extends TestBase {
     ("a_floating_ts", SoQLFloatingTimestamp),
     ("a_time", SoQLTime),
     ("a_date", SoQLDate),
-    ("a_money", SoQLMoney)
+    ("a_money", SoQLMoney),
+    (":an_id", SoQLID),
+    (":a_version", SoQLVersion),
+    ("a_double", SoQLDouble),
+    ("a_number_array", SoQLArray),
+    ("a_str_array", SoQLArray),
+    ("name", SoQLText),
+    ("description", SoQLText),
+    ("a_json", SoQLJson),
+    ("an_object", SoQLObject)
+
   )
 
   val simpleRows = List(
@@ -38,7 +51,18 @@ class KMLIshTest extends TestBase {
     SoQLFloatingTimestamp(ldt.plusHours(1)),
     SoQLTime(ldt.toLocalTime),
     SoQLDate(ldt.toLocalDate),
-    SoQLMoney((new BigDecimal(42.00)))
+    SoQLMoney((new BigDecimal(42.00))),
+    SoQLID(42),
+    SoQLVersion(32),
+    SoQLDouble(42.00),
+    SoQLArray(JArray(Seq(JNumber(1), JNumber(2), JNumber(3)))),
+    SoQLArray(JArray(Seq(JString("a"), JString("b"), JString("c")))),
+    SoQLText("actual name"),
+    SoQLText("actual description"),
+    SoQLJson(JsonReader.fromString("""{"something": "else", "a_json_number": 1, "nested": {"child": "hello"}}""")),
+    SoQLObject(JsonReader.fromString("""{"something": "wow", "an_object_number": 7, "nested": {"child": "hi"}}""").asInstanceOf[JObject])
+
+
   )
 
   protected def convertKML(layers: List[InputStream]): Node = {
@@ -65,6 +89,8 @@ class KMLIshTest extends TestBase {
     }
     XML.loadString(result)
   }
+
+
 
   protected def testPoints(convert: List[DataInputStream] => Node) = {
     val p = wkt("POINT (0 1)").asInstanceOf[Point]
@@ -101,6 +127,22 @@ class KMLIshTest extends TestBase {
                   <SimpleData name="a_time">01:23:00.000</SimpleData>
                   <SimpleData name="a_date">2015-03-22</SimpleData>
                   <SimpleData name="a_money">42</SimpleData>
+                  <SimpleData name="an_id">42</SimpleData>
+                  <SimpleData name="a_version">32</SimpleData>
+                  <SimpleData name="a_double">42.0</SimpleData>
+                  <SimpleData name="a_number_array">1, 2, 3</SimpleData>
+                  <SimpleData name="a_str_array">a, b, c</SimpleData>
+                  <name>actual name</name>
+                  <description>actual description</description>
+
+                  <SimpleData name="a_json.something">else</SimpleData>
+                  <SimpleData name="a_json.a_json_number">1</SimpleData>
+                  <SimpleData name="a_json.nested.child">hello</SimpleData>
+
+                  <SimpleData name="an_object.something">wow</SimpleData>
+                  <SimpleData name="an_object.an_object_number">7</SimpleData>
+                  <SimpleData name="an_object.nested.child">hi</SimpleData>
+
                 </SchemaData>
               </ExtendedData>
               <Point>
@@ -147,6 +189,21 @@ class KMLIshTest extends TestBase {
                   <SimpleData name="a_time">01:23:00.000</SimpleData>
                   <SimpleData name="a_date">2015-03-22</SimpleData>
                   <SimpleData name="a_money">42</SimpleData>
+                  <SimpleData name="an_id">42</SimpleData>
+                  <SimpleData name="a_version">32</SimpleData>
+                  <SimpleData name="a_double">42.0</SimpleData>
+                  <SimpleData name="a_number_array">1, 2, 3</SimpleData>
+                  <SimpleData name="a_str_array">a, b, c</SimpleData>
+                  <name>actual name</name>
+                  <description>actual description</description>
+
+                  <SimpleData name="a_json.something">else</SimpleData>
+                  <SimpleData name="a_json.a_json_number">1</SimpleData>
+                  <SimpleData name="a_json.nested.child">hello</SimpleData>
+                  <SimpleData name="an_object.something">wow</SimpleData>
+                  <SimpleData name="an_object.an_object_number">7</SimpleData>
+                  <SimpleData name="an_object.nested.child">hi</SimpleData>
+
                 </SchemaData>
               </ExtendedData>
               <LineString>
@@ -197,6 +254,21 @@ class KMLIshTest extends TestBase {
                   <SimpleData name="a_time">01:23:00.000</SimpleData>
                   <SimpleData name="a_date">2015-03-22</SimpleData>
                   <SimpleData name="a_money">42</SimpleData>
+                  <SimpleData name="an_id">42</SimpleData>
+                  <SimpleData name="a_version">32</SimpleData>
+                  <SimpleData name="a_double">42.0</SimpleData>
+                  <SimpleData name="a_number_array">1, 2, 3</SimpleData>
+                  <SimpleData name="a_str_array">a, b, c</SimpleData>
+                  <name>actual name</name>
+                  <description>actual description</description>
+
+                  <SimpleData name="a_json.something">else</SimpleData>
+                  <SimpleData name="a_json.a_json_number">1</SimpleData>
+                  <SimpleData name="a_json.nested.child">hello</SimpleData>
+                  <SimpleData name="an_object.something">wow</SimpleData>
+                  <SimpleData name="an_object.an_object_number">7</SimpleData>
+                  <SimpleData name="an_object.nested.child">hi</SimpleData>
+
                 </SchemaData>
               </ExtendedData>
               <Polygon>
@@ -253,6 +325,21 @@ class KMLIshTest extends TestBase {
                   <SimpleData name="a_time">01:23:00.000</SimpleData>
                   <SimpleData name="a_date">2015-03-22</SimpleData>
                   <SimpleData name="a_money">42</SimpleData>
+                  <SimpleData name="an_id">42</SimpleData>
+                  <SimpleData name="a_version">32</SimpleData>
+                  <SimpleData name="a_double">42.0</SimpleData>
+                  <SimpleData name="a_number_array">1, 2, 3</SimpleData>
+                  <SimpleData name="a_str_array">a, b, c</SimpleData>
+                  <name>actual name</name>
+                  <description>actual description</description>
+
+                  <SimpleData name="a_json.something">else</SimpleData>
+                  <SimpleData name="a_json.a_json_number">1</SimpleData>
+                  <SimpleData name="a_json.nested.child">hello</SimpleData>
+                  <SimpleData name="an_object.something">wow</SimpleData>
+                  <SimpleData name="an_object.an_object_number">7</SimpleData>
+                  <SimpleData name="an_object.nested.child">hi</SimpleData>
+
                 </SchemaData>
               </ExtendedData>
               <Polygon>
@@ -312,6 +399,21 @@ class KMLIshTest extends TestBase {
                   <SimpleData name="a_time">01:23:00.000</SimpleData>
                   <SimpleData name="a_date">2015-03-22</SimpleData>
                   <SimpleData name="a_money">42</SimpleData>
+                  <SimpleData name="an_id">42</SimpleData>
+                  <SimpleData name="a_version">32</SimpleData>
+                  <SimpleData name="a_double">42.0</SimpleData>
+                  <SimpleData name="a_number_array">1, 2, 3</SimpleData>
+                  <SimpleData name="a_str_array">a, b, c</SimpleData>
+                  <name>actual name</name>
+                  <description>actual description</description>
+
+                  <SimpleData name="a_json.something">else</SimpleData>
+                  <SimpleData name="a_json.a_json_number">1</SimpleData>
+                  <SimpleData name="a_json.nested.child">hello</SimpleData>
+                  <SimpleData name="an_object.something">wow</SimpleData>
+                  <SimpleData name="an_object.an_object_number">7</SimpleData>
+                  <SimpleData name="an_object.nested.child">hi</SimpleData>
+
                 </SchemaData>
               </ExtendedData>
               <MultiGeometry>
@@ -362,6 +464,21 @@ class KMLIshTest extends TestBase {
                   <SimpleData name="a_time">01:23:00.000</SimpleData>
                   <SimpleData name="a_date">2015-03-22</SimpleData>
                   <SimpleData name="a_money">42</SimpleData>
+                  <SimpleData name="an_id">42</SimpleData>
+                  <SimpleData name="a_version">32</SimpleData>
+                  <SimpleData name="a_double">42.0</SimpleData>
+                  <SimpleData name="a_number_array">1, 2, 3</SimpleData>
+                  <SimpleData name="a_str_array">a, b, c</SimpleData>
+                  <name>actual name</name>
+                  <description>actual description</description>
+
+                  <SimpleData name="a_json.something">else</SimpleData>
+                  <SimpleData name="a_json.a_json_number">1</SimpleData>
+                  <SimpleData name="a_json.nested.child">hello</SimpleData>
+                  <SimpleData name="an_object.something">wow</SimpleData>
+                  <SimpleData name="an_object.an_object_number">7</SimpleData>
+                  <SimpleData name="an_object.nested.child">hi</SimpleData>
+
                 </SchemaData>
               </ExtendedData>
               <MultiGeometry>
@@ -409,6 +526,21 @@ class KMLIshTest extends TestBase {
                   <SimpleData name="a_time">01:23:00.000</SimpleData>
                   <SimpleData name="a_date">2015-03-22</SimpleData>
                   <SimpleData name="a_money">42</SimpleData>
+                  <SimpleData name="an_id">42</SimpleData>
+                  <SimpleData name="a_version">32</SimpleData>
+                  <SimpleData name="a_double">42.0</SimpleData>
+                  <SimpleData name="a_number_array">1, 2, 3</SimpleData>
+                  <SimpleData name="a_str_array">a, b, c</SimpleData>
+                  <name>actual name</name>
+                  <description>actual description</description>
+
+                  <SimpleData name="a_json.something">else</SimpleData>
+                  <SimpleData name="a_json.a_json_number">1</SimpleData>
+                  <SimpleData name="a_json.nested.child">hello</SimpleData>
+                  <SimpleData name="an_object.something">wow</SimpleData>
+                  <SimpleData name="an_object.an_object_number">7</SimpleData>
+                  <SimpleData name="an_object.nested.child">hi</SimpleData>
+
                 </SchemaData>
               </ExtendedData>
               <MultiGeometry>
@@ -473,6 +605,21 @@ class KMLIshTest extends TestBase {
                   <SimpleData name="a_time">01:23:00.000</SimpleData>
                   <SimpleData name="a_date">2015-03-22</SimpleData>
                   <SimpleData name="a_money">42</SimpleData>
+                  <SimpleData name="an_id">42</SimpleData>
+                  <SimpleData name="a_version">32</SimpleData>
+                  <SimpleData name="a_double">42.0</SimpleData>
+                  <SimpleData name="a_number_array">1, 2, 3</SimpleData>
+                  <SimpleData name="a_str_array">a, b, c</SimpleData>
+                  <name>actual name</name>
+                  <description>actual description</description>
+
+                  <SimpleData name="a_json.something">else</SimpleData>
+                  <SimpleData name="a_json.a_json_number">1</SimpleData>
+                  <SimpleData name="a_json.nested.child">hello</SimpleData>
+                  <SimpleData name="an_object.something">wow</SimpleData>
+                  <SimpleData name="an_object.an_object_number">7</SimpleData>
+                  <SimpleData name="an_object.nested.child">hi</SimpleData>
+
                 </SchemaData>
               </ExtendedData>
               <LineString>
@@ -497,6 +644,21 @@ class KMLIshTest extends TestBase {
                   <SimpleData name="a_time">01:23:00.000</SimpleData>
                   <SimpleData name="a_date">2015-03-22</SimpleData>
                   <SimpleData name="a_money">42</SimpleData>
+                  <SimpleData name="an_id">42</SimpleData>
+                  <SimpleData name="a_version">32</SimpleData>
+                  <SimpleData name="a_double">42.0</SimpleData>
+                  <SimpleData name="a_number_array">1, 2, 3</SimpleData>
+                  <SimpleData name="a_str_array">a, b, c</SimpleData>
+                  <name>actual name</name>
+                  <description>actual description</description>
+
+                  <SimpleData name="a_json.something">else</SimpleData>
+                  <SimpleData name="a_json.a_json_number">1</SimpleData>
+                  <SimpleData name="a_json.nested.child">hello</SimpleData>
+                  <SimpleData name="an_object.something">wow</SimpleData>
+                  <SimpleData name="an_object.an_object_number">7</SimpleData>
+                  <SimpleData name="an_object.nested.child">hi</SimpleData>
+
                 </SchemaData>
               </ExtendedData>
               <Polygon>

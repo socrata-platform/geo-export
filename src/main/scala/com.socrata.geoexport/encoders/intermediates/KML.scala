@@ -3,13 +3,14 @@ package kml
 
 import java.util.Date
 
+import com.rojoma.json.v3.ast._
 import com.socrata.soql.types._
 import com.vividsolutions.jts.geom._
 import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.DateTimeFormat
 import scala.xml.Node
 
-
+case class UnknownSoQLTypeException(message: String) extends Exception
 case class KMLTranslationException(message: String) extends Exception
 
 abstract class KMLRep[T](soqlName: String) extends ShapeRep[T] {
@@ -87,6 +88,20 @@ trait SimpleDatum {
   def isGeometry = false
 }
 
+trait ComplexDatum extends SimpleDatum {
+  def fromJValue(soqlName: String, v: JValue): Seq[Node] = v match {
+    case n: JNull => asSimpleData(null)
+    case JBoolean(b) => asSimpleData(b.booleanValue.toString)
+    case JString(s) => asSimpleData(s)
+    case n: JNumber => asSimpleData(n.toString)
+    case JArray(arr) => ???
+    case JObject(fields) => fields.flatMap { case (name, value) =>
+      val childName = s"${soqlName}.${name}"
+      new JSONRep(childName).fromJValue(childName, value)
+    }.toSeq
+  }
+}
+
 class PointRep(soqlName: String) extends KMLRep[SoQLPoint](soqlName) with GeoDatum {
   def toAttrValues(soql: SoQLPoint): Seq[Any] = encodePoint(soql.value)
 }
@@ -131,8 +146,15 @@ class NumberRep(soqlName: String) extends KMLRep[SoQLNumber](soqlName) with Simp
   def toAttrValues(soql: SoQLNumber): Seq[Any] = asSimpleData(soql.value.toString)
 }
 
+//KML hardcodes name and description columns as distinct from simpldata columns
 class TextRep(soqlName: String) extends KMLRep[SoQLText](soqlName) with SimpleDatum {
-  def toAttrValues(soql: SoQLText): Seq[Any] = asSimpleData(soql.value.toString)
+  def toAttrValues(soql: SoQLText): Seq[Any] = {
+    toAttrNames.head.toLowerCase match {
+      case "description" => <description>{soql.value.toString}</description>
+      case "name" => <name>{soql.value.toString}</name>
+      case _ => asSimpleData(soql.value.toString)
+    }
+  }
 }
 
 class MoneyRep(soqlName: String) extends KMLRep[SoQLMoney](soqlName) with SimpleDatum {
@@ -145,10 +167,39 @@ class BooleanRep(soqlName: String) extends KMLRep[SoQLBoolean](soqlName) with Si
 
 class VersionRep(soqlName: String) extends KMLRep[SoQLVersion](soqlName) with SimpleDatum {
   def toAttrValues(soql: SoQLVersion): Seq[Any] = asSimpleData(soql.value.toString)
+
+  override protected def normalizeName(name: String) = {
+    name.replaceFirst("^:", "")
+  }
 }
 
 class IDRep(soqlName: String) extends KMLRep[SoQLID](soqlName) with SimpleDatum {
   def toAttrValues(soql: SoQLID): Seq[Any] = asSimpleData(soql.value.toString)
+
+  override protected def normalizeName(name: String) = {
+    name.replaceFirst("^:", "")
+  }
+}
+
+class DoubleRep(soqlName: String) extends KMLRep[SoQLDouble](soqlName) with SimpleDatum {
+  def toAttrValues(soql: SoQLDouble): Seq[Any] = asSimpleData(soql.value.toString)
+}
+
+class ArrayRep(soqlName: String) extends KMLRep[SoQLArray](soqlName) with SimpleDatum {
+  def toAttrValues(soql: SoQLArray): Seq[Any] = {
+    asSimpleData(soql.value.toArray.map {
+      case JString(s) => s
+      case other => other
+    }.mkString(", "))
+  }
+}
+
+class JSONRep(soqlName: String) extends KMLRep[SoQLJson](soqlName) with ComplexDatum {
+  def toAttrValues(soql: SoQLJson): Seq[Any] = fromJValue(soqlName, soql.value)
+}
+
+class ObjectRep(soqlName: String) extends KMLRep[SoQLObject](soqlName) with ComplexDatum {
+  def toAttrValues(soql: SoQLObject): Seq[Any] = fromJValue(soqlName, soql.value)
 }
 
 object KMLRepMapper extends RepMapper {
@@ -168,10 +219,10 @@ object KMLRepMapper extends RepMapper {
   def forBoolean(name: String) =            new BooleanRep(name)
   def forVersion(name: String) =            new VersionRep(name)
   def forID(name: String) =                 new IDRep(name)
-  def forArray(name: String) = ???
-  def forDouble(name: String) = ???
-  def forJson(name: String) = ???
-  def forObject(name: String) = ???
+  def forArray(name: String) =              new ArrayRep(name)
+  def forDouble(name: String) =             new DoubleRep(name)
+  def forJson(name: String) =               new JSONRep(name)
+  def forObject(name: String) =             new ObjectRep(name)
 
 
   def toAttr(thing: (SoQLValue, ShapeRep[_ <: SoQLValue])) : Seq[Any] = thing match {
@@ -191,7 +242,11 @@ object KMLRepMapper extends RepMapper {
     case (value: SoQLBoolean, intermediary: BooleanRep) => intermediary.toAttrValues(value)
     case (value: SoQLVersion, intermediary: VersionRep) => intermediary.toAttrValues(value)
     case (value: SoQLID, intermediary: IDRep) => intermediary.toAttrValues(value)
-    case _ => ???
+    case (value: SoQLArray, intermediary: ArrayRep) => intermediary.toAttrValues(value)
+    case (value: SoQLDouble, intermediary: DoubleRep) => intermediary.toAttrValues(value)
+    case (value: SoQLJson, intermediary: JSONRep) => intermediary.toAttrValues(value)
+    case (value: SoQLObject, intermediary: ObjectRep) => intermediary.toAttrValues(value)
+    case wat => throw new UnknownSoQLTypeException(s"Unknown SoQL type ${wat}")
   }
 }
 
