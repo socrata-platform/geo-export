@@ -93,8 +93,6 @@ object KMLMapper {
 }
 
 object KMLEncoder extends GeoEncoder {
-
-
   def encode(layers: Layers, outStream: OutputStream) : Try[OutputStream] = {
     val writer = new OutputStreamWriter(outStream)
     try {

@@ -15,11 +15,10 @@ object Converter {
     layers as.
   */
   def execute(layerStreams: Iterable[InputStream], encoder: GeoEncoder, os: OutputStream) : Try[OutputStream] = {
-    Try(layerStreams.map { instream =>
-      new SoQLPackIterator(new DataInputStream(instream))
-    }) match {
-      case Success(featureStreams) => encoder.encode(featureStreams, os)
-      case Failure(f) => Failure(f)
+    Try(layerStreams.map { is =>
+      new SoQLPackIterator(new DataInputStream(is))
+    }).flatMap { features =>
+      encoder.encode(features, os)
     }
   }
 }

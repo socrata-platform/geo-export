@@ -44,42 +44,42 @@ trait SplitDatetime {
 
 class PointRep(soqlName: String) extends ShapefileRep[SoQLPoint](soqlName: String) with GeoDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[Point])
-  def toAttrValues(soql: SoQLPoint): Seq[Object] = Seq(soql.value)
+  def toAttrValues(soql: SoQLPoint): Seq[AnyRef] = Seq(soql.value)
 }
 
 class MultiPointRep(soqlName: String) extends ShapefileRep[SoQLMultiPoint](soqlName: String) with GeoDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[MultiPoint])
-  def toAttrValues(soql: SoQLMultiPoint): Seq[Object] = Seq(soql.value)
+  def toAttrValues(soql: SoQLMultiPoint): Seq[AnyRef] = Seq(soql.value)
 }
 
 class LineRep(soqlName: String) extends ShapefileRep[SoQLLine](soqlName: String) with GeoDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[LineString])
-  def toAttrValues(soql: SoQLLine): Seq[Object] = Seq(soql.value)
+  def toAttrValues(soql: SoQLLine): Seq[AnyRef] = Seq(soql.value)
 }
 
 class MultiLineRep(soqlName: String) extends ShapefileRep[SoQLMultiLine](soqlName: String) with GeoDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[MultiLineString])
-  def toAttrValues(soql: SoQLMultiLine): Seq[Object] = Seq(soql.value)
+  def toAttrValues(soql: SoQLMultiLine): Seq[AnyRef] = Seq(soql.value)
 }
 
 class PolygonRep(soqlName: String) extends ShapefileRep[SoQLPolygon](soqlName: String) with GeoDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[Polygon])
-  def toAttrValues(soql: SoQLPolygon): Seq[Object] = Seq(soql.value)
+  def toAttrValues(soql: SoQLPolygon): Seq[AnyRef] = Seq(soql.value)
 }
 
 class MultiPolygonRep(soqlName: String) extends ShapefileRep[SoQLMultiPolygon](soqlName: String) with GeoDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[MultiPolygon])
-  def toAttrValues(soql: SoQLMultiPolygon): Seq[Object] = Seq(soql.value)
+  def toAttrValues(soql: SoQLMultiPolygon): Seq[AnyRef] = Seq(soql.value)
 }
 
 class DateRep(soqlName: String) extends ShapefileRep[SoQLDate](soqlName: String) with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[Date])
-  def toAttrValues(soql: SoQLDate): Seq[Object] = Seq(soql.value.toDate)
+  def toAttrValues(soql: SoQLDate): Seq[AnyRef] = Seq(soql.value.toDate)
 }
 
 class TimeRep(soqlName: String) extends ShapefileRep[SoQLTime](soqlName: String) with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[String])
-  def toAttrValues(soql: SoQLTime): Seq[Object] = Seq(SoQLTime.StringRep(soql.value))
+  def toAttrValues(soql: SoQLTime): Seq[AnyRef] = Seq(SoQLTime.StringRep(soql.value))
 }
 
 class FloatingTimestampRep(soqlName: String)
@@ -87,7 +87,7 @@ class FloatingTimestampRep(soqlName: String)
 
   override def toAttrNames: Seq[String] = this.splitNames(soqlName, normalizeName)
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[Date], classOf[String])
-  def toAttrValues(soql: SoQLFloatingTimestamp): Seq[Object] = {
+  def toAttrValues(soql: SoQLFloatingTimestamp): Seq[AnyRef] = {
     val date = soql.value.toDate()
     val time = SoQLTime.StringRep(soql.value.toLocalTime)
     Seq(date, time)
@@ -99,7 +99,7 @@ class FixedTimestampRep(soqlName: String)
 
   override def toAttrNames: Seq[String] = this.splitNames(soqlName, normalizeName)
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[Date], classOf[String])
-  def toAttrValues(soql: SoQLFixedTimestamp): Seq[Object] = {
+  def toAttrValues(soql: SoQLFixedTimestamp): Seq[AnyRef] = {
     val utc = new DateTime(soql.value, DateTimeZone.UTC)
     val date = utc.toDate()
     val time = SoQLTime.StringRep(utc.toLocalTime)
@@ -109,22 +109,22 @@ class FixedTimestampRep(soqlName: String)
 
 class NumberRep(soqlName: String) extends ShapefileRep[SoQLNumber](soqlName: String) with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[BigDecimal])
-  def toAttrValues(soql: SoQLNumber): Seq[Object] = Seq(soql.value)
+  def toAttrValues(soql: SoQLNumber): Seq[AnyRef] = Seq(soql.value)
 }
 
 class TextRep(soqlName: String) extends ShapefileRep[SoQLText](soqlName: String) with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[String])
-  def toAttrValues(soql: SoQLText): Seq[Object] = Seq(soql.value)
+  def toAttrValues(soql: SoQLText): Seq[AnyRef] = Seq(soql.value)
 }
 
 class MoneyRep(soqlName: String) extends ShapefileRep[SoQLMoney](soqlName: String) with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[BigDecimal])
-  def toAttrValues(soql: SoQLMoney): Seq[Object] = Seq(soql.value)
+  def toAttrValues(soql: SoQLMoney): Seq[AnyRef] = Seq(soql.value)
 }
 
 class BooleanRep(soqlName: String) extends ShapefileRep[SoQLBoolean](soqlName: String) with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[java.lang.Boolean])
-  def toAttrValues(soql: SoQLBoolean): Seq[Object] = Seq(soql.value: java.lang.Boolean)
+  def toAttrValues(soql: SoQLBoolean): Seq[AnyRef] = Seq(soql.value: java.lang.Boolean)
 }
 
 // These are both Longs, but you can't represent a Long this large in a DBF,
@@ -133,18 +133,18 @@ class VersionRep(soqlName: String)
   extends ShapefileRep[SoQLVersion](soqlName: String) with SocrataMetadataRep with DBFDatum {
 
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[java.lang.String])
-  def toAttrValues(soql: SoQLVersion): Seq[Object] = Seq(soql.value.toString)
+  def toAttrValues(soql: SoQLVersion): Seq[AnyRef] = Seq(soql.value.toString)
   override protected def normalizeName(name: String) = super.normalizeName(this.normalizeIdLike(name))
 }
 
 class IDRep(soqlName: String) extends ShapefileRep[SoQLID](soqlName: String) with SocrataMetadataRep with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[java.lang.String])
-  def toAttrValues(soql: SoQLID): Seq[Object] = Seq(soql.value.toString)
+  def toAttrValues(soql: SoQLID): Seq[AnyRef] = Seq(soql.value.toString)
   override protected def normalizeName(name: String) = super.normalizeName(this.normalizeIdLike(name))
 }
 class DoubleRep(soqlName: String) extends ShapefileRep[SoQLDouble](soqlName: String) with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[java.lang.Double])
-  def toAttrValues(soql: SoQLDouble): Seq[Object] = Seq(soql.value: java.lang.Double)
+  def toAttrValues(soql: SoQLDouble): Seq[AnyRef] = Seq(soql.value: java.lang.Double)
 }
 
 // Because there is no way to encode arbitrary types with a rigid schema that DBF enforces,
@@ -152,14 +152,14 @@ class DoubleRep(soqlName: String) extends ShapefileRep[SoQLDouble](soqlName: Str
 // can be different
 class ArrayRep(soqlName: String) extends ShapefileRep[SoQLArray](soqlName: String) with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[java.lang.String])
-  def toAttrValues(soql: SoQLArray): Seq[Object] = Seq(soql.value.toString)
+  def toAttrValues(soql: SoQLArray): Seq[AnyRef] = Seq(soql.value.toString)
 }
 class JSONRep(soqlName: String) extends ShapefileRep[SoQLJson](soqlName: String) with DBFDatum {
-  def toAttrValues(soql: SoQLJson): Seq[Object] = Seq(soql.value.toString)
+  def toAttrValues(soql: SoQLJson): Seq[AnyRef] = Seq(soql.value.toString)
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[String])
 }
 class ObjectRep(soqlName: String) extends ShapefileRep[SoQLObject](soqlName: String) with DBFDatum {
-  def toAttrValues(soql: SoQLObject): Seq[Object] = Seq(soql.value.toString)
+  def toAttrValues(soql: SoQLObject): Seq[AnyRef] = Seq(soql.value.toString)
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[String])
 }
 
@@ -208,7 +208,7 @@ object ShapefileRepMapper extends RepMapper {
   def forJson(name: String): JSONRep =                              new JSONRep(name)
   def forObject(name: String): ObjectRep =                          new ObjectRep(name)
   // scalastyle:off
-  def toAttr(thing: (SoQLValue, ShapeRep[_ <: SoQLValue])) : Seq[Object] = thing match {
+  def toAttr(thing: (SoQLValue, ShapeRep[_ <: SoQLValue])) : Seq[AnyRef] = thing match {
     case (value: SoQLPoint, intermediary: PointRep) => intermediary.toAttrValues(value)
     case (value: SoQLMultiPoint, intermediary: MultiPointRep) => intermediary.toAttrValues(value)
     case (value: SoQLLine, intermediary: LineRep) => intermediary.toAttrValues(value)
