@@ -1,3 +1,4 @@
+// scalastyle:off null
 package com.socrata.geoexport.encoders
 
 import java.io._
@@ -63,10 +64,8 @@ object ShapefileEncoder extends GeoEncoder {
     builder.setName("FeatureType")
 
     val addedNames = schema
-    .filter {
-      case r: IDRep => false
-      case _ => true
-    }.flatMap { rep =>
+    .filter(!_.isInstanceOf[IDRep]) // find all the non-id fields
+    .flatMap { rep =>
       val restrictions = seqAsJavaList(List[Filter]())
 
       val attrNames = rep.toAttrNames
@@ -78,19 +77,23 @@ object ShapefileEncoder extends GeoEncoder {
 
       attrNames.zip(bindings).foreach { case (attrName, binding) =>
         // geotools is dumb
-        // scalastyle:off
         if (classOf[Geometry].isAssignableFrom(binding)) {
           val attrName = new NameImpl("the_geom")
-          val geomType = new GeometryTypeImpl(attrName, binding, DefaultGeographicCRS.WGS84, true, false, seqAsJavaList(List()), null, null)
-          val geomDescriptor = new GeometryDescriptorImpl(geomType, attrName, Int.MinValue, Int.MaxValue, true, null)
+          val geomType = new GeometryTypeImpl(
+            attrName, binding, DefaultGeographicCRS.WGS84, true, false, seqAsJavaList(List()), null, null
+          )
+          val geomDescriptor = new GeometryDescriptorImpl(
+            geomType, attrName, Int.MinValue, Int.MaxValue, true, null
+          )
           builder.add(geomDescriptor)
         } else {
           val bindingName = new NameImpl(binding.toString())
           val attrType = new AttributeTypeImpl(bindingName, binding, true, false, restrictions, null, null)
-          val descriptor = new AttributeDescriptorImpl(attrType, new NameImpl(attrName), Int.MinValue, Int.MaxValue, true, null)
+          val descriptor = new AttributeDescriptorImpl(
+            attrType, new NameImpl(attrName), Int.MinValue, Int.MaxValue, true, null
+          )
           builder.add(descriptor)
         }
-        // scalastyle:on
       }
       attrNames
     }
@@ -98,7 +101,6 @@ object ShapefileEncoder extends GeoEncoder {
     builder.buildFeatureType()
   }
 
-  // scalastyle:off
   private def buildFeature(
     featureId: Int,
     featureType: SimpleFeatureType,
@@ -106,26 +108,21 @@ object ShapefileEncoder extends GeoEncoder {
 
     val id = new FeatureIdImpl(featureId.toString)
 
-    val nonIds = attributes.filter { v =>
-      v match {
-        case (_: SoQLID, _) => false
-        case _ => true
-      }
-    }
+    val nonIds = attributes.filter(!_._1.isInstanceOf[SoQLID])
     // what in the actual .... there has to be a better way to do this...
     // except not because dependent types
     val values = seqAsJavaList(nonIds.flatMap {
-      thing => ShapefileRepMapper.toAttr(thing)
+      intermediate => ShapefileRepMapper.toAttr(intermediate)
     })
     new SimpleFeatureImpl(values, featureType, id)
   }
-  // scalastyle:on
+
   private def addFeatures(layer: SoQLPackIterator, featureType: SimpleFeatureType, file: File,
                           dataStore: DataStore, reps:Seq[ShapeRep[_ <: SoQLValue]]) = {
     dataStore.getFeatureSource((dataStore.getTypeNames.toList)(0)) match {
       case featureStore: SimpleFeatureStore =>
 
-        for { trans <- managed(new DefaultTransaction(file.getName)) } {
+        using(new DefaultTransaction(file.getName)) { trans =>
           try {
 
             featureStore.setTransaction(trans)
@@ -197,5 +194,4 @@ object ShapefileEncoder extends GeoEncoder {
   def encodes: Set[String] = Set(shapefileExt)
   def encodedMIME: String  = "application/zip"
 }
-
-
+// scalastyle:on null

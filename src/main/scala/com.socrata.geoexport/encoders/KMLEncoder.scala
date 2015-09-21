@@ -48,10 +48,8 @@ object KMLMapper {
     writer.write("""<?xml version='1.0' encoding='UTF-8'?>
       |<kml xmlns:kml="http://earth.google.com/kml/2.2">
       |  <Document id="featureCollection">""".stripMargin)
-    // no scalastyle. how about avoid using null in the scala XML API
-    // scalastyle:off
-    XML.write(writer, defaultStyle, "UTF-8", false, null)
-    // scalastyle:on
+    // no scala. how about *you* avoid using null in the scala XML API
+    XML.write(writer, defaultStyle, "UTF-8", false, null) //scalastyle:ignore
     layers.foreach(kml(_, writer))
     writer.write("""  </Document>
     </kml>""".stripMargin)
@@ -61,9 +59,7 @@ object KMLMapper {
     writer.write("<Folder>")
     collection.foreach { feature: Array[SoQLValue] =>
       val featureXML = kml(collection.schema, feature)
-      // scalastyle:off
-      XML.write(writer, featureXML, "UTF-8", false, null)
-      // scalastyle:on
+      XML.write(writer, featureXML, "UTF-8", false, null) //scalastyle:ignore
     }
     writer.write("</Folder>")
   }

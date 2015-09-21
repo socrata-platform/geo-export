@@ -237,7 +237,7 @@ object KMLRepMapper extends RepMapper {
   def forDouble(name: String): DoubleRep =                        new DoubleRep(name)
   def forJson(name: String): JSONRep =                            new JSONRep(name)
   def forObject(name: String): ObjectRep =                        new ObjectRep(name)
-  // scalastyle:off
+  // scalastyle:off cyclomatic.complexity
   def toAttr(thing: (SoQLValue, ShapeRep[_ <: SoQLValue])) : Seq[Any] = thing match {
     case (value: SoQLPoint, intermediary: PointRep) => intermediary.toAttrValues(value)
     case (value: SoQLMultiPoint, intermediary: MultiPointRep) => intermediary.toAttrValues(value)
@@ -261,6 +261,6 @@ object KMLRepMapper extends RepMapper {
     case (value: SoQLObject, intermediary: ObjectRep) => intermediary.toAttrValues(value)
     case unknown: Any => throw new UnknownSoQLTypeException(s"Unknown SoQL type ${unknown}")
   }
-  // scalastyle:on
+  // scalastyle:on cyclomatic.complexity
 }
 

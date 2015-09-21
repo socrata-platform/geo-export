@@ -15,5 +15,4 @@ See the [DockerFile](Dockerfile) for defaults.
 * `MIN_THREADS`             - Sets the minimum number of server threads.
 * `MAX_THREADS`             - Sets the maximum number of server threads.
 
-Note: `MAX_THREADS` should be set so that each thread has about 100m
-to use.  There are plans to address this in a future release.
+##TODO: figure out reasonable values for xmx and min/max and such

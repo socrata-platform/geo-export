@@ -31,8 +31,7 @@ libraryDependencies ++= Seq(
   "org.apache.curator"       % "curator-x-discovery"      % "2.7.0",
   "com.socrata"             %% "soql-pack"                % "0.6.0",
 
-  "org.geotools"      % "gt-shapefile"      % "12.4"
-
+  "org.geotools"             % "gt-shapefile"             % "12.4"
 )
 
 libraryDependencies ++= Seq(

@@ -69,14 +69,14 @@ trait TestBase
 
   protected def placemarkPolyOuter(placemark: NodeSeq): Seq[Seq[Seq[Double]]] = {
     (placemark \ "Polygon" \ "outerBoundaryIs" \  "LinearRing" \ "coordinates").map {
-      n => pluckCoordinates(n.text)
+      coordNode => pluckCoordinates(coordNode.text)
     }.toList
   }
 
   protected def pluckPolyOuter(node: Node) = placemarkPolyOuter(node \ "Placemark")
 
   protected def pluckCoordinates(text: String): Seq[Seq[Double]] = {
-    text.trim.split("\\s").toList.map { c => c.trim.split(",").toList.map(_.toDouble) }
+    text.trim.split("\\s").toList.map { coord => coord.trim.split(",").toList.map(_.toDouble) }
   }
 
   protected def print(node: Node): Unit = {

@@ -18,7 +18,7 @@ class Router(export: ExportService) {
   private val logger = LoggerFactory.getLogger(getClass)
   private val logWrapper =
     NewLoggingHandler(LoggingOptions(logger, Set("X-Socrata-Host",
-                                                 "X-Socrata-RequestId",
+                                                 ReqIdHeader,
                                                  "X-Socrata-Resource"))) _
 
   val availableFormats = ExportService.formats
