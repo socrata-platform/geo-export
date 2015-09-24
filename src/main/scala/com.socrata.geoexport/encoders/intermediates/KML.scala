@@ -1,15 +1,11 @@
 package com.socrata.geoexport.intermediates
 package kml
 
-import java.util.Date
-
 import com.rojoma.json.v3.ast._
 import com.socrata.soql.types._
 import com.vividsolutions.jts.geom._
-import org.joda.time.{DateTime, DateTimeZone}
-import org.joda.time.format.DateTimeFormat
-import scala.xml.Node
 import org.slf4j.LoggerFactory
+import scala.xml.Node
 
 case class KMLTranslationException(message: String) extends Exception
 
@@ -220,7 +216,6 @@ class ObjectRep(soqlName: String) extends KMLRep[SoQLObject](soqlName) with Comp
 object KMLRepMapper extends RepMapper {
   lazy val log = LoggerFactory.getLogger(getClass)
 
-
   def forPoint(name: String): PointRep =                          new PointRep(name)
   def forMultiPoint(name: String): MultiPointRep =                new MultiPointRep(name)
   def forLine(name: String): LineRep =                            new LineRep(name)
@@ -263,6 +258,7 @@ object KMLRepMapper extends RepMapper {
     case (value: SoQLDouble, intermediary: DoubleRep) => intermediary.toAttrValues(value)
     case (value: SoQLJson, intermediary: JSONRep) => intermediary.toAttrValues(value)
     case (value: SoQLObject, intermediary: ObjectRep) => intermediary.toAttrValues(value)
+    case (SoQLNull, _) => Seq(null) // scalstyle:ignore null
     case (value: SoQLValue, _) =>
       log.error(s"Unknown SoQLValue: ${value.getClass()} - coercing toString but you should fix this!")
       Seq(value.toString)
