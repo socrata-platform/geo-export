@@ -6,7 +6,7 @@ import com.socrata.geoexport.intermediates.ShapeRep
 import com.socrata.soql.types._
 import com.vividsolutions.jts.geom._
 import com.socrata.geoexport.intermediates._
-
+import org.slf4j.LoggerFactory
 import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.DateTimeFormat
 
@@ -187,6 +187,8 @@ class ObjectRep(soqlName: String) extends ShapefileRep[SoQLObject](soqlName: Str
   schema, and then flatten the result into something that we can put in a DBF.
 */
 object ShapefileRepMapper extends RepMapper {
+  lazy val log = LoggerFactory.getLogger(getClass)
+
   def forPoint(name: String): PointRep =                            new PointRep(name)
   def forMultiPoint(name: String): MultiPointRep =                  new MultiPointRep(name)
   def forLine(name: String): LineRep =                              new LineRep(name)
@@ -229,7 +231,9 @@ object ShapefileRepMapper extends RepMapper {
     case (value: SoQLDouble, intermediary: DoubleRep) => intermediary.toAttrValues(value)
     case (value: SoQLJson, intermediary: JSONRep) => intermediary.toAttrValues(value)
     case (value: SoQLObject, intermediary: ObjectRep) => intermediary.toAttrValues(value)
-    case (value: SoQLValue, _) => Seq(value.toString: java.lang.String)
+    case (value: SoQLValue, _) =>
+      log.error(s"Unknown SoQLValue: ${value.getClass()} - coercing toString but you should fix this!")
+      Seq(value.toString: java.lang.String)
     // scalastyle:on
   }
 }

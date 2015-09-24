@@ -9,6 +9,7 @@ import com.vividsolutions.jts.geom._
 import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.DateTimeFormat
 import scala.xml.Node
+import org.slf4j.LoggerFactory
 
 case class KMLTranslationException(message: String) extends Exception
 
@@ -217,6 +218,9 @@ class ObjectRep(soqlName: String) extends KMLRep[SoQLObject](soqlName) with Comp
   Maps all the SoQLColumns to intermediate columns
 */
 object KMLRepMapper extends RepMapper {
+  lazy val log = LoggerFactory.getLogger(getClass)
+
+
   def forPoint(name: String): PointRep =                          new PointRep(name)
   def forMultiPoint(name: String): MultiPointRep =                new MultiPointRep(name)
   def forLine(name: String): LineRep =                            new LineRep(name)
@@ -259,7 +263,9 @@ object KMLRepMapper extends RepMapper {
     case (value: SoQLDouble, intermediary: DoubleRep) => intermediary.toAttrValues(value)
     case (value: SoQLJson, intermediary: JSONRep) => intermediary.toAttrValues(value)
     case (value: SoQLObject, intermediary: ObjectRep) => intermediary.toAttrValues(value)
-    case (value: SoQLValue, _) => Seq(value.toString)
+    case (value: SoQLValue, _) =>
+      log.error(s"Unknown SoQLValue: ${value.getClass()} - coercing toString but you should fix this!")
+      Seq(value.toString)
   }
   // scalastyle:on cyclomatic.complexity
 }
