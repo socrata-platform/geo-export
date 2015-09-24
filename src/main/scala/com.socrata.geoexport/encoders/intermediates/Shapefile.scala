@@ -229,7 +229,7 @@ object ShapefileRepMapper extends RepMapper {
     case (value: SoQLDouble, intermediary: DoubleRep) => intermediary.toAttrValues(value)
     case (value: SoQLJson, intermediary: JSONRep) => intermediary.toAttrValues(value)
     case (value: SoQLObject, intermediary: ObjectRep) => intermediary.toAttrValues(value)
-    case unknown: Any => throw new UnknownSoQLTypeException("Unknown SoQLType ${unknown}")
+    case (value: SoQLValue, _) => Seq(value.toString: java.lang.String)
     // scalastyle:on
   }
 }
