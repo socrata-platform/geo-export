@@ -64,17 +64,25 @@ class ExportTest extends TestBase with MockitoSugar {
     val fileName = s"/tmp/export_test_${UUID.randomUUID()}.zip"
     val file = new File(fileName)
 
-    val outputStream = new mocks.FileServletOutputStream(file)
-    val resp = outputStream.responseFor
 
-    val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-77dn", "shp"))
-    service.get(req)(resp)
-    verify(resp).setStatus(200)
+    def exportShape(tpc: TypedPathComponent[String]) = {
+        val outputStream = new mocks.FileServletOutputStream(file)
+        val resp = outputStream.responseFor
 
-    readShapeArchive(file) match {
-      case Seq((featureType, features)) =>
-        features.size must be(77)
+        val service = new ExportService(fixtureClient.client).service(tpc)
+        service.get(req)(resp)
+        verify(resp).setStatus(200)
+
+        readShapeArchive(file) match {
+          case Seq((featureType, features)) =>
+            features.size must be(77)
+        }
     }
+
+
+    exportShape(new TypedPathComponent("vt5y-77dn", "shp"))
+    exportShape(new TypedPathComponent("vt5y-77dn", "shapefile"))
+
   }
 
   test("can get a multi layer Shapefile dataset") {

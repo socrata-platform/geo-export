@@ -191,7 +191,7 @@ object ShapefileEncoder extends GeoEncoder {
     }
   }
 
-  def encodes: Set[String] = Set(shapefileExt)
+  def encodes: Set[String] = Set(shapefileExt) ++ Set("shapefile")
   def encodedMIME: String  = "application/zip"
 }
 // scalastyle:on null
