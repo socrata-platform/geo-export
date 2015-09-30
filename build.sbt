@@ -15,21 +15,23 @@ libraryDependencies ++= Seq(
   "com.rojoma"              %% "rojoma-json-v3-jackson"   % "1.0.0" excludeAll(
     ExclusionRule(organization = "com.rojoma")),
   "com.rojoma"              %% "simple-arm-v2"            % "2.1.0",
-
+  "com.socrata"             %% "socrata-curator-utils"    % "1.0.3" excludeAll(
+    ExclusionRule(organization = "com.socrata", name = "socrata-http-client"),
+    ExclusionRule(organization = "com.socrata", name = "socrata-http-jetty")),
   "com.socrata"             %% "socrata-http-client"      % "3.3.1" excludeAll(
     ExclusionRule(organization = "com.rojoma"),
     ExclusionRule(organization = "com.socrata", name = "socrata-thirdparty-utils_2.10")),
   "com.socrata"             %% "socrata-http-jetty"       % "3.3.1" excludeAll(
     ExclusionRule(organization = "com.rojoma"),
     ExclusionRule(organization = "com.socrata", name = "socrata-thirdparty-utils_2.10")),
-  "com.socrata"             %% "socrata-thirdparty-utils" % "3.1.4",
+  "com.socrata"             %% "socrata-thirdparty-utils" % "4.0.1",
 
   "com.typesafe"             % "config"                   % "1.2.1",
 
   "commons-codec"            % "commons-codec"            % "1.10",
   "commons-io"               % "commons-io"               % "2.4",
   "org.apache.curator"       % "curator-x-discovery"      % "2.7.0",
-  "com.socrata"             %% "soql-pack"                % "0.6.0",
+  "com.socrata"             %% "soql-pack"                % "0.8.3",
 
   "org.geotools"             % "gt-shapefile"             % "12.4"
 )

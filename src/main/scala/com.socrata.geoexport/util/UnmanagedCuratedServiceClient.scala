@@ -3,8 +3,8 @@ package com.socrata.geoexport
 import java.io.Closeable
 
 import com.socrata.http.client.{RequestBuilder, Response, SimpleHttpRequest}
-import com.socrata.thirdparty.curator.ServerProvider.{RetryWhen, Complete}
-import com.socrata.thirdparty.curator.{CuratedClientConfig, ServerProvider, ServiceDiscoveryException}
+import com.socrata.curator.ServerProvider.{RetryWhen, Complete}
+import com.socrata.curator.{CuratedClientConfig, ServerProvider, ServiceDiscoveryException}
 import org.slf4j.LoggerFactory
 
 /**
