@@ -12,7 +12,7 @@ import com.socrata.geoexport.intermediates._
 import com.socrata.soql.SoQLPackIterator
 import com.socrata.soql.types._
 import com.vividsolutions.jts.geom._
-import org.geotools.data.{DataStore, DefaultTransaction}
+import org.geotools.data.{DataStore, Transaction}
 import org.geotools.data.shapefile.ShapefileDataStoreFactory
 import org.geotools.data.simple.SimpleFeatureStore
 import org.geotools.feature.`type`._
@@ -119,32 +119,29 @@ object ShapefileEncoder extends GeoEncoder {
 
   private def addFeatures(layer: SoQLPackIterator, featureType: SimpleFeatureType, file: File,
                           dataStore: DataStore, reps:Seq[ShapeRep[_ <: SoQLValue]]) = {
-    dataStore.getFeatureSource((dataStore.getTypeNames.toList)(0)) match {
+    dataStore.getFeatureSource(dataStore.getTypeNames.head) match {
       case featureStore: SimpleFeatureStore =>
+        try {
+          val trans = Transaction.AUTO_COMMIT
+          featureStore.setTransaction(trans)
+          val collection = new DefaultFeatureCollection()
+          layer.foldLeft(0) { (id, attrs) =>
 
-        using(new DefaultTransaction(file.getName)) { trans =>
-          try {
-
-            featureStore.setTransaction(trans)
-            val collection = new DefaultFeatureCollection()
-            layer.foldLeft(0) { (id, attrs) =>
-
-              val intermediary = attrs.zip(reps)
-              if(!collection.add(buildFeature(id, featureType, intermediary))) {
-                throw new FeatureCollectionException(
-                  s"Failed to add feature ${attrs} to Geotools DefaultFeatureCollection"
-                )
-              }
-              id + 1
+            val intermediary = attrs.zip(reps)
+            if (!collection.add(buildFeature(id, featureType, intermediary))) {
+              throw new FeatureCollectionException(
+                s"Failed to add feature ${attrs} to Geotools DefaultFeatureCollection"
+              )
             }
-            log.debug(s"Added ${collection.size()} features to feature collection")
-            featureStore.addFeatures(collection)
-          } finally {
-            trans.commit()
-            dataStore.dispose()
+            id + 1
           }
+          log.debug(s"Added ${collection.size()} features to feature collection")
+          featureStore.addFeatures(collection)
+        } finally {
+          dataStore.dispose()
         }
-    }
+
+      }
     file
   }
 
