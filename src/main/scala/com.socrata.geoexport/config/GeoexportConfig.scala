@@ -2,7 +2,7 @@ package com.socrata.geoexport.config
 
 import com.typesafe.config.ConfigFactory
 
-import com.socrata.thirdparty.curator.{DiscoveryConfig, CuratedClientConfig, DiscoveryBrokerConfig}
+import com.socrata.curator.{DiscoveryConfig, CuratedClientConfig, DiscoveryBrokerConfig}
 
 // $COVERAGE-OFF$
 object GeoexportConfig {
