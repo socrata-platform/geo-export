@@ -12,6 +12,8 @@ object GeoexportConfig {
 
   lazy val threadpool = config.getConfig("geoexport.threadpool")
 
+  lazy val chunkSize = config.getInt("geoexport.chunk-size")
+
   lazy val broker = new DiscoveryBrokerConfig(config, "curator")
 
   lazy val upstream = new CuratedClientConfig(config, "upstream")
