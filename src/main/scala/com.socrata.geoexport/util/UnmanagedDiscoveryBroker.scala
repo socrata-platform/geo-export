@@ -1,7 +1,7 @@
 package com.socrata.geoexport
 
 import com.rojoma.simplearm.v2.{Managed, Resource}
-import com.socrata.thirdparty.curator._
+import com.socrata.curator._
 import org.apache.curator.x.discovery.ServiceDiscovery
 
 import com.socrata.http.client.{HttpClient, HttpClientHttpClient}

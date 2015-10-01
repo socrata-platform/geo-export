@@ -6,6 +6,7 @@ import java.util.UUID
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import com.rojoma.simplearm.util._
+import com.socrata.geoexport.config.GeoexportConfig
 import com.socrata.geoexport.encoders.KMLMapper._
 import com.socrata.geoexport.intermediates.shapefile._
 import com.socrata.geoexport.intermediates._
@@ -124,19 +125,23 @@ object ShapefileEncoder extends GeoEncoder {
         try {
           val trans = Transaction.AUTO_COMMIT
           featureStore.setTransaction(trans)
-          val collection = new DefaultFeatureCollection()
-          layer.foldLeft(0) { (id, attrs) =>
 
-            val intermediary = attrs.zip(reps)
-            if (!collection.add(buildFeature(id, featureType, intermediary))) {
-              throw new FeatureCollectionException(
-                s"Failed to add feature ${attrs} to Geotools DefaultFeatureCollection"
-              )
+          val chunks = layer.grouped(GeoexportConfig.chunkSize)
+          chunks.foldLeft(0) { (id, chunk)=>
+            val collection = new DefaultFeatureCollection()
+            val nextId = chunk.foldLeft(id) { (chunkId, attrs) =>
+              val intermediary = attrs.zip(reps)
+              if (!collection.add(buildFeature(chunkId, featureType, intermediary))) {
+                throw new FeatureCollectionException(
+                  s"Failed to add feature ${attrs} to Geotools DefaultFeatureCollection"
+                )
+              }
+              chunkId + 1
             }
-            id + 1
+            log.debug(s"Added ${collection.size()} features to feature collection")
+            featureStore.addFeatures(collection)
+            nextId
           }
-          log.debug(s"Added ${collection.size()} features to feature collection")
-          featureStore.addFeatures(collection)
         } finally {
           dataStore.dispose()
         }

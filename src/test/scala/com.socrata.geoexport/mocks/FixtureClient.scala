@@ -6,7 +6,7 @@ import java.nio.charset.{Charset, StandardCharsets}
 import com.socrata.geoexport.UnmanagedCuratedServiceClient
 import com.socrata.http.client.{RequestBuilder, Response, SimpleHttpRequest}
 import com.socrata.http.common.util.Acknowledgeable
-import com.socrata.thirdparty.curator.{CuratedClientConfig, ServerProvider}
+import com.socrata.curator.{CuratedClientConfig, ServerProvider}
 import com.typesafe.config.Config
 import org.apache.commons.io.IOUtils
 import org.scalatest.mock.MockitoSugar
