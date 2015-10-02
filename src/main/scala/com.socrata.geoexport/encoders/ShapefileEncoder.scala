@@ -171,6 +171,7 @@ object ShapefileEncoder extends GeoEncoder {
           }
           in.close()
           zipStream.closeEntry()
+          file.delete()
         }
         zipStream
       }.close()

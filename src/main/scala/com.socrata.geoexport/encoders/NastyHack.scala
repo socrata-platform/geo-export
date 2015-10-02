@@ -42,10 +42,5 @@ object NastyHack {
         writer.write()
       }
     }
-
-
-
-
-
   }
 }
