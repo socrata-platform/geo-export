@@ -1,5 +1,6 @@
 package org.geotools.data.shapefile
 
+import com.rojoma.simplearm.util._
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.TimeZone
@@ -9,11 +10,11 @@ import org.geotools.data.shapefile.shp.ShapefileReader
 import org.opengis.feature.simple.{SimpleFeature, SimpleFeatureType}
 
 object NastyHack {
-  def write(featureType: SimpleFeatureType, file: File, it: Iterator[SimpleFeature]): Unit = {
-    val shpFiles = new ShpFiles(file)
+
+  private def getReader(featureType: SimpleFeatureType, shpFiles: ShpFiles, it: Iterator[SimpleFeature]) = {
     // scalastyle:off null
     val shpReader = new ShapefileReader(shpFiles, false, false, null)
-    val reader = new ShapefileFeatureReader(featureType, shpReader, null, null) {
+    new ShapefileFeatureReader(featureType, shpReader, null, null) {
       override def hasNext(): Boolean = {
         it.hasNext
       }
@@ -23,13 +24,28 @@ object NastyHack {
       }
     }
     // scalastyle:on null
-    val tz: TimeZone = TimeZone.getTimeZone("UTC")
-    val writer = new ShapefileFeatureWriter(shpFiles, reader, StandardCharsets.UTF_8, tz)
+  }
 
-    while(writer.hasNext) {
-      writer.next()
-      writer.write()
+  private def getWriter(reader: ShapefileFeatureReader, shpFiles: ShpFiles) = {
+    val tz: TimeZone = TimeZone.getTimeZone("UTC")
+    new ShapefileFeatureWriter(shpFiles, reader, StandardCharsets.UTF_8, tz)
+  }
+
+  def write(featureType: SimpleFeatureType, file: File, it: Iterator[SimpleFeature]): Unit = {
+    val shpFiles = new ShpFiles(file)
+
+    for {
+      reader <- managed(getReader(featureType, shpFiles, it))
+      writer <- managed(getWriter(reader, shpFiles))
+    } {
+      while(writer.hasNext) {
+        writer.next()
+        writer.write()
+      }
     }
-    writer.close()
+
+
+
+
   }
 }
