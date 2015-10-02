@@ -22,6 +22,7 @@ abstract class ShapeRep[T] {
   def toAttrBindings: Seq[Class[_]]
   def toAttrValues(soql: T): Seq[Any]
   def isGeometry: Boolean
+  protected def normalizeIdLike(name: String) = name.replaceFirst("^:", "")
 }
 
 trait RepMapper {
@@ -76,8 +77,4 @@ object ShapeRep {
     case unknown: Any => throw new UnknownSoQLTypeException("Unknown SoQLType ${unknown}")
   }
   // scalastyle:on
-}
-
-trait SocrataMetadataRep {
-  protected def normalizeIdLike(name: String) = name.replaceFirst("^:", "")
 }
