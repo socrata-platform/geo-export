@@ -9,11 +9,9 @@ import org.geotools.data.shapefile.shp.ShapefileReader
 import org.opengis.feature.simple.{SimpleFeature, SimpleFeatureType}
 
 object NastyHack {
-  def write(featureType: SimpleFeatureType, file: File, it: Iterator[SimpleFeature]) = {
+  def write(featureType: SimpleFeatureType, file: File, it: Iterator[SimpleFeature]): Unit = {
     val shpFiles = new ShpFiles(file)
-
-
-
+    // scalastyle:off null
     val shpReader = new ShapefileReader(shpFiles, false, false, null)
     val reader = new ShapefileFeatureReader(featureType, shpReader, null, null) {
       override def hasNext(): Boolean = {
@@ -24,7 +22,8 @@ object NastyHack {
         it.next()
       }
     }
-    val tz: TimeZone = TimeZone.getDefault
+    // scalastyle:on null
+    val tz: TimeZone = TimeZone.getTimeZone("UTC")
     val writer = new ShapefileFeatureWriter(shpFiles, reader, StandardCharsets.UTF_8, tz)
 
     while(writer.hasNext) {
@@ -32,6 +31,5 @@ object NastyHack {
       writer.write()
     }
     writer.close()
-
   }
 }
