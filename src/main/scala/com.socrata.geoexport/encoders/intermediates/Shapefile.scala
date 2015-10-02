@@ -20,7 +20,8 @@ abstract class ShapefileRep[T](name: String) extends ShapeRep[T] {
   val maxDBFColumnLength = 10
 
   protected def normalizeName(name: String) = {
-    if (name.length > maxDBFColumnLength) name.substring(0, maxDBFColumnLength) else name
+    val n = normalizeIdLike(name)
+    if (n.length > maxDBFColumnLength) n.substring(0, maxDBFColumnLength) else n
   }
 
   def toAttrNames: Seq[String] = Seq(normalizeName(name))
@@ -36,8 +37,8 @@ trait DBFDatum {
 
 trait SplitDatetime {
   def splitNames(soqlName: String, normalizer: String => String): Seq[String] = {
-    val dateName = s"date_${soqlName}"
-    val timeName = s"time_${soqlName}"
+    val dateName = s"date_${normalizer(soqlName)}"
+    val timeName = s"time_${normalizer(soqlName)}"
     Seq(normalizer(dateName), normalizer(timeName))
   }
 }
@@ -130,17 +131,15 @@ class BooleanRep(soqlName: String) extends ShapefileRep[SoQLBoolean](soqlName: S
 // These are both Longs, but you can't represent a Long this large in a DBF,
 // so they'll need to be strings
 class VersionRep(soqlName: String)
-  extends ShapefileRep[SoQLVersion](soqlName: String) with SocrataMetadataRep with DBFDatum {
+  extends ShapefileRep[SoQLVersion](soqlName: String) with DBFDatum {
 
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[java.lang.String])
   def toAttrValues(soql: SoQLVersion): Seq[AnyRef] = Seq(soql.value.toString)
-  override protected def normalizeName(name: String) = super.normalizeName(this.normalizeIdLike(name))
 }
 
-class IDRep(soqlName: String) extends ShapefileRep[SoQLID](soqlName: String) with SocrataMetadataRep with DBFDatum {
+class IDRep(soqlName: String) extends ShapefileRep[SoQLID](soqlName: String) with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[java.lang.String])
   def toAttrValues(soql: SoQLID): Seq[AnyRef] = Seq(soql.value.toString)
-  override protected def normalizeName(name: String) = super.normalizeName(this.normalizeIdLike(name))
 }
 class DoubleRep(soqlName: String) extends ShapefileRep[SoQLDouble](soqlName: String) with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[java.lang.Double])
