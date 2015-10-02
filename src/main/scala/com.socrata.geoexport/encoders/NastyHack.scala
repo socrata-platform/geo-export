@@ -32,9 +32,8 @@ object NastyHack {
   }
 
   def write(featureType: SimpleFeatureType, file: File, it: Iterator[SimpleFeature]): Unit = {
-    val shpFiles = new ShpFiles(file)
-
     for {
+      shpFiles <- managed(new ShpFiles(file))
       reader <- managed(getReader(featureType, shpFiles, it))
       writer <- managed(getWriter(reader, shpFiles))
     } {
@@ -43,6 +42,7 @@ object NastyHack {
         writer.write()
       }
     }
+
 
 
 
