@@ -2,7 +2,8 @@
 package com.socrata.geoexport.encoders
 
 import java.io._
-import java.util.UUID
+import java.nio.charset.StandardCharsets
+import java.util.{TimeZone, UUID}
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import com.rojoma.simplearm.util._
@@ -13,8 +14,9 @@ import com.socrata.geoexport.intermediates._
 import com.socrata.soql.SoQLPackIterator
 import com.socrata.soql.types._
 import com.vividsolutions.jts.geom._
+import org.geotools.data.shapefile.shp.{ShapefileReader, ShapefileWriter}
+import org.geotools.data.shapefile._
 import org.geotools.data.{DataStore, Transaction}
-import org.geotools.data.shapefile.ShapefileDataStoreFactory
 import org.geotools.data.simple.SimpleFeatureStore
 import org.geotools.feature.`type`._
 import org.geotools.feature.simple.{SimpleFeatureImpl, SimpleFeatureTypeBuilder}
@@ -23,6 +25,7 @@ import org.geotools.filter.identity.FeatureIdImpl
 import org.geotools.referencing.crs.DefaultGeographicCRS
 import org.opengis.feature.simple.{SimpleFeature, SimpleFeatureType}
 import org.opengis.filter.Filter
+
 
 import scala.collection.JavaConversions._
 import scala.language.implicitConversions
@@ -38,14 +41,12 @@ object ShapefileEncoder extends GeoEncoder {
   val shapefileExt = "shp"
   val spatialIndexExt = "shx"
   val dbaseExt = "dbf"
-  val shpFixExt = "fix"
   val projExt = "prj"
 
   val shapeArchiveExts = Seq(
     shapefileExt,
     spatialIndexExt,
     dbaseExt,
-    shpFixExt,
     projExt
   )
   private def getShapefileMinions(shpFile: File): Seq[File] = {
@@ -120,33 +121,20 @@ object ShapefileEncoder extends GeoEncoder {
 
   private def addFeatures(layer: SoQLPackIterator, featureType: SimpleFeatureType, file: File,
                           dataStore: DataStore, reps:Seq[ShapeRep[_ <: SoQLValue]]) = {
-    dataStore.getFeatureSource(dataStore.getTypeNames.head) match {
-      case featureStore: SimpleFeatureStore =>
-        try {
-          val trans = Transaction.AUTO_COMMIT
-          featureStore.setTransaction(trans)
 
-          val chunks = layer.grouped(GeoexportConfig.chunkSize)
-          chunks.foldLeft(0) { (id, chunk)=>
-            val collection = new DefaultFeatureCollection()
-            val nextId = chunk.foldLeft(id) { (chunkId, attrs) =>
-              val intermediary = attrs.zip(reps)
-              if (!collection.add(buildFeature(chunkId, featureType, intermediary))) {
-                throw new FeatureCollectionException(
-                  s"Failed to add feature ${attrs} to Geotools DefaultFeatureCollection"
-                )
-              }
-              chunkId + 1
-            }
-            log.debug(s"Added ${collection.size()} features to feature collection")
-            featureStore.addFeatures(collection)
-            nextId
-          }
-        } finally {
-          dataStore.dispose()
-        }
-
+    var fid = 0
+    val it = new Iterator[SimpleFeature] {
+      def next(): SimpleFeature = {
+        val intermediary = layer.next.zip(reps)
+        val feature = buildFeature(fid, featureType, intermediary)
+        fid = fid + 1
+        feature
       }
+      def hasNext: Boolean = layer.hasNext
+    }
+
+    NastyHack.write(featureType, file, it)
+
     file
   }
 

@@ -163,6 +163,7 @@ class ShapefileTest extends TestBase {
         point.getX must be(0)
         point.getY must be(1)
     }
+
   }
 
   test("can convert a stream of a line soqlpack to shp") {
