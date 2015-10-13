@@ -10,9 +10,7 @@ import scala.xml.Node
 case class KMLTranslationException(message: String) extends Exception
 
 abstract class KMLRep[T](soqlName: String) extends ShapeRep[T] {
-  protected def normalizeName(name: String) = {
-    name
-  }
+  protected def normalizeName(name: String) = name.replaceAll(":", "")
 
   def toAttrBindings: Seq[Class[_]] = throw new KMLTranslationException("KML doesn't use bindings.")
   def toAttrNames: Seq[String] = Seq(normalizeName(soqlName))
@@ -165,14 +163,12 @@ class BooleanRep(soqlName: String) extends KMLRep[SoQLBoolean](soqlName) with Si
   def toAttrValues(soql: SoQLBoolean): Seq[Any] = asSimpleData(soql.value.toString)
 }
 
-class VersionRep(soqlName: String) extends KMLRep[SoQLVersion](soqlName) with SimpleDatum with SocrataMetadataRep {
+class VersionRep(soqlName: String) extends KMLRep[SoQLVersion](soqlName) with SimpleDatum {
   def toAttrValues(soql: SoQLVersion): Seq[Any] = asSimpleData(soql.value.toString)
-  override protected def normalizeName(name: String) = normalizeIdLike(name)
 }
 
-class IDRep(soqlName: String) extends KMLRep[SoQLID](soqlName) with SimpleDatum with SocrataMetadataRep {
+class IDRep(soqlName: String) extends KMLRep[SoQLID](soqlName) with SimpleDatum {
   def toAttrValues(soql: SoQLID): Seq[Any] = asSimpleData(soql.value.toString)
-  override protected def normalizeName(name: String) = normalizeIdLike(name)
 }
 
 class DoubleRep(soqlName: String) extends KMLRep[SoQLDouble](soqlName) with SimpleDatum {

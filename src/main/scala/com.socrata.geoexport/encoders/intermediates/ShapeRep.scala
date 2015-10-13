@@ -77,7 +77,3 @@ object ShapeRep {
   }
   // scalastyle:on
 }
-
-trait SocrataMetadataRep {
-  protected def normalizeIdLike(name: String) = name.replaceFirst("^:", "")
-}
