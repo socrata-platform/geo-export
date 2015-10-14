@@ -12,7 +12,7 @@ import org.joda.time.format.DateTimeFormat
   for each SoQLType which will translate names/values to those representable
   by the export format
 
-  RepMapper is a gross workaround for the lack of dependents typing i guess.
+  RepMapper is a gross workaround for the lack of dependent typing i guess.
 */
 
 case class UnknownSoQLTypeException(message: String) extends Exception

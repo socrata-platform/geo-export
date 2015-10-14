@@ -1,24 +1,14 @@
 package com.socrata.geoexport.encoders
 
-import java.io.{OutputStream, OutputStreamWriter, Writer}
-
-import com.rojoma.json.v3.ast.{JNumber, JString}
-import com.socrata.geoexport.encoders.KMLMapper._
-import com.socrata.soql.SoQLPackIterator
-import com.socrata.soql.types._
-import com.vividsolutions.jts.geom._
-import org.opengis.feature.`type`.AttributeDescriptor
-import org.slf4j.LoggerFactory
+import java.io.OutputStream
+import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import scala.language.implicitConversions
-import scala.xml.{Node, XML}
-import com.rojoma.simplearm.util._
-import scala.util.{Try, Success, Failure}
-import java.util.zip.{ZipEntry, ZipOutputStream}
+import scala.util.{Failure, Success, Try}
+import geotypes._
 
 
 object KMZEncoder extends GeoEncoder {
-
 
   def encode(layers: Layers, outStream: OutputStream) : Try[OutputStream] = {
     val zipStream = new ZipOutputStream(outStream)
