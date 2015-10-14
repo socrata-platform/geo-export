@@ -30,10 +30,10 @@ class KMLIshTest extends TestBase {
     ("a_floating_ts", SoQLFloatingTimestamp),
     ("a_time", SoQLTime),
     ("a_date", SoQLDate),
-    ("a_money", SoQLMoney),
+    (":a_money", SoQLMoney),
     (":an_id", SoQLID),
     (":a_version", SoQLVersion),
-    ("a_double", SoQLDouble),
+    (":a_double", SoQLDouble),
     ("a_number_array", SoQLArray),
     ("a_str_array", SoQLArray),
     ("name", SoQLText),
@@ -114,7 +114,7 @@ class KMLIshTest extends TestBase {
               <width>1.5</width>
             </LineStyle>
             <PolyStyle>
-              <color>7dff0000</color>
+              <color>7d8a30c4</color>
             </PolyStyle>
           </Style>
           <Folder>
@@ -176,7 +176,7 @@ class KMLIshTest extends TestBase {
               <width>1.5</width>
             </LineStyle>
             <PolyStyle>
-              <color>7dff0000</color>
+              <color>7d8a30c4</color>
             </PolyStyle>
           </Style>
           <Folder>
@@ -241,7 +241,7 @@ class KMLIshTest extends TestBase {
               <width>1.5</width>
             </LineStyle>
             <PolyStyle>
-              <color>7dff0000</color>
+              <color>7d8a30c4</color>
             </PolyStyle>
           </Style>
           <Folder>
@@ -312,7 +312,7 @@ class KMLIshTest extends TestBase {
               <width>1.5</width>
             </LineStyle>
             <PolyStyle>
-              <color>7dff0000</color>
+              <color>7d8a30c4</color>
             </PolyStyle>
           </Style>
           <Folder>
@@ -386,7 +386,7 @@ class KMLIshTest extends TestBase {
               <width>1.5</width>
             </LineStyle>
             <PolyStyle>
-              <color>7dff0000</color>
+              <color>7d8a30c4</color>
             </PolyStyle>
           </Style>
           <Folder>
@@ -451,7 +451,7 @@ class KMLIshTest extends TestBase {
               <width>1.5</width>
             </LineStyle>
             <PolyStyle>
-              <color>7dff0000</color>
+              <color>7d8a30c4</color>
             </PolyStyle>
           </Style>
           <Folder>
@@ -513,7 +513,7 @@ class KMLIshTest extends TestBase {
               <width>1.5</width>
             </LineStyle>
             <PolyStyle>
-              <color>7dff0000</color>
+              <color>7d8a30c4</color>
             </PolyStyle>
           </Style>
           <Folder>
@@ -592,7 +592,7 @@ class KMLIshTest extends TestBase {
               <width>1.5</width>
             </LineStyle>
             <PolyStyle>
-              <color>7dff0000</color>
+              <color>7d8a30c4</color>
             </PolyStyle>
           </Style>
           <Folder>

@@ -38,7 +38,7 @@ object KMLMapper {
         <width>1.5</width>
       </LineStyle>
       <PolyStyle>
-        <color>7dff0000</color>
+        <color>7d8a30c4</color>
       </PolyStyle>
     </Style>
 
