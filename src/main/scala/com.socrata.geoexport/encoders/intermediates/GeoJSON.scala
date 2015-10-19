@@ -173,7 +173,7 @@ object GeoJSONRepMapper extends RepMapper {
     case (value: SoQLDouble, intermediary: DoubleRep) => intermediary.toAttrValues(value)
     case (value: SoQLJson, intermediary: JSONRep) => intermediary.toAttrValues(value)
     case (value: SoQLObject, intermediary: ObjectRep) => intermediary.toAttrValues(value)
-    case (SoQLNull, _) => Seq(null) // scalastyle:ignore null
+    case (SoQLNull, _) => Seq(JNull)
     case (value: SoQLValue, _) =>
       log.error(s"Unknown SoQLValue: ${value.getClass()} - coercing toString but you should fix this!")
       Seq(JString(value.toString))
