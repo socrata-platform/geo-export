@@ -13,6 +13,8 @@ import org.scalatest.{FunSuite, MustMatchers}
 
 import com.socrata.http.server.HttpRequest
 import scala.xml.{NodeSeq, XML, Node}
+import com.rojoma.json.v3.io.{CompactJsonWriter, JsonReader}
+import com.rojoma.json.v3.ast._
 import org.scalatest.mock.MockitoSugar
 
 class ExportTest extends TestBase with MockitoSugar {
@@ -79,10 +81,8 @@ class ExportTest extends TestBase with MockitoSugar {
         }
     }
 
-
     exportShape(new TypedPathComponent("vt5y-77dn", "shp"))
     exportShape(new TypedPathComponent("vt5y-77dn", "shapefile"))
-
   }
 
   test("can get a multi layer Shapefile dataset") {
@@ -97,6 +97,35 @@ class ExportTest extends TestBase with MockitoSugar {
 
     verify(resp).setStatus(200)
   }
+
+  test("can get a multi layer geoJSON dataset") {
+
+    val fixtureClient = new FixtureClient
+
+    val req = mock[HttpRequest]
+    val outputStream = new mocks.ByteArrayServletOutputStream
+    val resp = outputStream.responseFor
+
+    val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-77dn,vt5y-77do", "geojson"))
+    service.get(req)(resp)
+
+    verify(resp).setStatus(200)
+
+    val js = JsonReader.fromString(outputStream.getString)
+
+    js match {
+      case JObject(fields) => println(fields.keys)
+        fields("features") match {
+          case JArray(features) =>
+            //geoJSON merges heterogenous shapes into the same feature list, so this list will be the sum
+            //of the length of each fixture
+            features.size must be (77 + 77)
+          case unexpected => throw new Exception(s"Expected JArray, found ${unexpected}")
+        }
+      case unexpected => throw new Exception(s"Expected JObject, found ${unexpected}")
+    }
+  }
+
 
   test("a 400 is returned on an invalid 4x4") {
     val fixtureClient = new FixtureClient
@@ -161,6 +190,19 @@ class ExportTest extends TestBase with MockitoSugar {
 
     verify(resp).setStatus(200)
     verify(resp).setContentType("application/vnd.google-earth.kmz")
+  }
+
+  test("geoJSON export has mimetype application/vnd.geo+json") {
+    val fixtureClient = new FixtureClient
+    val req = mock[HttpRequest]
+    val outputStream = new mocks.ByteArrayServletOutputStream
+    val resp = outputStream.responseFor
+
+    val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-77dn", "geojson"))
+    service.get(req)(resp)
+
+    verify(resp).setStatus(200)
+    verify(resp).setContentType("application/vnd.geo+json")
   }
 
 

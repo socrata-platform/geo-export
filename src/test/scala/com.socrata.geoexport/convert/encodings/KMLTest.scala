@@ -4,6 +4,7 @@ package com.socrata.geoexport
 import com.socrata.geoexport.encoders.KMLMapper._
 import com.socrata.soql.types._
 import com.vividsolutions.jts.geom._
+import encoders.geoexceptions._
 
 import scala.xml.Utility.{trim => xmltrim}
 

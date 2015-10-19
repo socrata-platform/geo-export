@@ -159,7 +159,7 @@ class KMLIshTest extends TestBase {
   }
 
   protected def testLinestring(convert: List[DataInputStream] => Node) = {
-        val p = wkt("LINESTRING (30 10, 10 30, 40 40)").asInstanceOf[LineString]
+    val p = wkt("LINESTRING (30 10, 10 30, 40 40)").asInstanceOf[LineString]
 
     val schema = simpleSchema :+ (("a_line", SoQLLine))
     val items = simpleRows :+ SoQLLine(p)

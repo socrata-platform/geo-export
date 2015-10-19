@@ -1,80 +1,44 @@
 package com.socrata.geoexport.encoders
 
-import java.io.{OutputStream, OutputStreamWriter, Writer}
+import java.io.{OutputStream, OutputStreamWriter}
 
-import com.rojoma.json.v3.ast.{JNumber, JString}
-import com.socrata.geoexport.encoders.KMLMapper._
-import com.socrata.soql.SoQLPackIterator
-import com.socrata.soql.types._
-import com.vividsolutions.jts.geom._
-import org.opengis.feature.`type`.AttributeDescriptor
-import org.slf4j.LoggerFactory
-import com.socrata.geoexport.intermediates._
 import com.socrata.geoexport.intermediates.kml._
 
 import scala.language.implicitConversions
+import scala.util.{Failure, Success, Try}
 import scala.xml.{Node, XML}
-import com.rojoma.simplearm.util._
-import scala.util.{Try, Success, Failure}
-import scala.language.existentials
-
+import geotypes._
 
 // Convert to XML nodes: https://developers.google.com/kml/documentation/kmlreference
 // functions in here should take a value or seq of values and return a single Node
-object KMLMapper {
- lazy val log = LoggerFactory.getLogger(getClass)
+object KMLMapper extends RowMapper[Node] {
 
-  case class MultipleGeometriesFoundException(message: String) extends Exception
-  case class UnknownGeometryException(message: String) extends Exception
-  type Attributes = Seq[AttributeDescriptor]
-  type Layers = Iterable[SoQLPackIterator]
+  protected def prefix = """<?xml version='1.0' encoding='UTF-8'?>
+    |<kml xmlns:kml="http://earth.google.com/kml/2.2">
+    |  <Document id="featureCollection">
+    |<Style id="defaultStyle">
+    |  <LineStyle>
+    |    <width>1.5</width>
+    |  </LineStyle>
+    |  <PolyStyle>
+    |    <color>7d8a30c4</color>
+    |  </PolyStyle>
+    |</Style>
+  """.stripMargin
 
-  def genKML(layers: Layers, writer: OutputStreamWriter): Unit = {
-    kml(layers, writer)
+  protected def suffix = """  </Document>
+  </kml>""".stripMargin
+
+  override protected def layerPrefix = "<Folder>"
+  override protected def layerSuffix(_moreLayers: Boolean) = "</Folder>"
+
+  protected def writeRow(node: Node, writer: OutputStreamWriter, _hasNext: Boolean) = {
+    XML.write(writer, node, "UTF-8", false, null) //scalastyle:ignore
   }
 
-  val defaultStyle = <Style id="defaultStyle">
-      <LineStyle>
-        <width>1.5</width>
-      </LineStyle>
-      <PolyStyle>
-        <color>7d8a30c4</color>
-      </PolyStyle>
-    </Style>
+  protected def toRow(schema: Schema, fields: Fields): Node = {
 
-
-  private def kml(layers: Layers, writer: OutputStreamWriter): Unit = {
-
-    writer.write("""<?xml version='1.0' encoding='UTF-8'?>
-      |<kml xmlns:kml="http://earth.google.com/kml/2.2">
-      |  <Document id="featureCollection">""".stripMargin)
-    // no scala. how about *you* avoid using null in the scala XML API
-    XML.write(writer, defaultStyle, "UTF-8", false, null) //scalastyle:ignore
-    layers.foreach(kml(_, writer))
-    writer.write("""  </Document>
-    </kml>""".stripMargin)
-  }
-
-  private def kml(collection: SoQLPackIterator, writer: OutputStreamWriter): Unit = {
-    writer.write("<Folder>")
-    collection.foreach { feature: Array[SoQLValue] =>
-      val featureXML = kml(collection.schema, feature)
-      XML.write(writer, featureXML, "UTF-8", false, null) //scalastyle:ignore
-    }
-    writer.write("</Folder>")
-  }
-
-  private def kml(schema: Seq[(String, SoQLType)], fields: Array[_ <: SoQLValue]): Node = {
-
-    val (geoms, attrs) = schema
-      .zip(fields)
-      .map { case (column, value) => (value, ShapeRep.repFor(column, KMLRepMapper)) }
-      .partition { case (_value, intermediate) => intermediate.isGeometry }
-
-    val geomAttr = geoms match {
-      case Seq(g) => g
-      case _ => throw new MultipleGeometriesFoundException("Too many geometry columns!")
-    }
+    val (geomAttr, attrs) = splitOnGeo(KMLRepMapper, schema, fields)
 
     <Placemark>
       <styleUrl>#defaultStyle</styleUrl>
@@ -92,7 +56,7 @@ object KMLEncoder extends GeoEncoder {
   def encode(layers: Layers, outStream: OutputStream) : Try[OutputStream] = {
     val writer = new OutputStreamWriter(outStream)
     try {
-      KMLMapper.genKML(layers, writer)
+      KMLMapper.serialize(layers, writer)
       Success(outStream)
     } catch {
       case e: Exception => Failure(e)
@@ -104,5 +68,3 @@ object KMLEncoder extends GeoEncoder {
   def encodes: Set[String] = Set("kml")
   def encodedMIME: String  = "application/vnd.google-earth.kml+xml"
 }
-
-

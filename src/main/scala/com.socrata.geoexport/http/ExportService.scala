@@ -10,7 +10,7 @@ import com.rojoma.json.v3.io.JsonReader
 import com.rojoma.json.v3.util.JsonUtil
 import com.socrata.geoexport.UnmanagedCuratedServiceClient
 import com.socrata.geoexport.conversions.Converter
-import com.socrata.geoexport.encoders.{KMLEncoder, ShapefileEncoder, KMZEncoder}
+import com.socrata.geoexport.encoders.{KMLEncoder, ShapefileEncoder, KMZEncoder, GeoJSONEncoder}
 import com.socrata.geoexport.http.ExportService._
 import com.socrata.http.client.{RequestBuilder, Response}
 import com.socrata.http.server.responses.{Json, _}
@@ -33,7 +33,7 @@ object ExportService {
   // to appease the scala linter.. ಠ_ಠ
   val errorKey = "reason"
   val FourbyFour = "[\\w0-9]{4}-[\\w0-9]{4}"
-  val encoders = List(KMLEncoder, ShapefileEncoder, KMZEncoder)
+  val encoders = List(KMLEncoder, ShapefileEncoder, KMZEncoder, GeoJSONEncoder)
   val formats: Set[String] = encoders.flatMap(_.encodes).toSet
   type LayerFailure = (Int, JValue)
 

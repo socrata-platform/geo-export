@@ -25,13 +25,17 @@ import org.geotools.filter.identity.FeatureIdImpl
 import org.geotools.referencing.crs.DefaultGeographicCRS
 import org.opengis.feature.simple.{SimpleFeature, SimpleFeatureType}
 import org.opengis.filter.Filter
-
+import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConversions._
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
+import geotypes._
 
 object ShapefileEncoder extends GeoEncoder {
+
+  lazy val log = LoggerFactory.getLogger(getClass)
+
   case class FeatureCollectionException(val message: String) extends Exception
 
   type SoQLColumn = (String, SoQLType)
