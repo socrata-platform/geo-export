@@ -35,7 +35,7 @@ GET /export/{uid_0},{uid_1},...,{uid_n}.{format}
 where
 ```
 uid:    a dataset identifier (four by four)
-format: an export format (currently only one of {shp, kml, kmz})
+format: an export format (currently only one of {shp, kml, kmz, geojson})
 ```
 
 export the comma separated list of datasets (identified by their uid)
