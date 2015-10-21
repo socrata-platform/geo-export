@@ -42,6 +42,7 @@ class ShapefileTest extends TestBase {
     ("a_bool", SoQLBoolean),
     (":a_ts", SoQLFixedTimestamp),
     (":a_fts", SoQLFloatingTimestamp),
+    ("a_null_fts", SoQLFloatingTimestamp),
     ("a_time", SoQLTime),
     (":a_date", SoQLDate),
     (":a_money", SoQLMoney),
@@ -60,6 +61,7 @@ class ShapefileTest extends TestBase {
     SoQLBoolean(true),
     SoQLFixedTimestamp(dt),
     SoQLFloatingTimestamp(ldt.plusHours(1)),
+    SoQLNull,
     SoQLTime(ldt.toLocalTime),
     SoQLDate(ldt.toLocalDate),
     SoQLMoney((new BigDecimal(42.00))),
@@ -99,6 +101,9 @@ class ShapefileTest extends TestBase {
 
     feature.getAttribute("date_a_ts").asInstanceOf[Date] must be(ldt.withTime(0, 0, 0, 0).toDate)
     feature.getAttribute("time_a_ts") must be("20:00:00.000")
+
+    feature.getAttribute("date_a_nul") must be(null)
+    feature.getAttribute("time_a_nul") must be(null)
 
     feature.getAttribute("date_a_fts").asInstanceOf[Date] must be(ldt.withTime(0, 0, 0, 0).toDate)
     feature.getAttribute("time_a_fts") must be("02:23:00.000")
