@@ -15,7 +15,10 @@ object Converter {
     This will merge the layers into whatever representation the encoder decides to represent
     layers as.
   */
-  def execute(rs: ResourceScope, layerStreams: Iterable[InputStream], encoder: GeoEncoder, os: OutputStream) : Try[OutputStream] = {
+  def execute(
+    rs: ResourceScope, layerStreams: Iterable[InputStream],
+    encoder: GeoEncoder, os: OutputStream) : Try[OutputStream] = {
+
     Try(layerStreams.map { is =>
       new SoQLPackIterator(new DataInputStream(is))
     }).flatMap { features =>
