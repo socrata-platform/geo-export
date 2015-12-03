@@ -71,7 +71,7 @@ class GeoJSONTest extends TestBase {
 
   private def convertGeoJSON(layers: List[InputStream]): String = {
     val outStream = new ByteArrayOutputStream()
-    val result = Converter.execute(layers, GeoJSONEncoder, outStream) match {
+    val result = Converter.execute(Unused, layers, GeoJSONEncoder, outStream) match {
       case Success(outstream) =>
         outStream.flush()
         outStream.toString("UTF-8")

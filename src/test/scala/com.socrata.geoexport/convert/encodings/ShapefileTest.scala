@@ -78,7 +78,7 @@ class ShapefileTest extends TestBase {
   private def convertShapefile(layers: List[InputStream]): File = {
     val archive = new File(s"/tmp/test_geo_export_${UUID.randomUUID()}.zip")
     val outStream = new FileOutputStream(archive)
-    Converter.execute(layers, ShapefileEncoder, outStream) match {
+    Converter.execute(Unused, layers, ShapefileEncoder, outStream) match {
       case Success(outstream) =>
         outStream.flush()
         archive

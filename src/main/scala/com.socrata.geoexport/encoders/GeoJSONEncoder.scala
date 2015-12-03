@@ -5,7 +5,7 @@ import java.io.{OutputStream, OutputStreamWriter}
 import com.rojoma.json.v3.ast.{JObject, JString, JValue}
 import com.rojoma.json.v3.io.CompactJsonWriter
 import com.socrata.geoexport.intermediates.geojson.GeoJSONRepMapper
-
+import com.rojoma.simplearm.v2.ResourceScope
 import scala.language.{existentials, implicitConversions}
 import scala.util.{Failure, Success, Try}
 import geotypes._
@@ -56,7 +56,7 @@ object GeoJSONMapper extends RowMapper[JValue] {
 
 object GeoJSONEncoder extends GeoEncoder {
 
-  def encode(layers: Layers, outStream: OutputStream) : Try[OutputStream] = {
+  def encode(rs: ResourceScope, layers: Layers, outStream: OutputStream) : Try[OutputStream] = {
     val writer = new OutputStreamWriter(outStream)
     try {
       GeoJSONMapper.serialize(layers, writer)

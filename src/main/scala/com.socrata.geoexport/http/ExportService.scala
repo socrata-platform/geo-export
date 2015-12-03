@@ -127,7 +127,7 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
             OK ~> ContentType(encoder.encodedMIME) ~> Stream({out: OutputStream =>
 
               val streams = responses.map { r => r.inputStream() }
-              Converter.execute(streams, encoder, out) match {
+              Converter.execute(req.resourceScope, streams, encoder, out) match {
                 case Success(s) =>
                   out.flush()
                   log.info(s"Finished writing export for ${fxfs}")

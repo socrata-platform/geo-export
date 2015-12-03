@@ -3,7 +3,7 @@ package com.socrata.geoexport.encoders
 import java.io.{OutputStream, OutputStreamWriter}
 
 import com.socrata.geoexport.intermediates.kml._
-
+import com.rojoma.simplearm.v2.ResourceScope
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 import scala.xml.{Node, XML}
@@ -53,7 +53,7 @@ object KMLMapper extends RowMapper[Node] {
 }
 
 object KMLEncoder extends GeoEncoder {
-  def encode(layers: Layers, outStream: OutputStream) : Try[OutputStream] = {
+  def encode(rs: ResourceScope, layers: Layers, outStream: OutputStream) : Try[OutputStream] = {
     val writer = new OutputStreamWriter(outStream)
     try {
       KMLMapper.serialize(layers, writer)
