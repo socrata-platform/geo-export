@@ -70,7 +70,7 @@ class KMLIshTest extends TestBase {
 
   protected def convertKML(layers: List[InputStream]): Node = {
     val outStream = new ByteArrayOutputStream()
-    val result = Converter.execute(layers, KMLEncoder, outStream) match {
+    val result = Converter.execute(Unused, layers, KMLEncoder, outStream) match {
       case Success(outstream) =>
         outStream.flush()
         outStream.toString("UTF-8")
@@ -80,7 +80,7 @@ class KMLIshTest extends TestBase {
   }
   protected def convertKMZ(layers: List[InputStream]): Node = {
     val outStream = new ByteArrayOutputStream()
-    val result = Converter.execute(layers, KMZEncoder, outStream) match {
+    val result = Converter.execute(Unused, layers, KMZEncoder, outStream) match {
       case Success(outstream) =>
         outStream.flush()
         val zis = new ZipInputStream(new ByteArrayInputStream(outStream.toByteArray))

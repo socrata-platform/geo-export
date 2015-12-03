@@ -26,7 +26,7 @@ import org.geotools.referencing.crs.DefaultGeographicCRS
 import org.opengis.feature.simple.{SimpleFeature, SimpleFeatureType}
 import org.opengis.filter.Filter
 import org.slf4j.LoggerFactory
-
+import com.rojoma.simplearm.v2.ResourceScope
 import scala.collection.JavaConversions._
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
@@ -53,10 +53,16 @@ object ShapefileEncoder extends GeoEncoder {
     dbaseExt,
     projExt
   )
-  private def getShapefileMinions(shpFile: File): Seq[File] = {
+  private def getShapefileMinions(shpFile: File, rs: ResourceScope, onFile: (InputStream, String) => Unit): Unit = {
     shpFile.getName.split("\\.") match {
       case Array(name, ext) => shapeArchiveExts.map { other =>
-        new File(shpFile.getParent, s"${name}.${other}")
+        val file = new File(shpFile.getParent, s"${name}.${other}")
+        val in = rs.open(new BufferedInputStream(rs.open(new FileInputStream(file))))
+        try {
+          onFile(in, file.getName)
+        } finally {
+          file.delete()
+        }
       }
     }
   }
@@ -143,7 +149,7 @@ object ShapefileEncoder extends GeoEncoder {
   }
 
 
-  def encode(layers: Layers, outStream: OutputStream) : Try[OutputStream] = {
+  def encode(rs: ResourceScope, layers: Layers, outStream: OutputStream) : Try[OutputStream] = {
 
     try {
       layers.map { layer =>
@@ -164,24 +170,21 @@ object ShapefileEncoder extends GeoEncoder {
         dataStore.createSchema(featureType)
         addFeatures(layer, featureType, file, dataStore, reps)
 
-      }.foldLeft(new ZipOutputStream(outStream)) { (zipStream, shpFile) =>
-        getShapefileMinions(shpFile).foreach { file =>
-          try {
-            zipStream.putNextEntry(new ZipEntry(file.getName))
-            val in = new BufferedInputStream(new FileInputStream(file))
-            var b = in.read()
-            while(b > -1) {
-              zipStream.write(b)
-              b = in.read()
-            }
-            in.close()
-            zipStream.closeEntry()
-          } finally {
-            file.delete()
+      }.foldLeft(rs.open(new ZipOutputStream(outStream))) { (zipStream, shpFile) =>
+
+
+        getShapefileMinions(shpFile, rs, { (in, fileName) =>
+          zipStream.putNextEntry(new ZipEntry(fileName))
+          var b = in.read()
+          while(b > -1) {
+            zipStream.write(b)
+            b = in.read()
           }
-        }
+          zipStream.closeEntry()
+        })
+
         zipStream
-      }.close()
+      }
 
       Success(outStream)
     } catch {
