@@ -35,6 +35,7 @@ import java.io.Closeable
 import geotypes._
 
 class ShapefileDirManager(shpDir: File) extends Closeable {
+  shpDir.mkdir()
   override def close(): Unit = FileUtils.deleteDirectory(shpDir)
 }
 
@@ -68,7 +69,7 @@ object ShapefileEncoder extends GeoEncoder {
    */
   private def getShapefileMinions(shpFile: File): Seq[File] = {
     shpFile.getName.split("\\.") match {
-      case Array(name, ext) => shapeArchiveExts.map { ext => new File(shpFile.getParent, s"${name}.${ext}")
+      case Array(name, _) => shapeArchiveExts.map { ext => new File(shpFile.getParent, s"${name}.${ext}")
       }
     }
   }
@@ -157,7 +158,6 @@ object ShapefileEncoder extends GeoEncoder {
 
   def encode(rs: ResourceScope, layers: Layers, outStream: OutputStream) : Try[OutputStream] = {
     val tmpDir = new File(s"/tmp/${UUID.randomUUID()}")
-    tmpDir.mkdir()
     rs.open(new ShapefileDirManager(tmpDir))
 
     try {
