@@ -304,7 +304,6 @@ class GeoJSONTest extends TestBase {
       ]
     }
     """.replaceAll("\\s", "")
-    println(actual)
 
     actual must be(expectedJs)
 

@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets
 import java.util.{TimeZone, UUID}
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
+import org.apache.commons.io.FileUtils
 import com.rojoma.simplearm.util._
 import com.socrata.geoexport.config.GeoexportConfig
 import com.socrata.geoexport.encoders.KMLMapper._
@@ -30,7 +31,12 @@ import com.rojoma.simplearm.v2.ResourceScope
 import scala.collection.JavaConversions._
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
+import java.io.Closeable
 import geotypes._
+
+class ShapefileDirManager(shpDir: File) extends Closeable {
+  override def close(): Unit = FileUtils.deleteDirectory(shpDir)
+}
 
 object ShapefileEncoder extends GeoEncoder {
 
@@ -53,16 +59,16 @@ object ShapefileEncoder extends GeoEncoder {
     dbaseExt,
     projExt
   )
-  private def getShapefileMinions(shpFile: File, rs: ResourceScope, onFile: (InputStream, String) => Unit): Unit = {
+
+  /**
+   * For any poor souls reading this code:
+   * Note that this does not create any files, it simple returns a
+   * list of file handles that GeoTool *will* make, when features
+   * are written to it.
+   */
+  private def getShapefileMinions(shpFile: File): Seq[File] = {
     shpFile.getName.split("\\.") match {
-      case Array(name, ext) => shapeArchiveExts.map { other =>
-        val file = new File(shpFile.getParent, s"${name}.${other}")
-        val in = rs.open(new BufferedInputStream(rs.open(new FileInputStream(file))))
-        try {
-          onFile(in, file.getName)
-        } finally {
-          file.delete()
-        }
+      case Array(name, ext) => shapeArchiveExts.map { ext => new File(shpFile.getParent, s"${name}.${ext}")
       }
     }
   }
@@ -150,11 +156,13 @@ object ShapefileEncoder extends GeoEncoder {
 
 
   def encode(rs: ResourceScope, layers: Layers, outStream: OutputStream) : Try[OutputStream] = {
+    val tmpDir = new File(s"/tmp/${UUID.randomUUID()}")
+    tmpDir.mkdir()
+    rs.open(new ShapefileDirManager(tmpDir))
 
     try {
       layers.map { layer =>
-        val file = new File(s"/tmp/geo_export_${UUID.randomUUID()}.shp")
-
+        val file = new File(tmpDir,  s"geo_export_${UUID.randomUUID()}.shp")
         // factories, stores, and sources, oh my
         val shapefileFactory = new ShapefileDataStoreFactory()
         val meta = Map[String, AnyRef](
@@ -162,7 +170,6 @@ object ShapefileEncoder extends GeoEncoder {
           "url" -> file.toURI.toURL
         )
         val dataStore = shapefileFactory.createNewDataStore(mapAsJavaMap(meta.asInstanceOf[Map[String, Serializable]]))
-
         // split the SoQLSchema into a potentially longer ShapeSchema
         val reps = toIntermediaryReps(layer.schema)
         // build the feature type out of a schema that is representable by a ShapeFile
@@ -170,11 +177,10 @@ object ShapefileEncoder extends GeoEncoder {
         dataStore.createSchema(featureType)
         addFeatures(layer, featureType, file, dataStore, reps)
 
-      }.foldLeft(rs.open(new ZipOutputStream(outStream))) { (zipStream, shpFile) =>
-
-
-        getShapefileMinions(shpFile, rs, { (in, fileName) =>
-          zipStream.putNextEntry(new ZipEntry(fileName))
+      }.foldLeft(new ZipOutputStream(outStream)) { (zipStream, shpFile) =>
+        getShapefileMinions(shpFile).map ({ (file) =>
+          val in = rs.open(new BufferedInputStream(rs.open(new FileInputStream(file))))
+          zipStream.putNextEntry(new ZipEntry(file.getName))
           var b = in.read()
           while(b > -1) {
             zipStream.write(b)
@@ -182,9 +188,8 @@ object ShapefileEncoder extends GeoEncoder {
           }
           zipStream.closeEntry()
         })
-
         zipStream
-      }
+      }.close()
 
       Success(outStream)
     } catch {
