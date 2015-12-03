@@ -87,7 +87,6 @@ trait TestBase
   }
 
   def readShapeArchive(archive: File): Seq[(SimpleFeatureType, Seq[SimpleFeature])] = {
-
     val zip = new ZipFile(archive)
     val entries = zip.entries()
     val it = new Iterator[ZipEntry] { def hasNext = entries.hasMoreElements; def next = entries.nextElement }

@@ -17,18 +17,17 @@ import com.rojoma.json.v3.io.{CompactJsonWriter, JsonReader}
 import com.rojoma.json.v3.ast._
 import org.scalatest.mock.MockitoSugar
 
-class ExportTest extends TestBase with MockitoSugar {
+class ExportTest extends TestBase  {
 
   test("can get a single KML dataset") {
 
     val fixtureClient = new FixtureClient
 
-    val req = mock[HttpRequest]
     val outputStream = new mocks.ByteArrayServletOutputStream
     val resp = outputStream.responseFor
 
     val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-77dn", "kml"))
-    service.get(req)(resp)
+    service.get(Unused)(resp)
 
     verify(resp).setStatus(200)
 
@@ -41,12 +40,11 @@ class ExportTest extends TestBase with MockitoSugar {
 
     val fixtureClient = new FixtureClient
 
-    val req = mock[HttpRequest]
     val outputStream = new mocks.ByteArrayServletOutputStream
     val resp = outputStream.responseFor
 
     val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-77dn,vt5y-77do", "kml"))
-    service.get(req)(resp)
+    service.get(Unused)(resp)
 
     verify(resp).setStatus(200)
 
@@ -61,7 +59,6 @@ class ExportTest extends TestBase with MockitoSugar {
 
     val fixtureClient = new FixtureClient
 
-    val req = mock[HttpRequest]
 
     val fileName = s"/tmp/export_test_${UUID.randomUUID()}.zip"
     val file = new File(fileName)
@@ -72,7 +69,7 @@ class ExportTest extends TestBase with MockitoSugar {
         val resp = outputStream.responseFor
 
         val service = new ExportService(fixtureClient.client).service(tpc)
-        service.get(req)(resp)
+        service.get(Unused)(resp)
         verify(resp).setStatus(200)
 
         readShapeArchive(file) match {
@@ -88,12 +85,11 @@ class ExportTest extends TestBase with MockitoSugar {
   test("can get a multi layer Shapefile dataset") {
     val fixtureClient = new FixtureClient
 
-    val req = mock[HttpRequest]
     val outputStream = new mocks.ByteArrayServletOutputStream
     val resp = outputStream.responseFor
 
     val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-77dn,vt5y-77do", "shp"))
-    service.get(req)(resp)
+    service.get(Unused)(resp)
 
     verify(resp).setStatus(200)
   }
@@ -102,12 +98,11 @@ class ExportTest extends TestBase with MockitoSugar {
 
     val fixtureClient = new FixtureClient
 
-    val req = mock[HttpRequest]
     val outputStream = new mocks.ByteArrayServletOutputStream
     val resp = outputStream.responseFor
 
     val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-77dn,vt5y-77do", "geojson"))
-    service.get(req)(resp)
+    service.get(Unused)(resp)
 
     verify(resp).setStatus(200)
 
@@ -129,24 +124,22 @@ class ExportTest extends TestBase with MockitoSugar {
 
   test("a 400 is returned on an invalid 4x4") {
     val fixtureClient = new FixtureClient
-    val req = mock[HttpRequest]
     val outputStream = new mocks.ByteArrayServletOutputStream
     val resp = outputStream.responseFor
 
     val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-77dn,vt", "kml"))
-    service.get(req)(resp)
+    service.get(Unused)(resp)
 
     verify(resp).setStatus(400)
   }
 
   test("a 502 is returned on an unknown 4x4 and the error message is helpful") {
     val fixtureClient = new FixtureClient
-    val req = mock[HttpRequest]
     val outputStream = new mocks.ByteArrayServletOutputStream
     val resp = outputStream.responseFor
 
     val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-zzzz", "kml"))
-    service.get(req)(resp)
+    service.get(Unused)(resp)
 
     verify(resp).setStatus(502)
 
@@ -155,12 +148,11 @@ class ExportTest extends TestBase with MockitoSugar {
 
   test("kml export has mimetype application/vnd.google-earth.kml+xml") {
     val fixtureClient = new FixtureClient
-    val req = mock[HttpRequest]
     val outputStream = new mocks.ByteArrayServletOutputStream
     val resp = outputStream.responseFor
 
     val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-77dn", "kml"))
-    service.get(req)(resp)
+    service.get(Unused)(resp)
 
     verify(resp).setStatus(200)
     verify(resp).setContentType("application/vnd.google-earth.kml+xml")
@@ -168,12 +160,11 @@ class ExportTest extends TestBase with MockitoSugar {
 
   test("shp export has mimetype application/zip") {
     val fixtureClient = new FixtureClient
-    val req = mock[HttpRequest]
     val outputStream = new mocks.ByteArrayServletOutputStream
     val resp = outputStream.responseFor
 
     val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-77dn", "shp"))
-    service.get(req)(resp)
+    service.get(Unused)(resp)
 
     verify(resp).setStatus(200)
     verify(resp).setContentType("application/zip")
@@ -181,12 +172,11 @@ class ExportTest extends TestBase with MockitoSugar {
 
   test("kmz export has mimetype application/vnd.google-earth.kmz") {
     val fixtureClient = new FixtureClient
-    val req = mock[HttpRequest]
     val outputStream = new mocks.ByteArrayServletOutputStream
     val resp = outputStream.responseFor
 
     val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-77dn", "kmz"))
-    service.get(req)(resp)
+    service.get(Unused)(resp)
 
     verify(resp).setStatus(200)
     verify(resp).setContentType("application/vnd.google-earth.kmz")
@@ -194,12 +184,11 @@ class ExportTest extends TestBase with MockitoSugar {
 
   test("geoJSON export has mimetype application/vnd.geo+json") {
     val fixtureClient = new FixtureClient
-    val req = mock[HttpRequest]
     val outputStream = new mocks.ByteArrayServletOutputStream
     val resp = outputStream.responseFor
 
     val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-77dn", "geojson"))
-    service.get(req)(resp)
+    service.get(Unused)(resp)
 
     verify(resp).setStatus(200)
     verify(resp).setContentType("application/vnd.geo+json")
