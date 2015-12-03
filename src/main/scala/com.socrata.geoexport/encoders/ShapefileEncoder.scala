@@ -166,16 +166,19 @@ object ShapefileEncoder extends GeoEncoder {
 
       }.foldLeft(new ZipOutputStream(outStream)) { (zipStream, shpFile) =>
         getShapefileMinions(shpFile).foreach { file =>
-          zipStream.putNextEntry(new ZipEntry(file.getName))
-          val in = new BufferedInputStream(new FileInputStream(file))
-          var b = in.read()
-          while(b > -1) {
-            zipStream.write(b)
-            b = in.read()
+          try {
+            zipStream.putNextEntry(new ZipEntry(file.getName))
+            val in = new BufferedInputStream(new FileInputStream(file))
+            var b = in.read()
+            while(b > -1) {
+              zipStream.write(b)
+              b = in.read()
+            }
+            in.close()
+            zipStream.closeEntry()
+          } finally {
+            file.delete()
           }
-          in.close()
-          zipStream.closeEntry()
-          file.delete()
         }
         zipStream
       }.close()
