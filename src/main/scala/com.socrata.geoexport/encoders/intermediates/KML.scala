@@ -74,7 +74,7 @@ trait GeoDatum {
 trait SimpleDatum {
   def asSimpleData(item: String): Seq[Node] = {
     toAttrNames.zip(List(item)).map { case (name, value) =>
-      <SimpleData name={name}>{value}</SimpleData>
+      <Data name={name}><value>{value}</value></Data>
     }
   }
   def toAttrNames: Seq[String]

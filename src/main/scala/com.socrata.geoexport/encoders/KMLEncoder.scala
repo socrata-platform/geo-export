@@ -2,6 +2,7 @@ package com.socrata.geoexport.encoders
 
 import java.io.{OutputStream, OutputStreamWriter}
 
+import com.socrata.geoexport.intermediates.ShapeRep
 import com.socrata.geoexport.intermediates.kml._
 import com.rojoma.simplearm.v2.ResourceScope
 import scala.language.implicitConversions
@@ -39,13 +40,19 @@ object KMLMapper extends RowMapper[Node] {
   protected def toRow(schema: Schema, fields: Fields): Node = {
 
     val (geomAttr, attrs) = splitOnGeo(KMLRepMapper, schema, fields)
+    //name and description are special in KML and are not ExtendedData.
+    //ExtendedData is for everything else
+    val (namesOrDescription, extendedData) = attrs.partition { case (_, rep: ShapeRep[_]) =>
+      rep.toAttrNames.exists(attrName => {
+        attrName.toLowerCase.equals("name") || attrName.toLowerCase.equals("description")
+      })
+    }
 
     <Placemark>
       <styleUrl>#defaultStyle</styleUrl>
+      { namesOrDescription.flatMap(KMLRepMapper.toAttr(_)) }
       <ExtendedData>
-        <SchemaData>
-          { attrs.flatMap(KMLRepMapper.toAttr(_)) }
-        </SchemaData>
+        { extendedData.flatMap(KMLRepMapper.toAttr(_)) }
       </ExtendedData>
       { KMLRepMapper.toAttr(geomAttr).head }
     </Placemark>

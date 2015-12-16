@@ -120,33 +120,32 @@ class KMLIshTest extends TestBase {
           <Folder>
             <Placemark>
               <styleUrl>#defaultStyle</styleUrl>
+
+              <name>actual name</name>
+              <description>actual description</description>
+
               <ExtendedData>
-                <SchemaData>
-                  <SimpleData name="a_name">this is a name</SimpleData>
-                  <SimpleData name="a_number">42</SimpleData>
-                  <SimpleData name="a_bool">true</SimpleData>
-                  <SimpleData name="a_ts">2015-03-22T20:00:00.000Z</SimpleData>
-                  <SimpleData name="a_floating_ts">2015-03-22T02:23:00.000</SimpleData>
-                  <SimpleData name="a_time">01:23:00.000</SimpleData>
-                  <SimpleData name="a_date">2015-03-22</SimpleData>
-                  <SimpleData name="a_money">42</SimpleData>
-                  <SimpleData name="an_id">42</SimpleData>
-                  <SimpleData name="a_version">32</SimpleData>
-                  <SimpleData name="a_double">42.0</SimpleData>
-                  <SimpleData name="a_number_array">1, 2, 3</SimpleData>
-                  <SimpleData name="a_str_array">a, b, c</SimpleData>
-                  <name>actual name</name>
-                  <description>actual description</description>
+                <Data name="a_name"><value>this is a name</value></Data>
+                <Data name="a_number"><value>42</value></Data>
+                <Data name="a_bool"><value>true</value></Data>
+                <Data name="a_ts"><value>2015-03-22T20:00:00.000Z</value></Data>
+                <Data name="a_floating_ts"><value>2015-03-22T02:23:00.000</value></Data>
+                <Data name="a_time"><value>01:23:00.000</value></Data>
+                <Data name="a_date"><value>2015-03-22</value></Data>
+                <Data name="a_money"><value>42</value></Data>
+                <Data name="an_id"><value>42</value></Data>
+                <Data name="a_version"><value>32</value></Data>
+                <Data name="a_double"><value>42.0</value></Data>
+                <Data name="a_number_array"><value>1, 2, 3</value></Data>
+                <Data name="a_str_array"><value>a, b, c</value></Data>
 
-                  <SimpleData name="a_json.something">else</SimpleData>
-                  <SimpleData name="a_json.a_json_number">1</SimpleData>
-                  <SimpleData name="a_json.nested.child">hello</SimpleData>
+                <Data name="a_json.something"><value>else</value></Data>
+                <Data name="a_json.a_json_number"><value>1</value></Data>
+                <Data name="a_json.nested.child"><value>hello</value></Data>
 
-                  <SimpleData name="an_object.something">wow</SimpleData>
-                  <SimpleData name="an_object.an_object_number">7</SimpleData>
-                  <SimpleData name="an_object.nested.child">hi</SimpleData>
-
-                </SchemaData>
+                <Data name="an_object.something"><value>wow</value></Data>
+                <Data name="an_object.an_object_number"><value>7</value></Data>
+                <Data name="an_object.nested.child"><value>hi</value></Data>
               </ExtendedData>
               <Point>
                 <coordinates> 0.0,1.0 </coordinates>
@@ -182,32 +181,29 @@ class KMLIshTest extends TestBase {
           <Folder>
             <Placemark>
               <styleUrl>#defaultStyle</styleUrl>
+              <name>actual name</name>
+              <description>actual description</description>
+
               <ExtendedData>
-                <SchemaData>
-                  <SimpleData name="a_name">this is a name</SimpleData>
-                  <SimpleData name="a_number">42</SimpleData>
-                  <SimpleData name="a_bool">true</SimpleData>
-                  <SimpleData name="a_ts">2015-03-22T20:00:00.000Z</SimpleData>
-                  <SimpleData name="a_floating_ts">2015-03-22T02:23:00.000</SimpleData>
-                  <SimpleData name="a_time">01:23:00.000</SimpleData>
-                  <SimpleData name="a_date">2015-03-22</SimpleData>
-                  <SimpleData name="a_money">42</SimpleData>
-                  <SimpleData name="an_id">42</SimpleData>
-                  <SimpleData name="a_version">32</SimpleData>
-                  <SimpleData name="a_double">42.0</SimpleData>
-                  <SimpleData name="a_number_array">1, 2, 3</SimpleData>
-                  <SimpleData name="a_str_array">a, b, c</SimpleData>
-                  <name>actual name</name>
-                  <description>actual description</description>
-
-                  <SimpleData name="a_json.something">else</SimpleData>
-                  <SimpleData name="a_json.a_json_number">1</SimpleData>
-                  <SimpleData name="a_json.nested.child">hello</SimpleData>
-                  <SimpleData name="an_object.something">wow</SimpleData>
-                  <SimpleData name="an_object.an_object_number">7</SimpleData>
-                  <SimpleData name="an_object.nested.child">hi</SimpleData>
-
-                </SchemaData>
+                  <Data name="a_name"><value>this is a name</value></Data>
+                  <Data name="a_number"><value>42</value></Data>
+                  <Data name="a_bool"><value>true</value></Data>
+                  <Data name="a_ts"><value>2015-03-22T20:00:00.000Z</value></Data>
+                  <Data name="a_floating_ts"><value>2015-03-22T02:23:00.000</value></Data>
+                  <Data name="a_time"><value>01:23:00.000</value></Data>
+                  <Data name="a_date"><value>2015-03-22</value></Data>
+                  <Data name="a_money"><value>42</value></Data>
+                  <Data name="an_id"><value>42</value></Data>
+                  <Data name="a_version"><value>32</value></Data>
+                  <Data name="a_double"><value>42.0</value></Data>
+                  <Data name="a_number_array"><value>1, 2, 3</value></Data>
+                  <Data name="a_str_array"><value>a, b, c</value></Data>
+                  <Data name="a_json.something"><value>else</value></Data>
+                  <Data name="a_json.a_json_number"><value>1</value></Data>
+                  <Data name="a_json.nested.child"><value>hello</value></Data>
+                  <Data name="an_object.something"><value>wow</value></Data>
+                  <Data name="an_object.an_object_number"><value>7</value></Data>
+                  <Data name="an_object.nested.child"><value>hi</value></Data>
               </ExtendedData>
               <LineString>
                 <coordinates>
@@ -247,32 +243,28 @@ class KMLIshTest extends TestBase {
           <Folder>
             <Placemark>
               <styleUrl>#defaultStyle</styleUrl>
+              <name>actual name</name>
+              <description>actual description</description>
               <ExtendedData>
-                <SchemaData>
-                  <SimpleData name="a_name">this is a name</SimpleData>
-                  <SimpleData name="a_number">42</SimpleData>
-                  <SimpleData name="a_bool">true</SimpleData>
-                  <SimpleData name="a_ts">2015-03-22T20:00:00.000Z</SimpleData>
-                  <SimpleData name="a_floating_ts">2015-03-22T02:23:00.000</SimpleData>
-                  <SimpleData name="a_time">01:23:00.000</SimpleData>
-                  <SimpleData name="a_date">2015-03-22</SimpleData>
-                  <SimpleData name="a_money">42</SimpleData>
-                  <SimpleData name="an_id">42</SimpleData>
-                  <SimpleData name="a_version">32</SimpleData>
-                  <SimpleData name="a_double">42.0</SimpleData>
-                  <SimpleData name="a_number_array">1, 2, 3</SimpleData>
-                  <SimpleData name="a_str_array">a, b, c</SimpleData>
-                  <name>actual name</name>
-                  <description>actual description</description>
-
-                  <SimpleData name="a_json.something">else</SimpleData>
-                  <SimpleData name="a_json.a_json_number">1</SimpleData>
-                  <SimpleData name="a_json.nested.child">hello</SimpleData>
-                  <SimpleData name="an_object.something">wow</SimpleData>
-                  <SimpleData name="an_object.an_object_number">7</SimpleData>
-                  <SimpleData name="an_object.nested.child">hi</SimpleData>
-
-                </SchemaData>
+                  <Data name="a_name"><value>this is a name</value></Data>
+                  <Data name="a_number"><value>42</value></Data>
+                  <Data name="a_bool"><value>true</value></Data>
+                  <Data name="a_ts"><value>2015-03-22T20:00:00.000Z</value></Data>
+                  <Data name="a_floating_ts"><value>2015-03-22T02:23:00.000</value></Data>
+                  <Data name="a_time"><value>01:23:00.000</value></Data>
+                  <Data name="a_date"><value>2015-03-22</value></Data>
+                  <Data name="a_money"><value>42</value></Data>
+                  <Data name="an_id"><value>42</value></Data>
+                  <Data name="a_version"><value>32</value></Data>
+                  <Data name="a_double"><value>42.0</value></Data>
+                  <Data name="a_number_array"><value>1, 2, 3</value></Data>
+                  <Data name="a_str_array"><value>a, b, c</value></Data>
+                  <Data name="a_json.something"><value>else</value></Data>
+                  <Data name="a_json.a_json_number"><value>1</value></Data>
+                  <Data name="a_json.nested.child"><value>hello</value></Data>
+                  <Data name="an_object.something"><value>wow</value></Data>
+                  <Data name="an_object.an_object_number"><value>7</value></Data>
+                  <Data name="an_object.nested.child"><value>hi</value></Data>
               </ExtendedData>
               <Polygon>
                 <outerBoundaryIs>
@@ -318,32 +310,29 @@ class KMLIshTest extends TestBase {
           <Folder>
             <Placemark>
               <styleUrl>#defaultStyle</styleUrl>
+              <name>actual name</name>
+              <description>actual description</description>
               <ExtendedData>
-                <SchemaData>
-                  <SimpleData name="a_name">this is a name</SimpleData>
-                  <SimpleData name="a_number">42</SimpleData>
-                  <SimpleData name="a_bool">true</SimpleData>
-                  <SimpleData name="a_ts">2015-03-22T20:00:00.000Z</SimpleData>
-                  <SimpleData name="a_floating_ts">2015-03-22T02:23:00.000</SimpleData>
-                  <SimpleData name="a_time">01:23:00.000</SimpleData>
-                  <SimpleData name="a_date">2015-03-22</SimpleData>
-                  <SimpleData name="a_money">42</SimpleData>
-                  <SimpleData name="an_id">42</SimpleData>
-                  <SimpleData name="a_version">32</SimpleData>
-                  <SimpleData name="a_double">42.0</SimpleData>
-                  <SimpleData name="a_number_array">1, 2, 3</SimpleData>
-                  <SimpleData name="a_str_array">a, b, c</SimpleData>
-                  <name>actual name</name>
-                  <description>actual description</description>
+                  <Data name="a_name"><value>this is a name</value></Data>
+                  <Data name="a_number"><value>42</value></Data>
+                  <Data name="a_bool"><value>true</value></Data>
+                  <Data name="a_ts"><value>2015-03-22T20:00:00.000Z</value></Data>
+                  <Data name="a_floating_ts"><value>2015-03-22T02:23:00.000</value></Data>
+                  <Data name="a_time"><value>01:23:00.000</value></Data>
+                  <Data name="a_date"><value>2015-03-22</value></Data>
+                  <Data name="a_money"><value>42</value></Data>
+                  <Data name="an_id"><value>42</value></Data>
+                  <Data name="a_version"><value>32</value></Data>
+                  <Data name="a_double"><value>42.0</value></Data>
+                  <Data name="a_number_array"><value>1, 2, 3</value></Data>
+                  <Data name="a_str_array"><value>a, b, c</value></Data>
+                  <Data name="a_json.something"><value>else</value></Data>
+                  <Data name="a_json.a_json_number"><value>1</value></Data>
+                  <Data name="a_json.nested.child"><value>hello</value></Data>
+                  <Data name="an_object.something"><value>wow</value></Data>
+                  <Data name="an_object.an_object_number"><value>7</value></Data>
+                  <Data name="an_object.nested.child"><value>hi</value></Data>
 
-                  <SimpleData name="a_json.something">else</SimpleData>
-                  <SimpleData name="a_json.a_json_number">1</SimpleData>
-                  <SimpleData name="a_json.nested.child">hello</SimpleData>
-                  <SimpleData name="an_object.something">wow</SimpleData>
-                  <SimpleData name="an_object.an_object_number">7</SimpleData>
-                  <SimpleData name="an_object.nested.child">hi</SimpleData>
-
-                </SchemaData>
               </ExtendedData>
               <Polygon>
                 <outerBoundaryIs>
@@ -392,32 +381,28 @@ class KMLIshTest extends TestBase {
           <Folder>
             <Placemark>
               <styleUrl>#defaultStyle</styleUrl>
+              <name>actual name</name>
+              <description>actual description</description>
               <ExtendedData>
-                <SchemaData>
-                  <SimpleData name="a_name">this is a name</SimpleData>
-                  <SimpleData name="a_number">42</SimpleData>
-                  <SimpleData name="a_bool">true</SimpleData>
-                  <SimpleData name="a_ts">2015-03-22T20:00:00.000Z</SimpleData>
-                  <SimpleData name="a_floating_ts">2015-03-22T02:23:00.000</SimpleData>
-                  <SimpleData name="a_time">01:23:00.000</SimpleData>
-                  <SimpleData name="a_date">2015-03-22</SimpleData>
-                  <SimpleData name="a_money">42</SimpleData>
-                  <SimpleData name="an_id">42</SimpleData>
-                  <SimpleData name="a_version">32</SimpleData>
-                  <SimpleData name="a_double">42.0</SimpleData>
-                  <SimpleData name="a_number_array">1, 2, 3</SimpleData>
-                  <SimpleData name="a_str_array">a, b, c</SimpleData>
-                  <name>actual name</name>
-                  <description>actual description</description>
-
-                  <SimpleData name="a_json.something">else</SimpleData>
-                  <SimpleData name="a_json.a_json_number">1</SimpleData>
-                  <SimpleData name="a_json.nested.child">hello</SimpleData>
-                  <SimpleData name="an_object.something">wow</SimpleData>
-                  <SimpleData name="an_object.an_object_number">7</SimpleData>
-                  <SimpleData name="an_object.nested.child">hi</SimpleData>
-
-                </SchemaData>
+                  <Data name="a_name"><value>this is a name</value></Data>
+                  <Data name="a_number"><value>42</value></Data>
+                  <Data name="a_bool"><value>true</value></Data>
+                  <Data name="a_ts"><value>2015-03-22T20:00:00.000Z</value></Data>
+                  <Data name="a_floating_ts"><value>2015-03-22T02:23:00.000</value></Data>
+                  <Data name="a_time"><value>01:23:00.000</value></Data>
+                  <Data name="a_date"><value>2015-03-22</value></Data>
+                  <Data name="a_money"><value>42</value></Data>
+                  <Data name="an_id"><value>42</value></Data>
+                  <Data name="a_version"><value>32</value></Data>
+                  <Data name="a_double"><value>42.0</value></Data>
+                  <Data name="a_number_array"><value>1, 2, 3</value></Data>
+                  <Data name="a_str_array"><value>a, b, c</value></Data>
+                  <Data name="a_json.something"><value>else</value></Data>
+                  <Data name="a_json.a_json_number"><value>1</value></Data>
+                  <Data name="a_json.nested.child"><value>hello</value></Data>
+                  <Data name="an_object.something"><value>wow</value></Data>
+                  <Data name="an_object.an_object_number"><value>7</value></Data>
+                  <Data name="an_object.nested.child"><value>hi</value></Data>
               </ExtendedData>
               <MultiGeometry>
                 <Point><coordinates> 10.0,40.0 </coordinates></Point>
@@ -457,32 +442,28 @@ class KMLIshTest extends TestBase {
           <Folder>
             <Placemark>
               <styleUrl>#defaultStyle</styleUrl>
+              <name>actual name</name>
+              <description>actual description</description>
               <ExtendedData>
-                <SchemaData>
-                  <SimpleData name="a_name">this is a name</SimpleData>
-                  <SimpleData name="a_number">42</SimpleData>
-                  <SimpleData name="a_bool">true</SimpleData>
-                  <SimpleData name="a_ts">2015-03-22T20:00:00.000Z</SimpleData>
-                  <SimpleData name="a_floating_ts">2015-03-22T02:23:00.000</SimpleData>
-                  <SimpleData name="a_time">01:23:00.000</SimpleData>
-                  <SimpleData name="a_date">2015-03-22</SimpleData>
-                  <SimpleData name="a_money">42</SimpleData>
-                  <SimpleData name="an_id">42</SimpleData>
-                  <SimpleData name="a_version">32</SimpleData>
-                  <SimpleData name="a_double">42.0</SimpleData>
-                  <SimpleData name="a_number_array">1, 2, 3</SimpleData>
-                  <SimpleData name="a_str_array">a, b, c</SimpleData>
-                  <name>actual name</name>
-                  <description>actual description</description>
-
-                  <SimpleData name="a_json.something">else</SimpleData>
-                  <SimpleData name="a_json.a_json_number">1</SimpleData>
-                  <SimpleData name="a_json.nested.child">hello</SimpleData>
-                  <SimpleData name="an_object.something">wow</SimpleData>
-                  <SimpleData name="an_object.an_object_number">7</SimpleData>
-                  <SimpleData name="an_object.nested.child">hi</SimpleData>
-
-                </SchemaData>
+                  <Data name="a_name"><value>this is a name</value></Data>
+                  <Data name="a_number"><value>42</value></Data>
+                  <Data name="a_bool"><value>true</value></Data>
+                  <Data name="a_ts"><value>2015-03-22T20:00:00.000Z</value></Data>
+                  <Data name="a_floating_ts"><value>2015-03-22T02:23:00.000</value></Data>
+                  <Data name="a_time"><value>01:23:00.000</value></Data>
+                  <Data name="a_date"><value>2015-03-22</value></Data>
+                  <Data name="a_money"><value>42</value></Data>
+                  <Data name="an_id"><value>42</value></Data>
+                  <Data name="a_version"><value>32</value></Data>
+                  <Data name="a_double"><value>42.0</value></Data>
+                  <Data name="a_number_array"><value>1, 2, 3</value></Data>
+                  <Data name="a_str_array"><value>a, b, c</value></Data>
+                  <Data name="a_json.something"><value>else</value></Data>
+                  <Data name="a_json.a_json_number"><value>1</value></Data>
+                  <Data name="a_json.nested.child"><value>hello</value></Data>
+                  <Data name="an_object.something"><value>wow</value></Data>
+                  <Data name="an_object.an_object_number"><value>7</value></Data>
+                  <Data name="an_object.nested.child"><value>hi</value></Data>
               </ExtendedData>
               <MultiGeometry>
                 <LineString><coordinates> 10.0,10.0 20.0,20.0 10.0,40.0 </coordinates></LineString>
@@ -519,32 +500,30 @@ class KMLIshTest extends TestBase {
           <Folder>
             <Placemark>
               <styleUrl>#defaultStyle</styleUrl>
+              <name>actual name</name>
+              <description>actual description</description>
+
               <ExtendedData>
-                <SchemaData>
-                  <SimpleData name="a_name">this is a name</SimpleData>
-                  <SimpleData name="a_number">42</SimpleData>
-                  <SimpleData name="a_bool">true</SimpleData>
-                  <SimpleData name="a_ts">2015-03-22T20:00:00.000Z</SimpleData>
-                  <SimpleData name="a_floating_ts">2015-03-22T02:23:00.000</SimpleData>
-                  <SimpleData name="a_time">01:23:00.000</SimpleData>
-                  <SimpleData name="a_date">2015-03-22</SimpleData>
-                  <SimpleData name="a_money">42</SimpleData>
-                  <SimpleData name="an_id">42</SimpleData>
-                  <SimpleData name="a_version">32</SimpleData>
-                  <SimpleData name="a_double">42.0</SimpleData>
-                  <SimpleData name="a_number_array">1, 2, 3</SimpleData>
-                  <SimpleData name="a_str_array">a, b, c</SimpleData>
-                  <name>actual name</name>
-                  <description>actual description</description>
+                  <Data name="a_name"><value>this is a name</value></Data>
+                  <Data name="a_number"><value>42</value></Data>
+                  <Data name="a_bool"><value>true</value></Data>
+                  <Data name="a_ts"><value>2015-03-22T20:00:00.000Z</value></Data>
+                  <Data name="a_floating_ts"><value>2015-03-22T02:23:00.000</value></Data>
+                  <Data name="a_time"><value>01:23:00.000</value></Data>
+                  <Data name="a_date"><value>2015-03-22</value></Data>
+                  <Data name="a_money"><value>42</value></Data>
+                  <Data name="an_id"><value>42</value></Data>
+                  <Data name="a_version"><value>32</value></Data>
+                  <Data name="a_double"><value>42.0</value></Data>
+                  <Data name="a_number_array"><value>1, 2, 3</value></Data>
+                  <Data name="a_str_array"><value>a, b, c</value></Data>
+                  <Data name="a_json.something"><value>else</value></Data>
+                  <Data name="a_json.a_json_number"><value>1</value></Data>
+                  <Data name="a_json.nested.child"><value>hello</value></Data>
+                  <Data name="an_object.something"><value>wow</value></Data>
+                  <Data name="an_object.an_object_number"><value>7</value></Data>
+                  <Data name="an_object.nested.child"><value>hi</value></Data>
 
-                  <SimpleData name="a_json.something">else</SimpleData>
-                  <SimpleData name="a_json.a_json_number">1</SimpleData>
-                  <SimpleData name="a_json.nested.child">hello</SimpleData>
-                  <SimpleData name="an_object.something">wow</SimpleData>
-                  <SimpleData name="an_object.an_object_number">7</SimpleData>
-                  <SimpleData name="an_object.nested.child">hi</SimpleData>
-
-                </SchemaData>
               </ExtendedData>
               <MultiGeometry>
                 <Polygon>
@@ -598,32 +577,30 @@ class KMLIshTest extends TestBase {
           <Folder>
             <Placemark>
               <styleUrl>#defaultStyle</styleUrl>
+              <name>actual name</name>
+              <description>actual description</description>
+
               <ExtendedData>
-                <SchemaData>
-                  <SimpleData name="a_name">this is a name</SimpleData>
-                  <SimpleData name="a_number">42</SimpleData>
-                  <SimpleData name="a_bool">true</SimpleData>
-                  <SimpleData name="a_ts">2015-03-22T20:00:00.000Z</SimpleData>
-                  <SimpleData name="a_floating_ts">2015-03-22T02:23:00.000</SimpleData>
-                  <SimpleData name="a_time">01:23:00.000</SimpleData>
-                  <SimpleData name="a_date">2015-03-22</SimpleData>
-                  <SimpleData name="a_money">42</SimpleData>
-                  <SimpleData name="an_id">42</SimpleData>
-                  <SimpleData name="a_version">32</SimpleData>
-                  <SimpleData name="a_double">42.0</SimpleData>
-                  <SimpleData name="a_number_array">1, 2, 3</SimpleData>
-                  <SimpleData name="a_str_array">a, b, c</SimpleData>
-                  <name>actual name</name>
-                  <description>actual description</description>
+                  <Data name="a_name"><value>this is a name</value></Data>
+                  <Data name="a_number"><value>42</value></Data>
+                  <Data name="a_bool"><value>true</value></Data>
+                  <Data name="a_ts"><value>2015-03-22T20:00:00.000Z</value></Data>
+                  <Data name="a_floating_ts"><value>2015-03-22T02:23:00.000</value></Data>
+                  <Data name="a_time"><value>01:23:00.000</value></Data>
+                  <Data name="a_date"><value>2015-03-22</value></Data>
+                  <Data name="a_money"><value>42</value></Data>
+                  <Data name="an_id"><value>42</value></Data>
+                  <Data name="a_version"><value>32</value></Data>
+                  <Data name="a_double"><value>42.0</value></Data>
+                  <Data name="a_number_array"><value>1, 2, 3</value></Data>
+                  <Data name="a_str_array"><value>a, b, c</value></Data>
+                  <Data name="a_json.something"><value>else</value></Data>
+                  <Data name="a_json.a_json_number"><value>1</value></Data>
+                  <Data name="a_json.nested.child"><value>hello</value></Data>
+                  <Data name="an_object.something"><value>wow</value></Data>
+                  <Data name="an_object.an_object_number"><value>7</value></Data>
+                  <Data name="an_object.nested.child"><value>hi</value></Data>
 
-                  <SimpleData name="a_json.something">else</SimpleData>
-                  <SimpleData name="a_json.a_json_number">1</SimpleData>
-                  <SimpleData name="a_json.nested.child">hello</SimpleData>
-                  <SimpleData name="an_object.something">wow</SimpleData>
-                  <SimpleData name="an_object.an_object_number">7</SimpleData>
-                  <SimpleData name="an_object.nested.child">hi</SimpleData>
-
-                </SchemaData>
               </ExtendedData>
               <LineString>
                 <coordinates>
@@ -637,32 +614,29 @@ class KMLIshTest extends TestBase {
           <Folder>
             <Placemark>
               <styleUrl>#defaultStyle</styleUrl>
+              <name>actual name</name>
+              <description>actual description</description>
               <ExtendedData>
-                <SchemaData>
-                  <SimpleData name="a_name">this is a name</SimpleData>
-                  <SimpleData name="a_number">42</SimpleData>
-                  <SimpleData name="a_bool">true</SimpleData>
-                  <SimpleData name="a_ts">2015-03-22T20:00:00.000Z</SimpleData>
-                  <SimpleData name="a_floating_ts">2015-03-22T02:23:00.000</SimpleData>
-                  <SimpleData name="a_time">01:23:00.000</SimpleData>
-                  <SimpleData name="a_date">2015-03-22</SimpleData>
-                  <SimpleData name="a_money">42</SimpleData>
-                  <SimpleData name="an_id">42</SimpleData>
-                  <SimpleData name="a_version">32</SimpleData>
-                  <SimpleData name="a_double">42.0</SimpleData>
-                  <SimpleData name="a_number_array">1, 2, 3</SimpleData>
-                  <SimpleData name="a_str_array">a, b, c</SimpleData>
-                  <name>actual name</name>
-                  <description>actual description</description>
+                  <Data name="a_name"><value>this is a name</value></Data>
+                  <Data name="a_number"><value>42</value></Data>
+                  <Data name="a_bool"><value>true</value></Data>
+                  <Data name="a_ts"><value>2015-03-22T20:00:00.000Z</value></Data>
+                  <Data name="a_floating_ts"><value>2015-03-22T02:23:00.000</value></Data>
+                  <Data name="a_time"><value>01:23:00.000</value></Data>
+                  <Data name="a_date"><value>2015-03-22</value></Data>
+                  <Data name="a_money"><value>42</value></Data>
+                  <Data name="an_id"><value>42</value></Data>
+                  <Data name="a_version"><value>32</value></Data>
+                  <Data name="a_double"><value>42.0</value></Data>
+                  <Data name="a_number_array"><value>1, 2, 3</value></Data>
+                  <Data name="a_str_array"><value>a, b, c</value></Data>
+                  <Data name="a_json.something"><value>else</value></Data>
+                  <Data name="a_json.a_json_number"><value>1</value></Data>
+                  <Data name="a_json.nested.child"><value>hello</value></Data>
+                  <Data name="an_object.something"><value>wow</value></Data>
+                  <Data name="an_object.an_object_number"><value>7</value></Data>
+                  <Data name="an_object.nested.child"><value>hi</value></Data>
 
-                  <SimpleData name="a_json.something">else</SimpleData>
-                  <SimpleData name="a_json.a_json_number">1</SimpleData>
-                  <SimpleData name="a_json.nested.child">hello</SimpleData>
-                  <SimpleData name="an_object.something">wow</SimpleData>
-                  <SimpleData name="an_object.an_object_number">7</SimpleData>
-                  <SimpleData name="an_object.nested.child">hi</SimpleData>
-
-                </SchemaData>
               </ExtendedData>
               <Polygon>
                 <outerBoundaryIs>
