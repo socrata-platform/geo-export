@@ -40,8 +40,8 @@ object KMLMapper extends RowMapper[Node] {
   protected def toRow(schema: Schema, fields: Fields): Node = {
 
     val (geomAttr, attrs) = splitOnGeo(KMLRepMapper, schema, fields)
-    //name and description are special in KML and are not ExtendedData.
-    //ExtendedData is for everything else
+    // name and description are special in KML and are not ExtendedData.
+    // ExtendedData is for everything else
     val (namesOrDescription, extendedData) = attrs.partition { case (_, rep: ShapeRep[_]) =>
       rep.toAttrNames.exists(attrName => {
         attrName.toLowerCase.equals("name") || attrName.toLowerCase.equals("description")
