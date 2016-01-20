@@ -147,7 +147,8 @@ class KMLIshTest extends TestBase {
                 <Data name="an_object.something"><value>wow</value></Data>
                 <Data name="an_object.an_object_number"><value>7</value></Data>
                 <Data name="an_object.nested.child"><value>hi</value></Data>
-                <Data name="a_null"><value>null</value></Data>
+                <Data name="a_null"><value
+                  ></value></Data>
               </ExtendedData>
               <Point>
                 <coordinates> 0.0,1.0 </coordinates>
@@ -206,7 +207,8 @@ class KMLIshTest extends TestBase {
                   <Data name="an_object.something"><value>wow</value></Data>
                   <Data name="an_object.an_object_number"><value>7</value></Data>
                   <Data name="an_object.nested.child"><value>hi</value></Data>
-                  <Data name="a_null"><value>null</value></Data>
+                  <Data name="a_null"><value
+                    ></value></Data>
 
 
               </ExtendedData>
@@ -270,7 +272,8 @@ class KMLIshTest extends TestBase {
                   <Data name="an_object.something"><value>wow</value></Data>
                   <Data name="an_object.an_object_number"><value>7</value></Data>
                   <Data name="an_object.nested.child"><value>hi</value></Data>
-                  <Data name="a_null"><value>null</value></Data>
+                  <Data name="a_null"><value
+                    ></value></Data>
 
               </ExtendedData>
               <Polygon>
@@ -339,7 +342,8 @@ class KMLIshTest extends TestBase {
                   <Data name="an_object.something"><value>wow</value></Data>
                   <Data name="an_object.an_object_number"><value>7</value></Data>
                   <Data name="an_object.nested.child"><value>hi</value></Data>
-                  <Data name="a_null"><value>null</value></Data>
+                  <Data name="a_null"><value
+                    ></value></Data>
 
 
               </ExtendedData>
@@ -412,7 +416,8 @@ class KMLIshTest extends TestBase {
                   <Data name="an_object.something"><value>wow</value></Data>
                   <Data name="an_object.an_object_number"><value>7</value></Data>
                   <Data name="an_object.nested.child"><value>hi</value></Data>
-                  <Data name="a_null"><value>null</value></Data>
+                  <Data name="a_null"><value
+                    ></value></Data>
 
               </ExtendedData>
               <MultiGeometry>
@@ -475,7 +480,8 @@ class KMLIshTest extends TestBase {
                   <Data name="an_object.something"><value>wow</value></Data>
                   <Data name="an_object.an_object_number"><value>7</value></Data>
                   <Data name="an_object.nested.child"><value>hi</value></Data>
-                  <Data name="a_null"><value>null</value></Data>
+                  <Data name="a_null"><value
+                    ></value></Data>
 
               </ExtendedData>
               <MultiGeometry>
@@ -536,7 +542,8 @@ class KMLIshTest extends TestBase {
                   <Data name="an_object.something"><value>wow</value></Data>
                   <Data name="an_object.an_object_number"><value>7</value></Data>
                   <Data name="an_object.nested.child"><value>hi</value></Data>
-                  <Data name="a_null"><value>null</value></Data>
+                  <Data name="a_null"><value
+                    ></value></Data>
 
 
               </ExtendedData>
@@ -615,7 +622,8 @@ class KMLIshTest extends TestBase {
                   <Data name="an_object.something"><value>wow</value></Data>
                   <Data name="an_object.an_object_number"><value>7</value></Data>
                   <Data name="an_object.nested.child"><value>hi</value></Data>
-                  <Data name="a_null"><value>null</value></Data>
+                  <Data name="a_null"><value
+                    ></value></Data>
 
 
               </ExtendedData>
@@ -653,7 +661,8 @@ class KMLIshTest extends TestBase {
                   <Data name="an_object.something"><value>wow</value></Data>
                   <Data name="an_object.an_object_number"><value>7</value></Data>
                   <Data name="an_object.nested.child"><value>hi</value></Data>
-                  <Data name="a_null"><value>null</value></Data>
+                  <Data name="a_null"><value
+                    ></value></Data>
 
 
               </ExtendedData>
