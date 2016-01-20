@@ -55,7 +55,6 @@ class KMLTest extends KMLIshTest {
 
   test("can merge two layers with different geoms to one kml in folders") {
     testMultiLayerHeterogenous(convertKML(_))
-
   }
 
 

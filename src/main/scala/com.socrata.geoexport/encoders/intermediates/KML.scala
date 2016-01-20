@@ -100,6 +100,7 @@ trait ComplexDatum extends SimpleDatum {
   }
 }
 
+
 class PointRep(soqlName: String) extends KMLRep[SoQLPoint](soqlName) with GeoDatum {
   def toAttrValues(soql: SoQLPoint): Seq[Any] = encodePoint(soql.value)
 }
@@ -254,7 +255,11 @@ object KMLRepMapper extends RepMapper {
     case (value: SoQLDouble, intermediary: DoubleRep) => intermediary.toAttrValues(value)
     case (value: SoQLJson, intermediary: JSONRep) => intermediary.toAttrValues(value)
     case (value: SoQLObject, intermediary: ObjectRep) => intermediary.toAttrValues(value)
-    case (SoQLNull, _) => Seq(null) // scalastyle:ignore null
+    case (SoQLNull, intermediary: KMLRep[_]) =>
+      intermediary.toAttrNames.map { name =>
+        <Data name={name}><value>null</value></Data>
+      }
+
     case (value: SoQLValue, _) =>
       log.error(s"Unknown SoQLValue: ${value.getClass()} - coercing toString but you should fix this!")
       Seq(value.toString)
