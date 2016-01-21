@@ -256,8 +256,9 @@ object KMLRepMapper extends RepMapper {
     case (value: SoQLJson, intermediary: JSONRep) => intermediary.toAttrValues(value)
     case (value: SoQLObject, intermediary: ObjectRep) => intermediary.toAttrValues(value)
     case (SoQLNull, intermediary: KMLRep[_]) =>
+      // null values will be converted into text nodes and turned into empty elements
       intermediary.toAttrNames.map { name =>
-        <Data name={name}><value></value></Data>
+        (new TextRep(name)).toAttrValues(new SoQLText(""))
       }
 
     case (value: SoQLValue, _) =>
