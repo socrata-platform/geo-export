@@ -257,7 +257,7 @@ object KMLRepMapper extends RepMapper {
     case (value: SoQLObject, intermediary: ObjectRep) => intermediary.toAttrValues(value)
     case (SoQLNull, intermediary: KMLRep[_]) =>
       intermediary.toAttrNames.map { name =>
-        <Data name={name}><value>null</value></Data>
+        <Data name={name}><value></value></Data>
       }
 
     case (value: SoQLValue, _) =>

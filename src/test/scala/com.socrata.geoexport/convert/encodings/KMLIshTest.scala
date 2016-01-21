@@ -147,7 +147,7 @@ class KMLIshTest extends TestBase {
                 <Data name="an_object.something"><value>wow</value></Data>
                 <Data name="an_object.an_object_number"><value>7</value></Data>
                 <Data name="an_object.nested.child"><value>hi</value></Data>
-                <Data name="a_null"><value>null</value></Data>
+                <Data name="a_null"><value></value></Data>
               </ExtendedData>
               <Point>
                 <coordinates> 0.0,1.0 </coordinates>
@@ -206,9 +206,7 @@ class KMLIshTest extends TestBase {
                   <Data name="an_object.something"><value>wow</value></Data>
                   <Data name="an_object.an_object_number"><value>7</value></Data>
                   <Data name="an_object.nested.child"><value>hi</value></Data>
-                  <Data name="a_null"><value>null</value></Data>
-
-
+                  <Data name="a_null"><value></value></Data>
               </ExtendedData>
               <LineString>
                 <coordinates>
@@ -270,8 +268,7 @@ class KMLIshTest extends TestBase {
                   <Data name="an_object.something"><value>wow</value></Data>
                   <Data name="an_object.an_object_number"><value>7</value></Data>
                   <Data name="an_object.nested.child"><value>hi</value></Data>
-                  <Data name="a_null"><value>null</value></Data>
-
+                  <Data name="a_null"><value></value></Data>
               </ExtendedData>
               <Polygon>
                 <outerBoundaryIs>
@@ -339,9 +336,7 @@ class KMLIshTest extends TestBase {
                   <Data name="an_object.something"><value>wow</value></Data>
                   <Data name="an_object.an_object_number"><value>7</value></Data>
                   <Data name="an_object.nested.child"><value>hi</value></Data>
-                  <Data name="a_null"><value>null</value></Data>
-
-
+                  <Data name="a_null"><value></value></Data>
               </ExtendedData>
               <Polygon>
                 <outerBoundaryIs>
@@ -412,8 +407,7 @@ class KMLIshTest extends TestBase {
                   <Data name="an_object.something"><value>wow</value></Data>
                   <Data name="an_object.an_object_number"><value>7</value></Data>
                   <Data name="an_object.nested.child"><value>hi</value></Data>
-                  <Data name="a_null"><value>null</value></Data>
-
+                  <Data name="a_null"><value></value></Data>
               </ExtendedData>
               <MultiGeometry>
                 <Point><coordinates> 10.0,40.0 </coordinates></Point>
@@ -475,8 +469,7 @@ class KMLIshTest extends TestBase {
                   <Data name="an_object.something"><value>wow</value></Data>
                   <Data name="an_object.an_object_number"><value>7</value></Data>
                   <Data name="an_object.nested.child"><value>hi</value></Data>
-                  <Data name="a_null"><value>null</value></Data>
-
+                  <Data name="a_null"><value></value></Data>
               </ExtendedData>
               <MultiGeometry>
                 <LineString><coordinates> 10.0,10.0 20.0,20.0 10.0,40.0 </coordinates></LineString>
@@ -536,9 +529,7 @@ class KMLIshTest extends TestBase {
                   <Data name="an_object.something"><value>wow</value></Data>
                   <Data name="an_object.an_object_number"><value>7</value></Data>
                   <Data name="an_object.nested.child"><value>hi</value></Data>
-                  <Data name="a_null"><value>null</value></Data>
-
-
+                  <Data name="a_null"><value></value></Data>
               </ExtendedData>
               <MultiGeometry>
                 <Polygon>
@@ -615,9 +606,7 @@ class KMLIshTest extends TestBase {
                   <Data name="an_object.something"><value>wow</value></Data>
                   <Data name="an_object.an_object_number"><value>7</value></Data>
                   <Data name="an_object.nested.child"><value>hi</value></Data>
-                  <Data name="a_null"><value>null</value></Data>
-
-
+                  <Data name="a_null"><value></value></Data>
               </ExtendedData>
               <LineString>
                 <coordinates>
@@ -653,9 +642,7 @@ class KMLIshTest extends TestBase {
                   <Data name="an_object.something"><value>wow</value></Data>
                   <Data name="an_object.an_object_number"><value>7</value></Data>
                   <Data name="an_object.nested.child"><value>hi</value></Data>
-                  <Data name="a_null"><value>null</value></Data>
-
-
+                  <Data name="a_null"><value></value></Data>
               </ExtendedData>
               <Polygon>
                 <outerBoundaryIs>
