@@ -1,5 +1,6 @@
 package com.socrata.geoexport.intermediates.shapefile
 
+import java.nio.charset.CodingErrorAction
 import java.util.Date
 import com.rojoma.json.v3.ast._
 import com.socrata.geoexport.intermediates.ShapeRep
@@ -9,6 +10,7 @@ import com.socrata.geoexport.intermediates._
 import org.slf4j.LoggerFactory
 import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.DateTimeFormat
+
 
 /**
   Here be the intermediate representations used to map SoQLColumns and SoQLValues
@@ -115,7 +117,10 @@ class NumberRep(soqlName: String) extends ShapefileRep[SoQLNumber](soqlName: Str
 
 class TextRep(soqlName: String) extends ShapefileRep[SoQLText](soqlName: String) with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[String])
-  def toAttrValues(soql: SoQLText): Seq[AnyRef] = Seq(soql.value)
+  def toAttrValues(soql: SoQLText): Seq[AnyRef] = {
+    val src = scala.io.Source.fromBytes(soql.value.getBytes("US-ASCII"), "UTF-8").mkString
+    Seq(new String(src))
+  }
 }
 
 class MoneyRep(soqlName: String) extends ShapefileRep[SoQLMoney](soqlName: String) with DBFDatum {

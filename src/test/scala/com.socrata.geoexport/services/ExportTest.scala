@@ -141,7 +141,7 @@ class ExportTest extends TestBase  {
     val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-zzzz", "kml"))
     service.get(Unused)(resp)
 
-    verify(resp).setStatus(502)
+    verify(resp).setStatus(404)
 
     outputStream.getString must be("""{"reason":[{"status":404,"reason":{"mock":"reason"}}]}""")
   }

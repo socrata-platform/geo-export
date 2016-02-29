@@ -56,7 +56,7 @@ class ShapefileTest extends TestBase {
   )
 
   val simpleRows = List(
-    SoQLText("this is a name"),
+    SoQLText("this is a name¾"),
     SoQLNumber(new BigDecimal(42.00)),
     SoQLBoolean(true),
     SoQLFixedTimestamp(dt),
@@ -95,7 +95,7 @@ class ShapefileTest extends TestBase {
 
 
   private def verifyFeature(feature: SimpleFeature) = {
-    feature.getAttribute("a_name").toString must be("this is a name")
+    feature.getAttribute("a_name").toString must be("this is a name?")
     feature.getAttribute("a_number") must be(42.00)
     feature.getAttribute("a_bool") must be(java.lang.Boolean.TRUE)
 

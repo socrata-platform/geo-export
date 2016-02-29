@@ -57,6 +57,7 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
 
 
   private def mergeUpstreamErrors(errors: Seq[LayerFailure]): HttpResponse = {
+    val statusCode = errors.map{ case (status, _) => status }.max
     val reasons = JsonEncode.toJValue[Seq[JValue]](errors.map { case (status, reason) =>
       log.warn(s"SodaFountain returned an error ${status} ${reason}")
       JsonEncode.toJValue[Map[String, JValue]](Map(
@@ -65,8 +66,8 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
       ))
     })
 
-    log.warn("SodaFountain failures, returning a 502")
-    BadGateway ~> Json(JsonEncode.toJValue(Map(errorKey -> reasons)))
+    log.warn(s"SodaFountain failures, returning a ${statusCode}")
+    Status(statusCode) ~> Json(JsonEncode.toJValue(Map(errorKey -> reasons)))
   }
 
   private def getUpstreamLayers(fxfs: Seq[String]): Either[HttpResponse, Seq[Response with Closeable]] = {
