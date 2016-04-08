@@ -181,24 +181,19 @@ object ShapefileEncoder extends GeoEncoder {
         val featureType = buildFeatureType(reps)
         dataStore.createSchema(featureType)
         addFeatures(layer, featureType, file, dataStore, reps)
-
       }
 
-      val zipStream = new ZipOutputStream(outStream)
-
-      shpFiles.foreach { shpFile =>
-        getShapefileMinions(shpFile).foreach { file =>
-          for {
-            fis <- managed(new FileInputStream(file))
-          } {
-            zipStream.putNextEntry(new ZipEntry(file.getName))
-            IOUtils.copy(fis, zipStream)
-            zipStream.closeEntry()
+      using(new ZipOutputStream(outStream)) { zipStream =>
+        shpFiles.foreach { shpFile =>
+          getShapefileMinions(shpFile).foreach { file =>
+            using(new FileInputStream(file)) { fis =>
+              zipStream.putNextEntry(new ZipEntry(file.getName))
+              IOUtils.copy(fis, zipStream)
+              zipStream.closeEntry()
+            }
           }
         }
       }
-      zipStream.close()
-
       Success(outStream)
     } catch {
       case e: Exception => Failure(e)
