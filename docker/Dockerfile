@@ -22,7 +22,7 @@ ENV LOG_LEVEL info
 ENV LOG_PATTERN %d %-5p [%t]  [%X{X-Socrata-RequestId}] [%X{X-Socrata-Resource}] %c{36} "%X{X-Socrata-Host}" %m%n
 
 # Add other required resources to the container
-ADD ship.d /etc/ship.d
+ADD runit /etc/runit
 Add ${SERVER_CONFIG}.j2 /etc/
 Add ${LOGBACK_CONFIG}.j2 /etc/
 ADD ${SERVER_ARTIFACT} ${SERVER_ROOT}
