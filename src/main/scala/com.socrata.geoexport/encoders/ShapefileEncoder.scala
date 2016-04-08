@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets
 import java.util.{TimeZone, UUID}
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
-import org.apache.commons.io.FileUtils
+import org.apache.commons.io.{IOUtils, FileUtils}
 import com.rojoma.simplearm.util._
 import com.socrata.geoexport.config.GeoexportConfig
 import com.socrata.geoexport.encoders.KMLMapper._
@@ -21,7 +21,7 @@ import org.geotools.data.{DataStore, Transaction}
 import org.geotools.data.simple.SimpleFeatureStore
 import org.geotools.feature.`type`._
 import org.geotools.feature.simple.{SimpleFeatureImpl, SimpleFeatureTypeBuilder}
-import org.geotools.feature.{DefaultFeatureCollection, NameImpl}
+import org.geotools.feature.NameImpl
 import org.geotools.filter.identity.FeatureIdImpl
 import org.geotools.referencing.crs.DefaultGeographicCRS
 import org.opengis.feature.simple.{SimpleFeature, SimpleFeatureType}
@@ -55,21 +55,22 @@ object ShapefileEncoder extends GeoEncoder {
   val projExt = "prj"
 
   val shapeArchiveExts = Seq(
+    dbaseExt,
     shapefileExt,
     spatialIndexExt,
-    dbaseExt,
     projExt
   )
 
   /**
    * For any poor souls reading this code:
-   * Note that this does not create any files, it simple returns a
-   * list of file handles that GeoTool *will* make, when features
+   * Note that this does not create any files, it simply returns a
+   * list of file handles that GeoTools *will* make, when features
    * are written to it.
    */
   private def getShapefileMinions(shpFile: File): Seq[File] = {
     shpFile.getName.split("\\.") match {
-      case Array(name, _) => shapeArchiveExts.map { ext => new File(shpFile.getParent, s"${name}.${ext}")
+      case Array(name, _) => shapeArchiveExts.map {
+        ext => new File(shpFile.getParent, s"${name}.${ext}")
       }
     }
   }
@@ -136,8 +137,12 @@ object ShapefileEncoder extends GeoEncoder {
     new SimpleFeatureImpl(values, featureType, id)
   }
 
-  private def addFeatures(layer: SoQLPackIterator, featureType: SimpleFeatureType, file: File,
-                          dataStore: DataStore, reps:Seq[ShapeRep[_ <: SoQLValue]]) = {
+  private def addFeatures(
+    layer: SoQLPackIterator,
+    featureType: SimpleFeatureType,
+    file: File,
+    dataStore: DataStore,
+    reps:Seq[ShapeRep[_ <: SoQLValue]]) = {
 
     var fid = 0
     val it = new Iterator[SimpleFeature] {
@@ -161,7 +166,7 @@ object ShapefileEncoder extends GeoEncoder {
     rs.open(new ShapefileDirManager(tmpDir))
 
     try {
-      layers.map { layer =>
+      val shpFiles = layers.map { layer =>
         val file = new File(tmpDir,  s"geo_export_${UUID.randomUUID()}.shp")
         // factories, stores, and sources, oh my
         val shapefileFactory = new ShapefileDataStoreFactory()
@@ -177,19 +182,22 @@ object ShapefileEncoder extends GeoEncoder {
         dataStore.createSchema(featureType)
         addFeatures(layer, featureType, file, dataStore, reps)
 
-      }.foldLeft(new ZipOutputStream(outStream)) { (zipStream, shpFile) =>
-        getShapefileMinions(shpFile).map ({ (file) =>
-          val in = rs.open(new BufferedInputStream(rs.open(new FileInputStream(file))))
-          zipStream.putNextEntry(new ZipEntry(file.getName))
-          var b = in.read()
-          while(b > -1) {
-            zipStream.write(b)
-            b = in.read()
+      }
+
+      val zipStream = new ZipOutputStream(outStream)
+
+      shpFiles.foreach { shpFile =>
+        getShapefileMinions(shpFile).foreach { file =>
+          for {
+            fis <- managed(new FileInputStream(file))
+          } {
+            zipStream.putNextEntry(new ZipEntry(file.getName))
+            IOUtils.copy(fis, zipStream)
+            zipStream.closeEntry()
           }
-          zipStream.closeEntry()
-        })
-        zipStream
-      }.close()
+        }
+      }
+      zipStream.close()
 
       Success(outStream)
     } catch {
