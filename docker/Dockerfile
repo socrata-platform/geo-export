@@ -1,4 +1,4 @@
-FROM socrata/runit-java8
+FROM socrata/java8
 
 # Service specifif settings.
 ENV SERVER_NAME geo-export
