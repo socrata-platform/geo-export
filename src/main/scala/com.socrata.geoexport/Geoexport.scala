@@ -54,8 +54,7 @@ object Geoexport extends App {
         handler = router.handler,
         options = SocrataServerJetty.defaultOptions.
           withPort(GeoexportConfig.port).
-          withPoolOptions(SocrataServerJetty.Pool(GeoexportConfig.threadpool)).
-          withIdleTimeout(5 * 60 * 1000)
+          withPoolOptions(SocrataServerJetty.Pool(GeoexportConfig.threadpool))
       )
 
 

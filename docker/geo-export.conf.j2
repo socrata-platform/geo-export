@@ -5,6 +5,7 @@ com.socrata {
     threadpool {
       min-threads = {{ MIN_THREADS }}
       max-threads = {{ MAX_THREADS }}
+      idle-timeout = 1200000
     }
   }
   common-zk-ensemble = {{ ZOOKEEPER_ENSEMBLE }}
