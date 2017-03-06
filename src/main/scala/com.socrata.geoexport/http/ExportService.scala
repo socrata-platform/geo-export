@@ -20,6 +20,7 @@ import org.apache.commons.io.IOUtils
 import org.slf4j.LoggerFactory
 import com.socrata.http.server.implicits._
 import com.socrata.http.server.responses._
+import com.socrata.http.server.util.RequestId.ReqIdHeader
 import com.socrata.geoexport.encoders.GeoEncoder
 import javax.servlet.http.HttpServletResponse.{
   SC_OK => ScOk,
@@ -70,15 +71,17 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
     Status(statusCode) ~> Json(JsonEncode.toJValue(Map(errorKey -> reasons)))
   }
 
-  private def getUpstreamLayers(fxfs: Seq[String]): Either[HttpResponse, Seq[Response with Closeable]] = {
+  private def getUpstreamLayers(req: HttpRequest,
+                                fxfs: Seq[String]): Either[HttpResponse, Seq[Response with Closeable]] = {
     fxfs.map { fbf =>
       val reqBuilder = {
         base: RequestBuilder =>
-          val req = base
+          val sfReq = base
             .path(Seq("export", s"_${fbf}.soqlpack"))
+            .addHeader(ReqIdHeader -> req.requestId)
             .get
           log.info(s"""SodaFountain <<< ${URLDecoder.decode(req.toString, "UTF-8")}""")
-          req
+          sfReq
       }
       Try(sodaClient.execute(reqBuilder)) match {
         case Success(response) =>
@@ -105,9 +108,10 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
     }
   }
 
-  private def proxy(fourByFours: String): Either[HttpResponse, Seq[Response with Closeable]] = {
+  private def proxy(req: HttpRequest,
+                    fourByFours: String): Either[HttpResponse, Seq[Response with Closeable]] = {
     toLayerNames(fourByFours) match {
-      case Right(layers) => getUpstreamLayers(layers)
+      case Right(layers) => getUpstreamLayers(req, layers)
       case Left(reason) =>
         log.warn(s"Received bad 4x4s ${fourByFours}")
         Left(reason)
@@ -118,12 +122,11 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
     encoders.find(_.encodes.contains(format))
   }
 
-
   def handleRequest(req: HttpRequest, fxfs: TypedPathComponent[String]): HttpResponse = {
     val TypedPathComponent(fourByFours, format) = fxfs
     getEncoder(format) match {
       case Some(encoder) =>
-        proxy(fourByFours) match {
+        proxy(req, fourByFours) match {
           case Right(responses) =>
             OK ~> ContentType(encoder.encodedMIME) ~> Stream({out: OutputStream =>
 
