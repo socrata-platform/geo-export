@@ -98,8 +98,7 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
               Left((status, err))
           }
         case Failure(exc) =>
-          exc.printStackTrace()
-          log.error(s"Failed to contact SodaFountain: ${exc.getMessage}")
+          log.error(s"Failed to contact SodaFountain", exc)
           Left((ScNotFound, JsonEncode.toJValue[String](s"${exc.getMessage}")))
       }
     }.partition(_.isLeft) match {
@@ -136,9 +135,7 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
                   out.flush()
                   log.info(s"Finished writing export for ${fxfs}")
                 case Failure(failure) =>
-                  log.warn("Encountered a fatal error while streaming the response; 200 status was already committed.")
-                  log.error(failure.getMessage, failure.getStackTrace)
-                  failure.printStackTrace()
+                  log.error("Encountered a fatal error while streaming the response; 200 status was already committed.", failure)
 
               }
               responses.foreach(_.close())
