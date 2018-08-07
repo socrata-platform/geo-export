@@ -135,7 +135,10 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
                   out.flush()
                   log.info(s"Finished writing export for ${fxfs}")
                 case Failure(failure) =>
-                  log.error("Encountered a fatal error while streaming the response; 200 status was already committed.", failure)
+                  log.error(
+                    "Encountered a fatal error; 200 status was already committed.",
+                    failure
+                  )
 
               }
               responses.foreach(_.close())
