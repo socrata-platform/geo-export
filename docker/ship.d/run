@@ -7,6 +7,8 @@ SERVER_JAR="$SERVER_ROOT/$SERVER_ARTIFACT"
 /bin/env_parse /etc/${SERVER_CONFIG}.j2
 /bin/env_parse /etc/${LOGBACK_CONFIG}.j2
 
+ulimit -f 15000000
+
 exec su socrata -c "exec /usr/bin/java \
     -Xmx${JAVA_XMX} \
     -Xms${JAVA_XMX} \
