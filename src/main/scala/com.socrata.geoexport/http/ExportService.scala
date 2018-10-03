@@ -77,7 +77,8 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
       val reqBuilder = {
         base: RequestBuilder =>
           val sfReq = base
-            .path(Seq("export", s"_${fbf}.soqlpack"))
+            .path(Seq("resource", s"_${fbf}.soqlpack"))
+            .addParameter(("$query", s"select * limit ${Int.MaxValue}"))
             .addHeader(ReqIdHeader -> req.requestId)
             .get
           log.info(s"""SodaFountain <<< ${URLDecoder.decode(req.toString, "UTF-8")}""")
