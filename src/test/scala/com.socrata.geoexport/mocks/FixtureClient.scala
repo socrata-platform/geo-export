@@ -40,7 +40,7 @@ class FixtureClient extends MockitoSugar {
       private def getFilename: String = {
         val request = builder(RequestBuilder(""))
         request.builder.path.toList match {
-          case Seq("export", uidAndFormat) => uidAndFormat
+          case Seq("resource", uidAndFormat) => uidAndFormat
         }
       }
 
