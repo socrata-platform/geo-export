@@ -1,7 +1,6 @@
 package com.socrata.geoexport.intermediates
 
 import com.socrata.soql.types._
-import com.vividsolutions.jts.geom._
 import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.DateTimeFormat
 
@@ -73,7 +72,7 @@ object ShapeRep {
     case (name, SoQLDouble) => repMapper.forDouble(name)
     case (name, SoQLJson) => repMapper.forJson(name)
     case (name, SoQLObject) => repMapper.forObject(name)
-    case unknown: Any => throw new UnknownSoQLTypeException("Unknown SoQLType ${unknown}")
+    case unknown: Any => throw new UnknownSoQLTypeException(s"Unknown SoQLType ${unknown}")
   }
   // scalastyle:on
 }

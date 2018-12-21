@@ -2,7 +2,6 @@ package com.socrata.geoexport.intermediates.shapefile
 
 import java.nio.charset.CodingErrorAction
 import java.util.Date
-import com.rojoma.json.v3.ast._
 import com.socrata.geoexport.intermediates.ShapeRep
 import com.socrata.soql.types._
 import com.vividsolutions.jts.geom._

@@ -6,13 +6,10 @@ import org.geotools.factory.FactoryRegistry
 import org.geotools.referencing.ReferencingFactoryFinder
 import org.slf4j.LoggerFactory
 
-import com.rojoma.simplearm.v2.conversions._
 import com.rojoma.simplearm.v2.{Resource, managed}
 
 import com.socrata.http.client.HttpClientHttpClient
-import com.socrata.http.server.implicits._
-import com.socrata.http.server.responses._
-import com.socrata.http.server.{HttpRequest, HttpResponse, HttpService, SocrataServerJetty}
+import com.socrata.http.server.{HttpRequest, SocrataServerJetty}
 import com.socrata.curator._
 import http.{VersionService, ExportService}
 import config.GeoexportConfig

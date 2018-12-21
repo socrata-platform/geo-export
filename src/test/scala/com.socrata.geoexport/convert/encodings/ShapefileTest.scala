@@ -21,7 +21,6 @@ import com.socrata.geoexport.conversions.Converter
 import org.apache.commons.io.output.ByteArrayOutputStream
 import scala.xml.{NodeSeq, XML, Node}
 import com.socrata.geoexport.encoders.ShapefileEncoder
-import scala.collection.JavaConversions._;
 
 class GeoIterator(sfi: SimpleFeatureIterator) extends Iterator [SimpleFeature] with AutoCloseable {
   def hasNext: Boolean = sfi.hasNext()

@@ -1,8 +1,5 @@
 package com.socrata.geoexport.mocks
 
-import java.io.ByteArrayOutputStream
-import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets.UTF_8
 import javax.servlet.ServletOutputStream
 import javax.servlet.http.HttpServletResponse
 import java.io.{FileOutputStream, File}

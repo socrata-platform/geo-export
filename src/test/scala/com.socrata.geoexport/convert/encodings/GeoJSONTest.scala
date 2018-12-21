@@ -21,7 +21,6 @@ import com.socrata.geoexport.conversions.Converter
 import org.apache.commons.io.output.ByteArrayOutputStream
 import com.rojoma.json.v3.io.CompactJsonWriter
 import com.socrata.geoexport.encoders.GeoJSONEncoder
-import scala.collection.JavaConversions._;
 import com.socrata.thirdparty.geojson.JtsCodecs.geoCodec
 
 

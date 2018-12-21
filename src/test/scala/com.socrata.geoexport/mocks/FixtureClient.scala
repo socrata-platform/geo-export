@@ -9,7 +9,7 @@ import com.socrata.http.common.util.Acknowledgeable
 import com.socrata.curator.{CuratedClientConfig, ServerProvider}
 import com.typesafe.config.Config
 import org.apache.commons.io.IOUtils
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 
 
 
@@ -23,7 +23,7 @@ class FixtureClient extends MockitoSugar {
       getStream(fixtureName) match {
         case Some(is) => is
         case None =>
-          IOUtils.toInputStream("""{"mock": "reason"}""")
+          IOUtils.toInputStream("""{"mock": "reason"}""", StandardCharsets.UTF_8)
       }
     }
     override def acknowledge(): Unit = ()

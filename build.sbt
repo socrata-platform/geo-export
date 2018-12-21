@@ -7,8 +7,7 @@ resolvers ++= Seq(
   "velvia maven" at "https://dl.bintray.com/velvia/maven",
   "Scalaz Bintray Repo" at "https://dl.bintray.com/scalaz/releases",
   "Open Source Geospatial Foundation Repository" at "http://download.osgeo.org/webdav/geotools",
-  "Socrata Artifactory" at "https://repo.socrata.com/artifactory/libs-release",
-  Resolver.url("socrata ivy releases", url("https://repo.socrata.com/artifactory/ivy-libs-release-local"))(Resolver.ivyStylePatterns)
+  "Socrata Artifactory" at "https://repo.socrata.com/artifactory/libs-release"
 )
 
 val JettyVersion = "9.2.10.v20150310"
@@ -55,4 +54,28 @@ testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, TestOptionNoTrac
 // Setup revolver.
 Revolver.settings
 
+sourceGenerators in Compile <+= (sourceManaged in Compile, version, scalaVersion) map { (root, version, scalaVersion) =>
+  import com.rojoma.json.v3.ast.JString
+  import java.io.FileWriter
 
+  val target = root / "BuildInfo.scala"
+
+  root.mkdirs()
+  val result = s"""package buildinfo
+
+object BuildInfo {
+  val version = ${JString(version)}
+  val scalaVersion = ${JString(scalaVersion)}
+  val buildTime = ${System.currentTimeMillis}L
+}
+"""
+
+  val w = new FileWriter(target)
+  try {
+    w.write(result)
+  } finally {
+    w.close()
+  }
+
+  Seq(target)
+}

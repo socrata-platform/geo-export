@@ -7,9 +7,8 @@ import java.util.{TimeZone, UUID}
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import org.apache.commons.io.{IOUtils, FileUtils}
-import com.rojoma.simplearm.util._
+import com.rojoma.simplearm.v2._
 import com.socrata.geoexport.config.GeoexportConfig
-import com.socrata.geoexport.encoders.KMLMapper._
 import com.socrata.geoexport.intermediates.shapefile._
 import com.socrata.geoexport.intermediates._
 import com.socrata.soql.SoQLPackIterator

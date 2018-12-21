@@ -14,7 +14,6 @@ import org.apache.commons.io.IOUtils
 import org.joda.time.{LocalTime, LocalDateTime, DateTime}
 import scala.util.{Try, Success, Failure}
 import scala.xml.Utility.{trim => xmltrim}
-import com.socrata.geoexport.encoders.KMLMapper._
 import com.socrata.geoexport.conversions.Converter
 import org.apache.commons.io.output.ByteArrayOutputStream
 import scala.xml.{NodeSeq, XML, Node}
