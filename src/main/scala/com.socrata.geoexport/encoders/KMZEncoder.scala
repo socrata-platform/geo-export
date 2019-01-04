@@ -3,7 +3,6 @@ package com.socrata.geoexport.encoders
 import java.io.OutputStream
 import java.util.zip.{ZipEntry, ZipOutputStream}
 import com.rojoma.simplearm.v2.ResourceScope
-import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 import geotypes._
 

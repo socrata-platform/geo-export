@@ -2,7 +2,6 @@ package com.socrata.geoexport.intermediates.geojson
 
 import com.rojoma.json.v3.ast._
 import com.socrata.soql.types._
-import com.vividsolutions.jts.geom._
 import org.slf4j.LoggerFactory
 import com.socrata.geoexport.intermediates.{ShapeRep, RepMapper}
 import com.socrata.thirdparty.geojson.JtsCodecs.geoCodec

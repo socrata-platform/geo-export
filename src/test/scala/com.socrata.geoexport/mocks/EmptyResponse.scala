@@ -5,12 +5,9 @@ import java.nio.charset.{Charset, StandardCharsets}
 import javax.activation.MimeType
 
 import com.rojoma.json.v3.ast.JValue
-import com.rojoma.json.v3.interpolation._
 
 import com.socrata.http.client.Response
 import com.socrata.http.common.util.Acknowledgeable
-
-import EmptyResponse._
 
 class EmptyResponse(ct: String = "application/vnd.geo+json") extends Response {
   val resultCode = 0

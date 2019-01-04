@@ -1,6 +1,6 @@
 package org.geotools.data.shapefile
 
-import com.rojoma.simplearm.util._
+import com.rojoma.simplearm.v2._
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.TimeZone
@@ -10,6 +10,13 @@ import org.geotools.data.shapefile.shp.ShapefileReader
 import org.opengis.feature.simple.{SimpleFeature, SimpleFeatureType}
 
 object NastyHack {
+  implicit object ShpFilesResource extends Resource[ShpFiles] {
+    // scalastyle:off
+    def close(shpFiles: ShpFiles) {
+      shpFiles.dispose()
+    }
+    // scalastyle:on
+  }
 
   private def getReader(featureType: SimpleFeatureType, shpFiles: ShpFiles, it: Iterator[SimpleFeature]) = {
     // scalastyle:off null

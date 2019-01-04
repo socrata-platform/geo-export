@@ -17,7 +17,7 @@ import org.scalatest._
 import org.scalatest.prop.PropertyChecks
 import org.velvia.MsgPack
 import scala.util.{Try, Success, Failure}
-import com.socrata.test.common.UnusedSugarCommon
+import com.socrata.testcommon.UnusedSugarCommon
 
 trait TestBase
     extends FunSuite

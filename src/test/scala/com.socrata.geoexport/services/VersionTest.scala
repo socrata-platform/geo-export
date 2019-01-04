@@ -4,7 +4,7 @@ package http
 import javax.servlet.http.HttpServletResponse.{SC_OK => ScOk}
 
 import org.mockito.Mockito.{verify, when}
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FunSuite, MustMatchers}
 
 import com.socrata.http.server.HttpRequest
