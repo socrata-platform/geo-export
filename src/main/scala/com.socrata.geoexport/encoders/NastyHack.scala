@@ -11,9 +11,11 @@ import org.opengis.feature.simple.{SimpleFeature, SimpleFeatureType}
 
 object NastyHack {
   implicit object ShpFilesResource extends Resource[ShpFiles] {
+    // scalastyle:off
     def close(shpFiles: ShpFiles) {
       shpFiles.dispose()
     }
+    // scalastyle:on
   }
 
   private def getReader(featureType: SimpleFeatureType, shpFiles: ShpFiles, it: Iterator[SimpleFeature]) = {

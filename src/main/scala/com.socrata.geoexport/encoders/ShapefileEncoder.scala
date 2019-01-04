@@ -27,7 +27,9 @@ import org.opengis.feature.simple.{SimpleFeature, SimpleFeatureType}
 import org.opengis.filter.Filter
 import org.slf4j.LoggerFactory
 import com.rojoma.simplearm.v2.ResourceScope
+// scalastyle:off
 import scala.collection.JavaConversions._
+// scalastyle:on
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 import java.io.Closeable
