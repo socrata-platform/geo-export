@@ -33,7 +33,8 @@ libraryDependencies ++= Seq(
 
   "commons-codec"            % "commons-codec"            % "1.10",
   "commons-io"               % "commons-io"               % "2.4",
-  "org.apache.curator"       % "curator-x-discovery"      % "4.1.0",
+  // curator versions in the 4.x range are incompatible with our current zk version 3.4.14
+  "org.apache.curator"       % "curator-x-discovery"      % "2.7.0",
   "com.socrata"             %% "soql-pack"                % "2.11.7",
 
   "org.geotools"             % "gt-shapefile"             % "14.0"
