@@ -2,13 +2,12 @@ name := "geo-export"
 
 scalaVersion := "2.11.7"
 
-resolvers ++= Seq(
-  "ecc" at "https://github.com/ElectronicChartCentre/ecc-mvn-repo/raw/master/releases",
-  "velvia maven" at "https://dl.bintray.com/velvia/maven",
-  "Scalaz Bintray Repo" at "https://dl.bintray.com/scalaz/releases",
-  "Open Source Geospatial Foundation Repository" at "http://download.osgeo.org/webdav/geotools",
-  "Socrata Artifactory" at "https://repo.socrata.com/artifactory/libs-release"
-)
+externalResolvers := Seq(
+   "Socarata SBT Repo" at "https://repo.socrata.com/artifactory/socrata-sbt-repo/",
+   "Socrata Artifactory" at "https://repo.socrata.com/artifactory/libs-release/",
+   "Socrata Artifactory Snapshot" at "https://repo.socrata.com/artifactory/libs-snapshot/",
+   "Socrata Jcenter" at "https://repo.socrata.com/artifactory/jcenter/",
+   Resolver.url("Socrata", url("https://repo.socrata.com/artifactory/ivy-libs-release"))(Resolver.ivyStylePatterns))
 
 val JettyVersion = "9.2.10.v20150310"
 
