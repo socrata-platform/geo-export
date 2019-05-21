@@ -13,7 +13,7 @@ val JettyVersion = "9.2.10.v20150310"
 
 libraryDependencies ++= Seq(
   "ch.qos.logback"           % "logback-classic"          % "1.1.3",
-  "com.rojoma"              %% "rojoma-json-v3"           % "3.3.0",
+  "com.rojoma"              %% "rojoma-json-v3"           % "3.9.1",
   "com.rojoma"              %% "rojoma-json-v3-jackson"   % "1.0.0" excludeAll(
     ExclusionRule(organization = "com.rojoma")),
   "com.rojoma"              %% "simple-arm-v2"            % "2.1.0",
