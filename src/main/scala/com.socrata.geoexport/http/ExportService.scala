@@ -74,11 +74,12 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
   private def getUpstreamLayers(req: HttpRequest,
                                 fxfs: Seq[String]): Either[HttpResponse, Seq[Response with Closeable]] = {
     fxfs.map { fbf =>
+      val soql = req.queryParameter("query").getOrElse(s"select * limit ${Int.MaxValue}")
       val reqBuilder = {
         base: RequestBuilder =>
           val sfReq = base
             .path(Seq("resource", s"_${fbf}.soqlpack"))
-            .addParameter(("$query", s"select * limit ${Int.MaxValue}"))
+            .addParameter(("$query", soql))
             .addHeader(ReqIdHeader -> req.requestId)
             .get
           log.info(s"""SodaFountain <<< ${URLDecoder.decode(req.toString, "UTF-8")}""")
