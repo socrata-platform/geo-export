@@ -34,11 +34,12 @@ object ExportService {
   // to appease the scala linter.. ಠ_ಠ
   val errorKey = "reason"
   val FourbyFour = "[\\w0-9]{4}-[\\w0-9]{4}"
+  val NbeResourceName = "_[\\w0-9]{4}-[\\w0-9]{4}"
   val encoders = List(KMLEncoder, ShapefileEncoder, KMZEncoder, GeoJSONEncoder)
   val formats: Set[String] = encoders.flatMap(_.encodes).toSet
   type LayerFailure = (Int, JValue)
 
-  private def isValidFourByFour(s: String) = s.matches(FourbyFour)
+  private def isValidFourByFour(s: String) = s.matches(FourbyFour) || s.matches(NbeResourceName)
 
   def toLayerNames(fourByFours: String): Either[HttpResponse, Seq[String]] = {
     val layers = fourByFours.split(",")
@@ -49,6 +50,15 @@ object ExportService {
         ))))
       case (valid, _) =>
         Right(valid)
+    }
+  }
+
+  // temporary measure while we deploy the update to core that passes nbe resource names directly
+  def resourceNameify(fbf: String): String = {
+    if (!fbf.matches(NbeResourceName)) {
+      s"_${fbf}"
+    } else {
+      fbf
     }
   }
 }
@@ -78,7 +88,7 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
       val reqBuilder = {
         base: RequestBuilder =>
           val sfReq = base
-            .path(Seq("resource", s"_${fbf}.soqlpack"))
+            .path(Seq("resource", s"${resourceNameify(fbf)}.soqlpack"))
             .addParameter(("$query", soql))
             .addHeader(ReqIdHeader -> req.requestId)
             .get
