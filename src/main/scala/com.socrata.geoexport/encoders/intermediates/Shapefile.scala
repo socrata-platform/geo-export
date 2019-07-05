@@ -132,6 +132,17 @@ class BooleanRep(soqlName: String) extends ShapefileRep[SoQLBoolean](soqlName: S
   def toAttrValues(soql: SoQLBoolean): Seq[AnyRef] = Seq(soql.value: java.lang.Boolean)
 }
 
+class UrlRep(soqlName: String) extends ShapefileRep[SoQLUrl](soqlName: String) with DBFDatum {
+  def toAttrBindings: Seq[Class[_]] = Seq(classOf[String])
+  def toAttrValues(soql: SoQLUrl): Seq[AnyRef] = {
+    soql match {
+      case SoQLUrl(None, None) => Seq("")
+      case SoQLUrl(Some(url), None) => Seq(url.toString)
+      case SoQLUrl(Some(url), Some(label)) => Seq(s"${label} (${url})")
+    }
+  }
+}
+
 // These are both Longs, but you can't represent a Long this large in a DBF,
 // so they'll need to be strings
 class VersionRep(soqlName: String)
@@ -211,6 +222,7 @@ object ShapefileRepMapper extends RepMapper {
   def forDouble(name: String): DoubleRep =                          new DoubleRep(name)
   def forJson(name: String): JSONRep =                              new JSONRep(name)
   def forObject(name: String): ObjectRep =                          new ObjectRep(name)
+  def forUrl(name: String): UrlRep =                                new UrlRep(name)
   // scalastyle:off
   def toAttr(thing: (SoQLValue, ShapeRep[_ <: SoQLValue])) : Seq[AnyRef] = thing match {
     case (value: SoQLPoint, intermediary: PointRep) => intermediary.toAttrValues(value)
@@ -233,6 +245,7 @@ object ShapefileRepMapper extends RepMapper {
     case (value: SoQLDouble, intermediary: DoubleRep) => intermediary.toAttrValues(value)
     case (value: SoQLJson, intermediary: JSONRep) => intermediary.toAttrValues(value)
     case (value: SoQLObject, intermediary: ObjectRep) => intermediary.toAttrValues(value)
+    case (value: SoQLUrl, intermediary: UrlRep) => intermediary.toAttrValues(value)
     case (SoQLNull, intermediary) => intermediary.toAttrNames.map{ _name => null} // scalastyle:ignore null
     case (value: SoQLValue, _) =>
       log.error(s"Unknown SoQLValue: ${value.getClass()} - coercing toString but you should fix this!")

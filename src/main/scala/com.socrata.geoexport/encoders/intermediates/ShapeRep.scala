@@ -44,6 +44,7 @@ trait RepMapper {
   def forDouble(name: String): ShapeRep[SoQLDouble]
   def forJson(name: String): ShapeRep[SoQLJson]
   def forObject(name: String): ShapeRep[SoQLObject]
+  def forUrl(name: String): ShapeRep[SoQLUrl]
 
   def toAttr(thing: (SoQLValue, ShapeRep[_ <: SoQLValue])) : Seq[Any]
 }
@@ -72,6 +73,7 @@ object ShapeRep {
     case (name, SoQLDouble) => repMapper.forDouble(name)
     case (name, SoQLJson) => repMapper.forJson(name)
     case (name, SoQLObject) => repMapper.forObject(name)
+    case (name, SoQLUrl) => repMapper.forUrl(name)
     case unknown: Any => throw new UnknownSoQLTypeException(s"Unknown SoQLType ${unknown}")
   }
   // scalastyle:on

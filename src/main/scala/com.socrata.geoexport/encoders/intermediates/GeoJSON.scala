@@ -124,6 +124,16 @@ class ObjectRep(soqlName: String) extends GeoJSONRep[SoQLObject](soqlName) with 
   def toAttrValues(soql: SoQLObject): Seq[JValue] = Seq(soql.value)
 }
 
+class UrlRep(soqlName: String) extends GeoJSONRep[SoQLUrl](soqlName) with SimpleDatum {
+  def toAttrValues(soql: SoQLUrl): Seq[JValue] = {
+    asSimpleData(soql match {
+      case SoQLUrl(None, None) => ""
+      case SoQLUrl(Some(url), None) => url.toString
+      case SoQLUrl(Some(url), Some(label)) => s"${label} (${url})"
+    })
+  }
+}
+
 /**
   Maps all the SoQLColumns to intermediate columns
 */
@@ -150,6 +160,7 @@ object GeoJSONRepMapper extends RepMapper {
   def forDouble(name: String): DoubleRep =                        new DoubleRep(name)
   def forJson(name: String): JSONRep =                            new JSONRep(name)
   def forObject(name: String): ObjectRep =                        new ObjectRep(name)
+  def forUrl(name: String): UrlRep =                              new UrlRep(name)
   // scalastyle:off cyclomatic.complexity
   def toAttr(thing: (SoQLValue, ShapeRep[_ <: SoQLValue])) : Seq[JValue] = thing match {
     case (value: SoQLPoint, intermediary: PointRep) => intermediary.toAttrValues(value)
@@ -172,6 +183,7 @@ object GeoJSONRepMapper extends RepMapper {
     case (value: SoQLDouble, intermediary: DoubleRep) => intermediary.toAttrValues(value)
     case (value: SoQLJson, intermediary: JSONRep) => intermediary.toAttrValues(value)
     case (value: SoQLObject, intermediary: ObjectRep) => intermediary.toAttrValues(value)
+    case (value: SoQLUrl, intermediary: UrlRep) => intermediary.toAttrValues(value)
     case (SoQLNull, _) => Seq(JNull)
     case (value: SoQLValue, _) =>
       log.error(s"Unknown SoQLValue: ${value.getClass()} - coercing toString but you should fix this!")
