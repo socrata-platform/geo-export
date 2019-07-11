@@ -156,6 +156,16 @@ class TextRep(soqlName: String) extends KMLRep[SoQLText](soqlName) with SimpleDa
   }
 }
 
+class UrlRep(soqlName: String) extends KMLRep[SoQLUrl](soqlName) with SimpleDatum {
+  def toAttrValues(soql: SoQLUrl): Seq[Any] = {
+    asSimpleData(soql match {
+      case SoQLUrl(None, None) => ""
+      case SoQLUrl(Some(url), None) => url.toString
+      case SoQLUrl(Some(url), Some(label)) => s"${label} (${url})"
+    })
+  }
+}
+
 class MoneyRep(soqlName: String) extends KMLRep[SoQLMoney](soqlName) with SimpleDatum {
   def toAttrValues(soql: SoQLMoney): Seq[Any] = asSimpleData(soql.value.toString)
 }
@@ -233,6 +243,7 @@ object KMLRepMapper extends RepMapper {
   def forDouble(name: String): DoubleRep =                        new DoubleRep(name)
   def forJson(name: String): JSONRep =                            new JSONRep(name)
   def forObject(name: String): ObjectRep =                        new ObjectRep(name)
+  def forUrl(name: String): UrlRep =                              new UrlRep(name)
   // scalastyle:off cyclomatic.complexity
   def toAttr(thing: (SoQLValue, ShapeRep[_ <: SoQLValue])) : Seq[Any] = thing match {
     case (value: SoQLPoint, intermediary: PointRep) => intermediary.toAttrValues(value)
@@ -255,6 +266,7 @@ object KMLRepMapper extends RepMapper {
     case (value: SoQLDouble, intermediary: DoubleRep) => intermediary.toAttrValues(value)
     case (value: SoQLJson, intermediary: JSONRep) => intermediary.toAttrValues(value)
     case (value: SoQLObject, intermediary: ObjectRep) => intermediary.toAttrValues(value)
+    case (value: SoQLUrl, intermediary: UrlRep) => intermediary.toAttrValues(value)
     case (SoQLNull, intermediary: KMLRep[_]) =>
       // null values will be converted into text nodes and turned into empty elements
       intermediary.toAttrNames.map { name =>

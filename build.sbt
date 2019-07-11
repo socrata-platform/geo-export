@@ -7,7 +7,8 @@ externalResolvers := Seq(
    "Socrata Artifactory" at "https://repo.socrata.com/artifactory/libs-release/",
    "Socrata Artifactory Snapshot" at "https://repo.socrata.com/artifactory/libs-snapshot/",
    "Socrata Jcenter" at "https://repo.socrata.com/artifactory/jcenter/",
-   Resolver.url("Socrata", url("https://repo.socrata.com/artifactory/ivy-libs-release"))(Resolver.ivyStylePatterns))
+   Resolver.url("Socrata", url("https://repo.socrata.com/artifactory/ivy-libs-release"))(Resolver.ivyStylePatterns),
+  Resolver.file("local", file(Path.userHome.absolutePath + "/.ivy2/local"))(Resolver.ivyStylePatterns))
 
 val JettyVersion = "9.2.10.v20150310"
 
@@ -34,7 +35,7 @@ libraryDependencies ++= Seq(
   "commons-io"               % "commons-io"               % "2.4",
   // curator versions in the 4.x range are incompatible with our current zk version 3.4.14
   "org.apache.curator"       % "curator-x-discovery"      % "2.7.0",
-  "com.socrata"             %% "soql-pack"                % "2.11.7",
+  "com.socrata"             %% "soql-pack"                % "2.11.13",
 
   "org.geotools"             % "gt-shapefile"             % "14.0"
 )
