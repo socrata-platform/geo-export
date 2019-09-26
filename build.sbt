@@ -17,7 +17,7 @@ libraryDependencies ++= Seq(
   "com.rojoma"              %% "rojoma-json-v3"           % "3.9.1",
   "com.rojoma"              %% "rojoma-json-v3-jackson"   % "1.0.0" excludeAll(
     ExclusionRule(organization = "com.rojoma")),
-  "com.rojoma"              %% "simple-arm-v2"            % "2.1.0",
+  "com.rojoma"              %% "simple-arm-v2"            % "2.3.1",
   "com.socrata"             %% "socrata-curator-utils"    % "1.1.2" excludeAll(
     ExclusionRule(organization = "com.socrata", name = "socrata-http-client"),
     ExclusionRule(organization = "com.socrata", name = "socrata-http-jetty")),
