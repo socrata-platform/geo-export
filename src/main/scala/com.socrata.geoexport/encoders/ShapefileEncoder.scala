@@ -92,6 +92,8 @@ object ShapefileEncoder extends GeoEncoder {
       val attrNames = rep.toAttrNames
       val bindings = rep.toAttrBindings
 
+      val usedAttrNames = attrNames.toSet
+
       if(attrNames.size != bindings.size) {
         throw new Exception("Attribute names:bindings mapping must be 1:1 in the intermediary representation")
       }
@@ -108,10 +110,16 @@ object ShapefileEncoder extends GeoEncoder {
           )
           builder.add(geomDescriptor)
         } else {
+          val realAttrName =
+            if(attrName == "the_geom") { // this name is special, so since it's _not_ a geometry, we need to rename it
+              Iterator.from(2).map(attrName + "_" + _).find(!usedAttrNames.contains(_)).get
+            } else {
+              attrName
+            }
           val bindingName = new NameImpl(binding.toString())
           val attrType = new AttributeTypeImpl(bindingName, binding, true, false, restrictions, null, null)
           val descriptor = new AttributeDescriptorImpl(
-            attrType, new NameImpl(attrName), Int.MinValue, Int.MaxValue, true, null
+            attrType, new NameImpl(realAttrName), Int.MinValue, Int.MaxValue, true, null
           )
           builder.add(descriptor)
         }
