@@ -78,6 +78,22 @@ object ShapefileEncoder extends GeoEncoder {
 
   private def toIntermediaryReps(schema: Seq[SoQLColumn]) = schema.map(ShapeRep.repFor(_, ShapefileRepMapper))
 
+  def truncateAndDedup(initialAttrNames: Seq[String]): Seq[String] = {
+    val MaxShapefileName = 10
+    val shortAttrNames = initialAttrNames.filter(_.length <= MaxShapefileName).toSet
+    val (attrNamesReversed, _) = initialAttrNames.foldLeft((List.empty[String], shortAttrNames)) { (accUsedNames, name) =>
+      val (acc, usedNames) = accUsedNames
+      val freshName =
+        if(shortAttrNames(name)) name
+        else (Iterator.single(name.take(MaxShapefileName)) ++ Iterator.from(2).map { i =>
+          val iStr = i.toString
+          name.take(MaxShapefileName - iStr.length - 1) + "_" + iStr
+        }).dropWhile(usedNames.contains(_)).next()
+      (freshName :: acc, usedNames + freshName)
+    }
+    attrNamesReversed.reverse
+  }
+
   private def buildFeatureType(schema: IntermediarySchema): SimpleFeatureType = {
     val builder = new SimpleFeatureTypeBuilder()
 
@@ -89,7 +105,7 @@ object ShapefileEncoder extends GeoEncoder {
     .flatMap { rep =>
       val restrictions = seqAsJavaList(List[Filter]())
 
-      val attrNames = rep.toAttrNames
+      val attrNames = truncateAndDedup(rep.toAttrNames)
       val bindings = rep.toAttrBindings
 
       val usedAttrNames = attrNames.toSet
