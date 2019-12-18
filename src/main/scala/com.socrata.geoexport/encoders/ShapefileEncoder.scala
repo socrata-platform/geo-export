@@ -90,8 +90,8 @@ object ShapefileEncoder extends GeoEncoder {
               val iStr = i.toString
               name.take(MaxShapefileName - iStr.length - 1) + "_" + iStr
             }).dropWhile(usedNames.contains(_)).next()
-            (freshName :: acc, usedNames + freshName)
           }
+        (freshName :: acc, usedNames + freshName)
     }
     attrNamesReversed.reverse
   }
