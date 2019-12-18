@@ -81,15 +81,17 @@ object ShapefileEncoder extends GeoEncoder {
   def truncateAndDedup(initialAttrNames: Seq[String]): Seq[String] = {
     val MaxShapefileName = 10
     val shortAttrNames = initialAttrNames.filter(_.length <= MaxShapefileName).toSet
-    val (attrNamesReversed, _) = initialAttrNames.foldLeft((List.empty[String], shortAttrNames)) { (accUsedNames, name) =>
-      val (acc, usedNames) = accUsedNames
-      val freshName =
-        if(shortAttrNames(name)) name
-        else (Iterator.single(name.take(MaxShapefileName)) ++ Iterator.from(2).map { i =>
-          val iStr = i.toString
-          name.take(MaxShapefileName - iStr.length - 1) + "_" + iStr
-        }).dropWhile(usedNames.contains(_)).next()
-      (freshName :: acc, usedNames + freshName)
+    val (attrNamesReversed, _) = initialAttrNames.foldLeft((List.empty[String], shortAttrNames)) {
+      (accUsedNames, name) =>
+        val (acc, usedNames) = accUsedNames
+        val freshName =
+          if(shortAttrNames(name)) { name }
+          else { (Iterator.single(name.take(MaxShapefileName)) ++ Iterator.from(2).map { i =>
+              val iStr = i.toString
+              name.take(MaxShapefileName - iStr.length - 1) + "_" + iStr
+            }).dropWhile(usedNames.contains(_)).next()
+            (freshName :: acc, usedNames + freshName)
+          }
     }
     attrNamesReversed.reverse
   }
