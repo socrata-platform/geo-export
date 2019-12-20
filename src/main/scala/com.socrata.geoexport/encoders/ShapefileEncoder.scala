@@ -93,12 +93,10 @@ object ShapefileEncoder extends GeoEncoder {
         } else {
           val shortName = name.take(MaxShapefileName)
           val freshName =
-            if(!usedNames.contains(shortName) && !reservedNames.contains(shortName)) { shortName }
-            else { (Iterator.single(shortName) ++ Iterator.from(2).map { i =>
-                      val iStr = i.toString
-                      shortName.take(MaxShapefileName - iStr.length - 1) + "_" + iStr
-                    }).dropWhile { n => usedNames.contains(n) || reservedNames.contains(n) }.next()
-            }
+            (Iterator.single(shortName) ++ Iterator.from(2).map { i =>
+               val iStr = i.toString
+               shortName.take(MaxShapefileName - iStr.length - 1) + "_" + iStr
+             }).dropWhile { n => usedNames.contains(n) || reservedNames.contains(n) }.next()
           (freshName :: acc, usedNames + freshName, reservedNames)
         }
     }
