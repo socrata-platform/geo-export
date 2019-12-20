@@ -18,4 +18,8 @@ class ShapefileEncoderTest extends FunSuite with MustMatchers {
   test("Multiple long names are deduped in order") {
     ShapefileEncoder.truncateAndDedup(Seq("a", "b is a very long name", "b is a very long name again")) must be (Seq("a", "b is a ver", "b is a v_2"))
   }
+
+  test("If two identical short names exist, they are deduped") {
+    ShapefileEncoder.truncateAndDedup(Seq("a", "a")) must be (Seq("a", "a_2"))
+  }
 }
