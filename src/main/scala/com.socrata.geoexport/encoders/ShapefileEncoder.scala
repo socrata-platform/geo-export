@@ -97,7 +97,7 @@ object ShapefileEncoder extends GeoEncoder {
             else { (Iterator.single(shortName) ++ Iterator.from(2).map { i =>
                       val iStr = i.toString
                       shortName.take(MaxShapefileName - iStr.length - 1) + "_" + iStr
-                    }).dropWhile { n => shortNamesSet.contains(n) || usedNames.contains(n) || reservedNames.contains(n) }.next()
+                    }).dropWhile { n => usedNames.contains(n) || reservedNames.contains(n) }.next()
             }
           (freshName :: acc, usedNames + freshName, reservedNames)
         }
