@@ -102,49 +102,51 @@ object ShapefileEncoder extends GeoEncoder {
     builder.setCRS(DefaultGeographicCRS.WGS84)
     builder.setName("FeatureType")
 
-    val addedNames = schema
-    .filter(!_.isInstanceOf[IDRep]) // find all the non-id fields
-    .flatMap { rep =>
-      val restrictions = seqAsJavaList(List[Filter]())
+    val (rawAttrNames, bindings, restrictions) = schema.
+      filterNot(_.isInstanceOf[IDRep]). // find all the non-id fields
+      flatMap { rep =>
+        val restrictions = seqAsJavaList(List[Filter]())
 
-      val attrNames = truncateAndDedup(rep.toAttrNames)
-      val bindings = rep.toAttrBindings
-
-      val usedAttrNames = attrNames.toSet
-
-      if(attrNames.size != bindings.size) {
-        throw new Exception("Attribute names:bindings mapping must be 1:1 in the intermediary representation")
-      }
-
-      attrNames.zip(bindings).foreach { case (attrName, binding) =>
-        // geotools is dumb
-        if (classOf[Geometry].isAssignableFrom(binding)) {
-          val attrName = new NameImpl("the_geom")
-          val geomType = new GeometryTypeImpl(
-            attrName, binding, DefaultGeographicCRS.WGS84, true, false, seqAsJavaList(List()), null, null
-          )
-          val geomDescriptor = new GeometryDescriptorImpl(
-            geomType, attrName, Int.MinValue, Int.MaxValue, true, null
-          )
-          builder.add(geomDescriptor)
-        } else {
-          val realAttrName =
-            if(attrName == "the_geom") { // this name is special, so since it's _not_ a geometry, we need to rename it
-              Iterator.from(2).map(attrName + "_" + _).find(!usedAttrNames.contains(_)).get
-            } else {
-              attrName
-            }
-          val bindingName = new NameImpl(binding.toString())
-          val attrType = new AttributeTypeImpl(bindingName, binding, true, false, restrictions, null, null)
-          val descriptor = new AttributeDescriptorImpl(
-            attrType, new NameImpl(realAttrName), Int.MinValue, Int.MaxValue, true, null
-          )
-          builder.add(descriptor)
+        val repAttrNames = rep.toAttrNames
+        val repBindings = rep.toAttrBindings
+        if(repAttrNames.size != repBindings.size) {
+          throw new Exception("Attribute names:bindings mapping must be 1:1 in the intermediary representation")
         }
+
+        (repAttrNames, repBindings, Stream.continually(restrictions)).zipped.toSeq
+      }.
+      unzip3
+
+    val attrNames = truncateAndDedup(rawAttrNames)
+    var usedAttrNames = attrNames.toSet
+
+    (rawAttrNames, bindings, restrictions).zipped.foreach { (attrName, binding, restrictions) =>
+      // geotools is dumb
+      if (classOf[Geometry].isAssignableFrom(binding)) {
+        val attrName = new NameImpl("the_geom")
+        val geomType = new GeometryTypeImpl(
+          attrName, binding, DefaultGeographicCRS.WGS84, true, false, seqAsJavaList(List()), null, null
+        )
+        val geomDescriptor = new GeometryDescriptorImpl(
+          geomType, attrName, Int.MinValue, Int.MaxValue, true, null
+        )
+        builder.add(geomDescriptor)
+      } else {
+        val realAttrName =
+          if(attrName == "the_geom") { // this name is special, so since it's _not_ a geometry, we need to rename it
+            Iterator.from(2).map(attrName + "_" + _).find(!usedAttrNames.contains(_)).get
+          } else {
+            attrName
+          }
+        usedAttrNames += realAttrName
+        val bindingName = new NameImpl(binding.toString())
+        val attrType = new AttributeTypeImpl(bindingName, binding, true, false, restrictions, null, null)
+        val descriptor = new AttributeDescriptorImpl(
+          attrType, new NameImpl(realAttrName), Int.MinValue, Int.MaxValue, true, null
+        )
+        builder.add(descriptor)
       }
-      attrNames
     }
-    log.debug(s"Added names ${addedNames.size}  ${addedNames}")
     builder.buildFeatureType()
   }
 
