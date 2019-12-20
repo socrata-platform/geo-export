@@ -120,7 +120,7 @@ object ShapefileEncoder extends GeoEncoder {
     val attrNames = truncateAndDedup(rawAttrNames)
     var usedAttrNames = attrNames.toSet
 
-    (rawAttrNames, bindings, restrictions).zipped.foreach { (attrName, binding, restrictions) =>
+    (attrNames, bindings, restrictions).zipped.foreach { (attrName, binding, restrictions) =>
       // geotools is dumb
       if (classOf[Geometry].isAssignableFrom(binding)) {
         val attrName = new NameImpl("the_geom")
