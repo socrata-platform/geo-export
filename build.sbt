@@ -55,6 +55,8 @@ testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, TestOptionNoTrac
 // Setup revolver.
 Revolver.settings
 
+com.socrata.sbtplugins.StylePlugin.StyleKeys.styleFailOnError in Compile := false
+
 sourceGenerators in Compile <+= (sourceManaged in Compile, version, scalaVersion) map { (root, version, scalaVersion) =>
   import com.rojoma.json.v3.ast.JString
   import java.io.FileWriter
