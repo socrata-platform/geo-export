@@ -80,18 +80,27 @@ object ShapefileEncoder extends GeoEncoder {
 
   def truncateAndDedup(initialAttrNames: Seq[String]): Seq[String] = {
     val MaxShapefileName = 10
-    val shortAttrNames = initialAttrNames.filter(_.length <= MaxShapefileName).toSet
-    val (attrNamesReversed, _) = initialAttrNames.foldLeft((List.empty[String], shortAttrNames)) {
-      (accUsedNames, name) =>
-        val (acc, usedNames) = accUsedNames
-        val freshName =
-          if(shortAttrNames(name)) { name }
-          else { (Iterator.single(name.take(MaxShapefileName)) ++ Iterator.from(2).map { i =>
-              val iStr = i.toString
-              name.take(MaxShapefileName - iStr.length - 1) + "_" + iStr
-            }).dropWhile(usedNames.contains(_)).next()
-          }
-        (freshName :: acc, usedNames + freshName)
+    val shortNamesSet = initialAttrNames.filter(_.length <= MaxShapefileName).toSet
+    val (attrNamesReversed, _, _) = initialAttrNames.foldLeft((List.empty[String], Set.empty[String], shortNamesSet)) {
+      (accUsedNamesReservedNames, name) =>
+        // "acc" is our results
+        // "usedNames" is the set of names we've generated
+        // "reservedNames" is the set of names we've not yet generated but are unwilling to generate
+        // because a future column will have that name without needing to be truncated
+        val (acc, usedNames, reservedNames) = accUsedNamesReservedNames
+        if(reservedNames.contains(name)) {
+          (name :: acc, usedNames + name, reservedNames - name)
+        } else {
+          val shortName = name.take(MaxShapefileName)
+          val freshName =
+            if(!usedNames.contains(shortName) && !reservedNames.contains(shortName)) { shortName }
+            else { (Iterator.single(shortName) ++ Iterator.from(2).map { i =>
+                      val iStr = i.toString
+                      shortName.take(MaxShapefileName - iStr.length - 1) + "_" + iStr
+                    }).dropWhile { n => shortNamesSet.contains(n) || usedNames.contains(n) || reservedNames.contains(n) }.next()
+            }
+          (freshName :: acc, usedNames + freshName, reservedNames)
+        }
     }
     attrNamesReversed.reverse
   }
@@ -118,6 +127,7 @@ object ShapefileEncoder extends GeoEncoder {
       unzip3
 
     val attrNames = truncateAndDedup(rawAttrNames)
+
     var usedAttrNames = attrNames.toSet
 
     (attrNames, bindings, restrictions).zipped.foreach { (attrName, binding, restrictions) =>

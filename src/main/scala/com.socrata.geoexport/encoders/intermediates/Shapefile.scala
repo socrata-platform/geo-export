@@ -18,11 +18,8 @@ import org.joda.time.format.DateTimeFormat
   See the note above ShapefileRepMapper for why this stuff needs to exist
 */
 abstract class ShapefileRep[T](name: String) extends ShapeRep[T] {
-  val maxDBFColumnLength = 10
-
   protected def normalizeName(name: String) = {
-    val n = name.replaceAll(":", "")
-    if (n.length > maxDBFColumnLength) n.substring(0, maxDBFColumnLength) else n
+    name.replaceAll(":", "") // we'll truncate to 10 chars later
   }
 
   def toAttrNames: Seq[String] = Seq(normalizeName(name))
