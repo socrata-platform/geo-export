@@ -1,5 +1,5 @@
 package com.socrata.geoexport.http
-
+import com.socrata.soql.SoQLPackIterator
 import java.io.{OutputStream, _}
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets.UTF_8
@@ -11,6 +11,7 @@ import com.rojoma.json.v3.util.JsonUtil
 import com.socrata.geoexport.UnmanagedCuratedServiceClient
 import com.socrata.geoexport.conversions.Converter
 import com.socrata.geoexport.encoders.{KMLEncoder, ShapefileEncoder, KMZEncoder, GeoJSONEncoder}
+import com.socrata.geoexport.encoders.geotypes._
 import com.socrata.geoexport.http.ExportService._
 import com.socrata.http.client.{RequestBuilder, Response}
 import com.socrata.http.server.responses.{Json, _}
@@ -141,22 +142,43 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
       case Some(encoder) =>
         proxy(req, fourByFours) match {
           case Right(responses) =>
-            OK ~> ContentType(encoder.encodedMIME) ~> Stream({out: OutputStream =>
+            encoder match {
+              case ShapefileEncoder =>
+                try {
+                  val layerStream: Layers = responses
+                    .map(r => r.inputStream())
+                    .map(is => new SoQLPackIterator(new DataInputStream(is)))
 
-              val streams = responses.map { r => r.inputStream() }
-              Converter.execute(req.resourceScope, streams, encoder, out) match {
-                case Success(s) =>
-                  out.flush()
-                  log.info(s"Finished writing export for ${fxfs}")
-                case Failure(failure) =>
-                  log.error(
-                    "Encountered a fatal error; 200 status was already committed.",
-                    failure
-                  )
-
-              }
-              responses.foreach(_.close())
-            })
+                  val files = ShapefileEncoder.buildFiles(req.resourceScope, layerStream)
+                  OK ~> ContentType(encoder.encodedMIME) ~> Stream({out: OutputStream =>
+                    ShapefileEncoder.streamZip(files, out)
+                    out.flush()
+                    log.info(s"Finished writing export for ${fxfs}")
+                  })
+                } catch {
+                  case e: Exception => {
+                    log.error("Error exporting shapefile", e)
+                    NotAcceptable
+                  }
+                } finally {
+                  responses.foreach(_.close())
+                }
+              case _ =>
+                OK ~> ContentType(encoder.encodedMIME) ~> Stream({out: OutputStream =>
+                  val streams = responses.map { r => r.inputStream() }
+                  Converter.execute(req.resourceScope, streams, encoder, out) match {
+                    case Success(s) =>
+                      out.flush()
+                      log.info(s"Finished writing export for ${fxfs}")
+                    case Failure(failure) =>
+                      log.error(
+                        "Encountered a fatal error; 200 status was already committed.",
+                        failure
+                      )
+                  }
+                  responses.foreach(_.close())
+              })
+            }
           case Left(error) => error
         }
       case None =>
