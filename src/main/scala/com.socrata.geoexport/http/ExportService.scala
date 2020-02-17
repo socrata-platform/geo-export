@@ -156,7 +156,7 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
                     log.info(s"Finished writing export for ${fxfs}")
                   })
                 } catch {
-                  case e: Exception => {
+                  case e: IOException => {
                     log.error("Error exporting shapefile", e)
                     NotAcceptable
                   }
