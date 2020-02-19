@@ -197,46 +197,43 @@ object ShapefileEncoder extends GeoEncoder {
     file
   }
 
-
-  def encode(rs: ResourceScope, layers: Layers, outStream: OutputStream) : Try[OutputStream] = {
+  def buildFiles(rs: ResourceScope, layers: Layers): Iterable[File] = {
     val tmpDir = new File(s"/tmp/${UUID.randomUUID()}")
     rs.open(new ShapefileDirManager(tmpDir))
-
-    try {
-      val shpFiles = layers.map { layer =>
-        val file = new File(tmpDir,  s"geo_export_${UUID.randomUUID()}.shp")
-        // factories, stores, and sources, oh my
-        val shapefileFactory = new ShapefileDataStoreFactory()
-        val meta = Map[String, AnyRef](
-          "create spatial index" -> java.lang.Boolean.TRUE,
-          "url" -> file.toURI.toURL
-        )
-        val dataStore = shapefileFactory.createNewDataStore(mapAsJavaMap(meta.asInstanceOf[Map[String, Serializable]]))
-        // split the SoQLSchema into a potentially longer ShapeSchema
-        val reps = toIntermediaryReps(layer.schema)
-        // build the feature type out of a schema that is representable by a ShapeFile
-        val featureType = buildFeatureType(reps)
-        dataStore.createSchema(featureType)
-        addFeatures(layer, featureType, file, dataStore, reps)
-      }
-
-      using(new ZipOutputStream(outStream)) { zipStream =>
-        shpFiles.foreach { shpFile =>
-          getShapefileMinions(shpFile).foreach { file =>
-            using(new FileInputStream(file)) { fis =>
-              zipStream.putNextEntry(new ZipEntry(file.getName))
-              IOUtils.copy(fis, zipStream)
-              zipStream.closeEntry()
-            }
-          }
-        }
-      }
-      Success(outStream)
-    } catch {
-      case e: Exception => Failure(e)
+    layers.map { layer =>
+      val file = new File(tmpDir,  s"geo_export_${UUID.randomUUID()}.shp")
+      // factories, stores, and sources, oh my
+      val shapefileFactory = new ShapefileDataStoreFactory()
+      val meta = Map[String, AnyRef](
+        "create spatial index" -> java.lang.Boolean.TRUE,
+        "url" -> file.toURI.toURL
+      )
+      val dataStore = shapefileFactory.createNewDataStore(mapAsJavaMap(meta.asInstanceOf[Map[String, Serializable]]))
+      // split the SoQLSchema into a potentially longer ShapeSchema
+      val reps = toIntermediaryReps(layer.schema)
+      // build the feature type out of a schema that is representable by a ShapeFile
+      val featureType = buildFeatureType(reps)
+      dataStore.createSchema(featureType)
+      addFeatures(layer, featureType, file, dataStore, reps)
     }
   }
 
+  def streamZip(files: Iterable[File], outStream: OutputStream): Unit = {
+    using(new ZipOutputStream(outStream)) { zipStream =>
+      files.foreach { shpFile =>
+        getShapefileMinions(shpFile).foreach { file =>
+          using(new FileInputStream(file)) { fis =>
+            zipStream.putNextEntry(new ZipEntry(file.getName))
+            IOUtils.copy(fis, zipStream)
+            zipStream.closeEntry()
+          }
+        }
+      }
+    }
+  }
+
+  def encode(rs: ResourceScope, layers: Layers, outStream: OutputStream) : Try[OutputStream] =
+    Success(outStream)
   def encodes: Set[String] = Set(shapefileExt) ++ Set("shapefile")
   def encodedMIME: String  = "application/zip"
 }
