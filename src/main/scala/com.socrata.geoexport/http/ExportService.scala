@@ -87,13 +87,16 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
     fxfs.map { fbf =>
       val soql = req.queryParameter("query").getOrElse(s"select * limit ${Int.MaxValue}")
       val copy = req.queryParameter("copy").getOrElse("published")
+      val context = req.queryParameter("context").getOrElse("{}")
       val reqBuilder = {
         base: RequestBuilder =>
           val sfReq = base
             .path(Seq("resource", s"${resourceNameify(fbf)}.soqlpack"))
             .addParameter(("$query", soql))
             .addParameter(("$$copy", copy))
+            .addParameter(("$$context", context))
             .addHeader(ReqIdHeader -> req.requestId)
+            .addHeader("X-Socrata-Lens-Uid" -> fbf)
             .get
           log.info(s"""SodaFountain <<< ${URLDecoder.decode(req.toString, "UTF-8")}""")
           sfReq
