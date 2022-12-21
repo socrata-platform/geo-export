@@ -1,0 +1,5 @@
+{
+  "ports": [ 7777 ],
+  "start_process": "bin/start_geo_export.sh",
+  "http_check": "/version"
+}
