@@ -18,6 +18,7 @@ import com.socrata.geoexport.conversions.Converter
 import org.apache.commons.io.output.ByteArrayOutputStream
 import scala.xml.{NodeSeq, XML, Node}
 import com.socrata.geoexport.encoders.{KMZEncoder, KMLEncoder}
+import com.rojoma.simplearm.v2._
 
 class KMLIshTest extends TestBase {
   val ldt = LocalDateTime.parse("2015-03-22T01:23")
@@ -69,28 +70,32 @@ class KMLIshTest extends TestBase {
   )
 
   protected def convertKML(layers: List[InputStream]): Node = {
-    val outStream = new ByteArrayOutputStream()
-    val result = Converter.execute(Unused, layers, KMLEncoder, outStream) match {
-      case Success(outstream) =>
-        outStream.flush()
-        outStream.toString("UTF-8")
-      case Failure(err) => throw err
+    using(new ResourceScope) { rs =>
+      val outStream = new ByteArrayOutputStream()
+      val result = Converter.execute(rs, layers, KMLEncoder, outStream) match {
+        case Success(outstream) =>
+          outStream.flush()
+          outStream.toString("UTF-8")
+        case Failure(err) => throw err
+      }
+      XML.loadString(result)
     }
-    XML.loadString(result)
   }
   protected def convertKMZ(layers: List[InputStream]): Node = {
-    val outStream = new ByteArrayOutputStream()
-    val result = Converter.execute(Unused, layers, KMZEncoder, outStream) match {
-      case Success(outstream) =>
-        outStream.flush()
-        val zis = new ZipInputStream(new ByteArrayInputStream(outStream.toByteArray))
-        zis.getNextEntry()
-        val writer = new StringWriter();
-        IOUtils.copy(zis, writer, "UTF-8");
-        writer.toString();
-      case Failure(err) => throw err
+    using(new ResourceScope) { rs =>
+      val outStream = new ByteArrayOutputStream()
+      val result = Converter.execute(rs, layers, KMZEncoder, outStream) match {
+        case Success(outstream) =>
+          outStream.flush()
+          val zis = new ZipInputStream(new ByteArrayInputStream(outStream.toByteArray))
+          zis.getNextEntry()
+          val writer = new StringWriter();
+          IOUtils.copy(zis, writer, "UTF-8");
+          writer.toString();
+        case Failure(err) => throw err
+      }
+      XML.loadString(result)
     }
-    XML.loadString(result)
   }
 
 

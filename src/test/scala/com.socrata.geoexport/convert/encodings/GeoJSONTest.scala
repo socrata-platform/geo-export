@@ -22,7 +22,7 @@ import org.apache.commons.io.output.ByteArrayOutputStream
 import com.rojoma.json.v3.io.CompactJsonWriter
 import com.socrata.geoexport.encoders.GeoJSONEncoder
 import com.socrata.thirdparty.geojson.JtsCodecs.geoCodec
-
+import com.rojoma.simplearm.v2._
 
 class GeoJSONTest extends TestBase {
   val ldt = LocalDateTime.parse("2015-03-22T01:23")
@@ -69,14 +69,16 @@ class GeoJSONTest extends TestBase {
 
 
   private def convertGeoJSON(layers: List[InputStream]): String = {
-    val outStream = new ByteArrayOutputStream()
-    val result = Converter.execute(Unused, layers, GeoJSONEncoder, outStream) match {
-      case Success(outstream) =>
-        outStream.flush()
-        outStream.toString("UTF-8")
-      case Failure(err) => throw err
+    using(new ResourceScope) { rs =>
+      val outStream = new ByteArrayOutputStream()
+      val result = Converter.execute(rs, layers, GeoJSONEncoder, outStream) match {
+        case Success(outstream) =>
+          outStream.flush()
+          outStream.toString("UTF-8")
+        case Failure(err) => throw err
+      }
+      result.replaceAll("\\s", "")
     }
-    result.replaceAll("\\s", "")
   }
 
   private def getExpected(shape: String): String = {
