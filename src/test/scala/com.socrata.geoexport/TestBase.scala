@@ -17,14 +17,12 @@ import org.scalatest._
 import org.scalatest.prop.PropertyChecks
 import org.velvia.MsgPack
 import scala.util.{Try, Success, Failure}
-import com.socrata.testcommon.UnusedSugarCommon
 
 trait TestBase
     extends FunSuite
     with org.scalatest.MustMatchers
     with PropertyChecks
-    with BeforeAndAfterAll
-    with UnusedSugarCommon {
+    with BeforeAndAfterAll {
 
   def wkt(w: String): Geometry = {
     val pm = new PrecisionModel(PrecisionModel.FIXED)

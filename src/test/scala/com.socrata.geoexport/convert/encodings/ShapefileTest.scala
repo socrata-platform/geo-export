@@ -22,6 +22,7 @@ import org.apache.commons.io.output.ByteArrayOutputStream
 import scala.xml.{NodeSeq, XML, Node}
 import com.socrata.geoexport.encoders.ShapefileEncoder
 import com.socrata.soql.SoQLPackIterator
+import com.rojoma.simplearm.v2._
 
 class GeoIterator(sfi: SimpleFeatureIterator) extends Iterator [SimpleFeature] with AutoCloseable {
   def hasNext: Boolean = sfi.hasNext()
@@ -76,14 +77,16 @@ class ShapefileTest extends TestBase {
   )
 
   private def convertShapefile(layers: List[InputStream]): File = {
-    val archive = new File(s"/tmp/test_geo_export_${UUID.randomUUID()}.zip")
-    val outStream = new FileOutputStream(archive)
+    using(new ResourceScope) { rs =>
+      val archive = new File(s"/tmp/test_geo_export_${UUID.randomUUID()}.zip")
+      val outStream = new FileOutputStream(archive)
 
-    val layerStream = layers.map { is => new SoQLPackIterator(new DataInputStream(is)) }
-    val files = ShapefileEncoder.buildFiles(Unused, layerStream)
-    ShapefileEncoder.streamZip(files, outStream)
-    outStream.flush()
-    archive
+      val layerStream = layers.map { is => new SoQLPackIterator(new DataInputStream(is)) }
+      val files = ShapefileEncoder.buildFiles(rs, layerStream)
+      ShapefileEncoder.streamZip(files, outStream)
+      outStream.flush()
+      archive
+    }
   }
 
   private def multiPointCoords(mp: MultiPoint) = {
