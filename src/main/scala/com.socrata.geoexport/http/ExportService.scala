@@ -87,7 +87,7 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
     val soql = req.queryParameter("query").getOrElse(s"select * limit ${Int.MaxValue}")
     val copy = req.queryParameter("copy").getOrElse("published")
     val context = req.queryParameter("context").getOrElse("{}")
-    val queryAppliesTo = req.queryParameter("queryAppliesTo").getOrElse("").split(",")
+    val queryAppliesTo = req.queryParameter("queryAppliesTo").getOrElse(fxfs.mkString(",")).split(",")
 
     fxfs.map { fbf =>
       val reqBuilder = { base: RequestBuilder =>
