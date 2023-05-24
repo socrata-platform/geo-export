@@ -84,19 +84,20 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
 
   private def getUpstreamLayers(req: HttpRequest,
                                 fxfs: Seq[String]): Either[HttpResponse, Seq[Response with Closeable]] = {
+    val soql = req.queryParameter("query").getOrElse(s"select * limit ${Int.MaxValue}")
+    val copy = req.queryParameter("copy").getOrElse("published")
+    val context = req.queryParameter("context").getOrElse("{}")
+    val queryAppliesTo = req.queryParameter("queryAppliesTo").getOrElse("").split(",")
+
     fxfs.map { fbf =>
-      val soql = req.queryParameter("query").getOrElse(s"select * limit ${Int.MaxValue}")
-      val copy = req.queryParameter("copy").getOrElse("published")
-      val context = req.queryParameter("context").getOrElse("{}")
       val reqBuilder = { base: RequestBuilder =>
-        base
+        val queryless = base
           .path(Seq("resource", s"${resourceNameify(fbf)}.soqlpack"))
-          .addParameter(("$query", soql))
           .addParameter(("$$copy", copy))
           .addParameter(("$$context", context))
           .addHeader(ReqIdHeader -> req.requestId)
           .addHeader("X-Socrata-Lens-Uid" -> fbf)
-          .get
+        (if (queryAppliesTo.contains(fbf)) queryless.addParameter(("$query", soql)) else queryless).get
       }
       Try(sodaClient.execute(reqBuilder)) match {
         case Success(response) =>
