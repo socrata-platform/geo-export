@@ -61,6 +61,12 @@ object ExportService {
   }
 
   case class LayerWithQuery(uid: String, query: Option[String], context: Option[String], copy: Option[String])
+
+  object QueryBody {
+    implicit val codec = AutomaticJsonCodecBuilder[QueryBody]
+  }
+
+  case class QueryBody(layersWithQueries: String, query: Option[String], context: Option[String], copy: Option[String])
 }
 
 class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleResource {
@@ -121,42 +127,72 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
     }
   }
 
-  private def parseLayersWithQueries(req: HttpRequest): Either[HttpResponse, Seq[LayerWithQuery]] = {
-    val thing = req.queryParameter("layersWithQueries").getOrElse("[]")
-    JsonUtil.parseJson[Seq[LayerWithQuery]](thing) match {
-      case Right(parsed: Seq[LayerWithQuery]) => Right(parsed)
+  private def parseQueryBody(req: HttpRequest, baseUids: Seq[String]): Either[HttpResponse, Seq[LayerWithQuery]] = {
+    req.reader match {
       case Left(_) => Left(BadRequest ~> Json(JsonUtil.renderJson(Map(
-        errorKey -> s"""Could not parse the 'layersWithQueries' parameter"""
+        errorKey -> "Invalid or unparsable Content-Type or MimeType"
+      ))))
+      case Right(reader: Reader) =>
+        JsonUtil.readJson[QueryBody](reader) match {
+          case Right(queryBody: QueryBody) =>
+            JsonUtil.parseJson[Seq[LayerWithQuery]](queryBody.layersWithQueries) match {
+              case Right(layersWithQueries: Seq[LayerWithQuery]) =>
+                Right(baseUids.map(fxf => {
+                  LayerWithQuery(
+                    fxf,
+                    queryBody.query,
+                    queryBody.context,
+                    queryBody.copy
+                  )
+                }) ++ layersWithQueries)
+              case Left(_) => Left(BadRequest ~> Json(JsonUtil.renderJson(Map(
+                errorKey -> s"""Could not parse the layersWithQuerys parameter"""
+              ))))
+            }
+          case Left(_) =>
+            Left(BadRequest ~> Json(JsonUtil.renderJson(Map(
+            errorKey -> s"""Could not parse the QUERY body"""
+          ))))
+        }
+    }
+  }
+
+  private def handleGetParameters(req: HttpRequest, baseUids: Seq[String]): Either[HttpResponse, Seq[LayerWithQuery]] = {
+    JsonUtil.parseJson[Seq[LayerWithQuery]](req.queryParameter("layersWithQueries").getOrElse("[]")) match {
+      case Right(extraLayers: Seq[LayerWithQuery]) =>
+        Right(baseUids.map(fxf => {
+          LayerWithQuery(
+            fxf,
+            req.queryParameter("query"),
+            req.queryParameter("context"),
+            req.queryParameter("copy")
+          )
+        }) ++ extraLayers)
+      case Left(_) => Left(BadRequest ~> Json(JsonUtil.renderJson(Map(
+        errorKey -> s"""Could not parse the layersWithQueries parameter"""
       ))))
     }
   }
 
-  private def createLayersWithQuerys(
-    req: HttpRequest,
-    baseFxfs: Seq[String],
-    parsedLayersWithQueries: Seq[LayerWithQuery]
-  ): Seq[LayerWithQuery] = {
-
-    baseFxfs.map(fxf => {
-      LayerWithQuery(
-        fxf,
-        req.queryParameter("query"),
-        req.queryParameter("context"),
-        req.queryParameter("copy")
-      )
-    }) ++ parsedLayersWithQueries
+  private def parseParametersAndBody(req: HttpRequest, baseUids: Seq[String]): Either[HttpResponse, Seq[LayerWithQuery]] = {
+    req.method match {
+      case "QUERY" => parseQueryBody(req, baseUids)
+      case "GET" => handleGetParameters(req, baseUids)
+      case otherMethod => Left(MethodNotAllowed ~> Json(JsonUtil.renderJson(Map(
+        errorKey -> s"""Method $otherMethod is not accepted, only GET or QUERY"""
+      ))))
+    }
   }
 
   private def proxy(req: HttpRequest,
                     fourByFours: String): Either[HttpResponse, Seq[Response with Closeable]] = {
-    parseLayersWithQueries(req) match {
+    val baseUids = fourByFours.split(",")
+    parseParametersAndBody(req, baseUids) match {
       case Right(layersWithQueries) =>
-        val baseUids = fourByFours.split(",")
-        val allUids = baseUids ++ layersWithQueries.map(_.uid)
+        val allUids = layersWithQueries.map(_.uid)
         validateFourByFours(allUids) match {
           case Right(_) =>
-            val layers = createLayersWithQuerys(req, baseUids, layersWithQueries)
-            getUpstreamLayers(req, layers)
+            getUpstreamLayers(req, layersWithQueries)
           case Left(reason) =>
             log.warn(s"Received bad 4x4s: ${allUids}")
             Left(reason)
