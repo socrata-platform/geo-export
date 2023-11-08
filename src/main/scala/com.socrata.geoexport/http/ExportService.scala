@@ -66,7 +66,7 @@ object ExportService {
     implicit val codec = AutomaticJsonCodecBuilder[QueryBody]
   }
 
-  case class QueryBody(layersWithQueries: String, query: Option[String], context: Option[String], copy: Option[String])
+  case class QueryBody(layersWithQueries: Seq[LayerWithQuery], query: Option[String], context: Option[String], copy: Option[String])
 }
 
 class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleResource {
@@ -134,25 +134,20 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
       ))))
       case Right(reader: Reader) =>
         JsonUtil.readJson[QueryBody](reader) match {
-          case Right(queryBody: QueryBody) =>
-            JsonUtil.parseJson[Seq[LayerWithQuery]](queryBody.layersWithQueries) match {
-              case Right(layersWithQueries: Seq[LayerWithQuery]) =>
-                Right(baseUids.map(fxf => {
-                  LayerWithQuery(
-                    fxf,
-                    queryBody.query,
-                    queryBody.context,
-                    queryBody.copy
-                  )
-                }) ++ layersWithQueries)
-              case Left(_) => Left(BadRequest ~> Json(JsonUtil.renderJson(Map(
-                errorKey -> s"""Could not parse the layersWithQuerys parameter"""
-              ))))
-            }
-          case Left(_) =>
+          case Left(e) =>
+            log.warn(s"Unable to parse the QueryBody! ${e}")
             Left(BadRequest ~> Json(JsonUtil.renderJson(Map(
-            errorKey -> s"""Could not parse the QUERY body"""
-          ))))
+              errorKey -> "Could not parse the QUERY body"
+            ))))
+          case Right(queryBody: QueryBody) =>
+            Right(baseUids.map(fxf => {
+              LayerWithQuery(
+                fxf,
+                queryBody.query,
+                queryBody.context,
+                queryBody.copy
+              )
+            }) ++ queryBody.layersWithQueries)
         }
     }
   }
@@ -168,9 +163,11 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
             req.queryParameter("copy")
           )
         }) ++ extraLayers)
-      case Left(_) => Left(BadRequest ~> Json(JsonUtil.renderJson(Map(
-        errorKey -> s"""Could not parse the layersWithQueries parameter"""
-      ))))
+      case Left(_) =>
+        log.warn(s"Unable to parse layersWithQueries parameter: ${req.queryParameter("layersWithQueries")}")
+        Left(BadRequest ~> Json(JsonUtil.renderJson(Map(
+          errorKey -> s"""Could not parse the layersWithQueries parameter"""
+        ))))
     }
   }
 
@@ -198,7 +195,6 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
             Left(reason)
         }
       case Left(err) =>
-        log.warn(s"Unable to parse layersWithQueries parameter: ${req.queryParameter("layersWithQueries")}")
         Left(err)
     }
   }

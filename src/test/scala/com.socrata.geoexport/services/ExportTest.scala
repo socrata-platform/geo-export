@@ -2,37 +2,38 @@ package com.socrata.geoexport
 package http
 
 import scala.collection.JavaConverters._
-
-import java.io.{FileOutputStream, File}
+import java.io.{BufferedReader, File, FileOutputStream, IOException, InputStreamReader}
 import java.util.UUID
 import javax.servlet.http.HttpServletResponse.{SC_OK => ScOk}
 import javax.servlet.http.HttpServletRequest
-
 import com.socrata.geoexport.mocks.FixtureClient
 import com.socrata.http.server.routing.TypedPathComponent
 import org.mockito.Mockito.{verify, when}
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{FunSuite, MustMatchers}
-
 import com.socrata.http.server.HttpRequest
-import scala.xml.{NodeSeq, XML, Node}
+
+import scala.xml.{Node, NodeSeq, XML}
 import com.rojoma.json.v3.io.{CompactJsonWriter, JsonReader}
 import com.rojoma.json.v3.ast._
 import org.scalatest.mock.MockitoSugar
 import com.rojoma.simplearm.v2._
 
+import javax.servlet.{ReadListener, ServletInputStream}
+
 class ExportTest extends TestBase  {
 
-  def Unused: HttpRequest = new HttpRequest {
+  def Unused(): HttpRequest = Unused("GET", "", None)
+  def Unused(method: String, queryString: String, inputStream: Option[javax.servlet.ServletInputStream] = None): HttpRequest = new HttpRequest {
     override def servletRequest = new HttpRequest.AugmentedHttpServletRequest(
       new HttpServletRequest {
-        override def getQueryString = ""
+        override def getQueryString = queryString
         override def getHeaderNames = java.util.Collections.enumeration(Nil.asJava)
         override def getHeader(name: String) = null
         override def getHeaders(name: String) = java.util.Collections.enumeration(Nil.asJava)
         override def getIntHeader(name: String) = -1
         override def getDateHeader(name: String) = -1L
-        override def getMethod = "GET"
+        override def getMethod = method
         override def authenticate(x$1: javax.servlet.http.HttpServletResponse): Boolean = ???
         override def changeSessionId(): String = ???
         override def getAuthType(): String = ???
@@ -64,9 +65,9 @@ class ExportTest extends TestBase  {
         override def getCharacterEncoding(): String = ???
         override def getContentLength(): Int = ???
         override def getContentLengthLong(): Long = ???
-        override def getContentType(): String = ???
+        override def getContentType(): String = "application/json"
         override def getDispatcherType(): javax.servlet.DispatcherType = ???
-        override def getInputStream(): javax.servlet.ServletInputStream = ???
+        override def getInputStream(): javax.servlet.ServletInputStream = inputStream.getOrElse(???)
         override def getLocalAddr(): String = ???
         override def getLocalName(): String = ???
         override def getLocalPort(): Int = ???
@@ -98,6 +99,17 @@ class ExportTest extends TestBase  {
       }
     )
     override val resourceScope = new ResourceScope
+  }
+
+  def getServletInputStream(body: String) = {
+    val myBytes = body.getBytes(java.nio.charset.StandardCharsets.UTF_8.name)
+    new ServletInputStream {
+      val data = new java.io.ByteArrayInputStream(myBytes)
+      override def read() = data.read()
+      override def isFinished = data.available == 0
+      override def isReady = !isFinished
+      override def setReadListener(x: ReadListener) = fail("No setReadListener")
+    }
   }
 
   test("can get a single KML dataset") {
@@ -275,5 +287,59 @@ class ExportTest extends TestBase  {
     verify(resp).setContentType("application/vnd.geo+json")
   }
 
+  test("can use QUERY to get a multilayer dataset") {
+    val ins = getServletInputStream("{\"layersWithQueries\": [], \"query\": \"SELECT 'a'\"}")
+    val fixtureClient = new FixtureClient
+    val outputStream = new mocks.ByteArrayServletOutputStream
+    val resp = outputStream.responseFor
 
+    val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-77dn,vt5y-77do", "kml"))
+    service.query(Unused("QUERY", "", Some(ins)))(resp)
+
+    verify(resp).setStatus(200)
+
+    val document = XML.loadString(outputStream.getString)
+    val folders = document \ "Document" \ "Folder"
+    folders.size must be(2)
+    (folders(0) \ "Placemark").size must be(77)
+    (folders(1) \ "Placemark").size must be(77)
+  }
+
+  test("can pass layers in using the layersWithQueries parameter and GET") {
+    val fixtureClient = new FixtureClient
+
+    val outputStream = new mocks.ByteArrayServletOutputStream
+    val resp = outputStream.responseFor
+    val queryString = "layersWithQueries=[{\"uid\": \"vt5y-77do\", \"query\": \"SELECT 10\"},{\"uid\": \"vt5y-77do\", \"query\": \"SELECT 10000\"}]"
+    val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-77dn", "kml"))
+    service.get(Unused("GET", queryString, None))(resp)
+
+    verify(resp).setStatus(200)
+
+    val document = XML.loadString(outputStream.getString)
+    val folders = document \ "Document" \ "Folder"
+    folders.size must be(3)
+    (folders(0) \ "Placemark").size must be(77)
+    (folders(1) \ "Placemark").size must be(77)
+    (folders(2) \ "Placemark").size must be(77)
+  }
+
+  test("can pass layers in using the layersWithQueries parameter and QUERY") {
+    val fixtureClient = new FixtureClient
+    val queryString = "{\"layersWithQueries\": [{\"uid\": \"vt5y-77do\", \"query\": \"SELECT 10\"},{\"uid\": \"vt5y-77do\", \"query\": \"SELECT 10000\"}]}"
+    val ins = getServletInputStream(queryString)
+    val outputStream = new mocks.ByteArrayServletOutputStream
+    val resp = outputStream.responseFor
+    val service = new ExportService(fixtureClient.client).service(new TypedPathComponent("vt5y-77dn", "kml"))
+    service.query(Unused("QUERY", "", Some(ins)))(resp)
+
+    verify(resp).setStatus(200)
+
+    val document = XML.loadString(outputStream.getString)
+    val folders = document \ "Document" \ "Folder"
+    folders.size must be(3)
+    (folders(0) \ "Placemark").size must be(77)
+    (folders(1) \ "Placemark").size must be(77)
+    (folders(2) \ "Placemark").size must be(77)
+  }
 }
