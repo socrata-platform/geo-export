@@ -4,7 +4,10 @@ import java.nio.charset.CodingErrorAction
 import java.util.Date
 import com.socrata.geoexport.intermediates.ShapeRep
 import com.socrata.soql.types._
-import com.vividsolutions.jts.geom._
+import org.locationtech.jts.geom._
+import org.locationtech.jts.io.{WKBReader, WKBWriter}
+import com.vividsolutions.jts.{geom => vgeom}
+import com.vividsolutions.jts.{io => vio}
 import com.socrata.geoexport.intermediates._
 import org.slf4j.LoggerFactory
 import org.joda.time.{DateTime, DateTimeZone}
@@ -28,6 +31,81 @@ abstract class ShapefileRep[T](name: String) extends ShapeRep[T] {
 trait GeoDatum {
   def isGeometry: Boolean = true
 }
+object GeoDatum {
+  private def threadLocal[T](init: => T) = new java.lang.ThreadLocal[T] {
+    override def initialValue(): T = init
+  }
+
+  private val gf = threadLocal { new GeometryFactory }
+  private val wkbReader_ = threadLocal { new WKBReader(gf.get) }
+  private val wkbWriter_ = threadLocal { new WKBWriter }
+
+  private val vGf = threadLocal { new vgeom.GeometryFactory }
+  private val vWkbReader_ = threadLocal { new vio.WKBReader(vGf.get) }
+  private val vWkbWriter_ = threadLocal { new vio.WKBWriter }
+
+  private def wkbReader = wkbReader_.get
+  private def wkbWriter = wkbWriter_.get
+  private def vWkbReader = vWkbReader_.get
+  private def vWkbWriter = vWkbWriter_.get
+
+  // Typesafe conversion between locationtech geo types and
+  // vividsolutions geo types (in geotools 20, they switched to
+  // locationtech but we still use vividsolutions everywhere else -
+  // specifically, in the soql geospatial types.  So this bundles up
+  // the conversion in a typesafe way where if you put a static Point
+  // (or whatever) in, you get a static Point (or whatever out).
+  // Internally it's convert-to-wkb followed by read-from-wkb followed
+  // by a cast, but that's all encapsulated here.
+  trait GeoConvert[G <: Geometry] {
+    type VG <: com.vividsolutions.jts.geom.Geometry
+    def geom2vgeom(g: G): VG =
+      vWkbReader.read(wkbWriter.write(g)).asInstanceOf[VG]
+  }
+
+  trait VGeoConvert[VG <: com.vividsolutions.jts.geom.Geometry] {
+    type G <: Geometry
+    def vgeom2geom(vg: VG): G =
+      wkbReader.read(vWkbWriter.write(vg)).asInstanceOf[G]
+  }
+
+  // Oh, for a non-painful macro system
+  implicit object GeometryConvert extends GeoConvert[Geometry] with VGeoConvert[vgeom.Geometry] {
+    type G = Geometry
+    type VG = vgeom.Geometry
+  }
+  implicit object PointConvert extends GeoConvert[Point] with VGeoConvert[vgeom.Point] {
+    type G = Point
+    type VG = vgeom.Point
+  }
+  implicit object MultiPointConvert extends GeoConvert[MultiPoint] with VGeoConvert[vgeom.MultiPoint] {
+    type G = MultiPoint
+    type VG = vgeom.MultiPoint
+  }
+  implicit object LineStringConvert extends GeoConvert[LineString] with VGeoConvert[vgeom.LineString] {
+    type G = LineString
+    type VG = vgeom.LineString
+  }
+  implicit object MultiLineStringConvert extends GeoConvert[MultiLineString] with VGeoConvert[vgeom.MultiLineString] {
+    type G = MultiLineString
+    type VG = vgeom.MultiLineString
+  }
+  implicit object PolygonConvert extends GeoConvert[Polygon] with VGeoConvert[vgeom.Polygon] {
+    type G = Polygon
+    type VG = vgeom.Polygon
+  }
+  implicit object MultiPolygonConvert extends GeoConvert[MultiPolygon] with VGeoConvert[vgeom.MultiPolygon] {
+    type G = MultiPolygon
+    type VG = vgeom.MultiPolygon
+  }
+
+  // These are the things you actually call to do the conversions.
+  def vgeom2geom[VG <: vgeom.Geometry](vg: VG)(implicit ev: VGeoConvert[VG]): ev.G =
+    ev.vgeom2geom(vg)
+
+  def geom2vgeom[G <: Geometry](g: G)(implicit ev: GeoConvert[G]): ev.VG =
+    ev.geom2vgeom(g)
+}
 
 trait DBFDatum {
   def isGeometry: Boolean = false
@@ -43,32 +121,32 @@ trait SplitDatetime {
 
 class PointRep(soqlName: String) extends ShapefileRep[SoQLPoint](soqlName: String) with GeoDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[Point])
-  def toAttrValues(soql: SoQLPoint): Seq[AnyRef] = Seq(soql.value)
+  def toAttrValues(soql: SoQLPoint): Seq[AnyRef] = Seq(GeoDatum.vgeom2geom(soql.value))
 }
 
 class MultiPointRep(soqlName: String) extends ShapefileRep[SoQLMultiPoint](soqlName: String) with GeoDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[MultiPoint])
-  def toAttrValues(soql: SoQLMultiPoint): Seq[AnyRef] = Seq(soql.value)
+  def toAttrValues(soql: SoQLMultiPoint): Seq[AnyRef] = Seq(GeoDatum.vgeom2geom(soql.value))
 }
 
 class LineRep(soqlName: String) extends ShapefileRep[SoQLLine](soqlName: String) with GeoDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[LineString])
-  def toAttrValues(soql: SoQLLine): Seq[AnyRef] = Seq(soql.value)
+  def toAttrValues(soql: SoQLLine): Seq[AnyRef] = Seq(GeoDatum.vgeom2geom(soql.value))
 }
 
 class MultiLineRep(soqlName: String) extends ShapefileRep[SoQLMultiLine](soqlName: String) with GeoDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[MultiLineString])
-  def toAttrValues(soql: SoQLMultiLine): Seq[AnyRef] = Seq(soql.value)
+  def toAttrValues(soql: SoQLMultiLine): Seq[AnyRef] = Seq(GeoDatum.vgeom2geom(soql.value))
 }
 
 class PolygonRep(soqlName: String) extends ShapefileRep[SoQLPolygon](soqlName: String) with GeoDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[Polygon])
-  def toAttrValues(soql: SoQLPolygon): Seq[AnyRef] = Seq(soql.value)
+  def toAttrValues(soql: SoQLPolygon): Seq[AnyRef] = Seq(GeoDatum.vgeom2geom(soql.value))
 }
 
 class MultiPolygonRep(soqlName: String) extends ShapefileRep[SoQLMultiPolygon](soqlName: String) with GeoDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[MultiPolygon])
-  def toAttrValues(soql: SoQLMultiPolygon): Seq[AnyRef] = Seq(soql.value)
+  def toAttrValues(soql: SoQLMultiPolygon): Seq[AnyRef] = Seq(GeoDatum.vgeom2geom(soql.value))
 }
 
 class DateRep(soqlName: String) extends ShapefileRep[SoQLDate](soqlName: String) with DBFDatum {

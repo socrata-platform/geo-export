@@ -13,7 +13,7 @@ import com.socrata.geoexport.intermediates.shapefile._
 import com.socrata.geoexport.intermediates._
 import com.socrata.soql.SoQLPackIterator
 import com.socrata.soql.types._
-import com.vividsolutions.jts.geom._
+import org.locationtech.jts.geom._
 import org.geotools.data.shapefile.shp.{ShapefileReader, ShapefileWriter}
 import org.geotools.data.shapefile._
 import org.geotools.data.{DataStore, Transaction}
@@ -28,7 +28,7 @@ import org.opengis.filter.Filter
 import org.slf4j.LoggerFactory
 import com.rojoma.simplearm.v2.ResourceScope
 // scalastyle:off
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 // scalastyle:on
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
@@ -200,15 +200,17 @@ object ShapefileEncoder extends GeoEncoder {
   def buildFiles(rs: ResourceScope, layers: Layers): Iterable[File] = {
     val tmpDir = new File(s"/tmp/${UUID.randomUUID()}")
     rs.open(new ShapefileDirManager(tmpDir))
+
     layers.map { layer =>
-      val file = new File(tmpDir,  s"geo_export_${UUID.randomUUID()}.shp")
+      val file = new File(tmpDir, s"geo_export_${UUID.randomUUID()}.shp")
       // factories, stores, and sources, oh my
       val shapefileFactory = new ShapefileDataStoreFactory()
-      val meta = Map[String, AnyRef](
-        "create spatial index" -> java.lang.Boolean.TRUE,
-        "url" -> file.toURI.toURL
+      val meta = Map[String, Any](
+        "create spatial index" -> true,
+        "url" -> file.toURI.toURL,
+        "charset" -> StandardCharsets.UTF_8
       )
-      val dataStore = shapefileFactory.createNewDataStore(mapAsJavaMap(meta.asInstanceOf[Map[String, Serializable]]))
+      val dataStore = shapefileFactory.createNewDataStore(meta.asJava)
       // split the SoQLSchema into a potentially longer ShapeSchema
       val reps = toIntermediaryReps(layer.schema)
       // build the feature type out of a schema that is representable by a ShapeFile
