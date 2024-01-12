@@ -101,7 +101,7 @@ class ShapefileTest extends TestBase {
 
 
   private def verifyFeature(feature: SimpleFeature) = {
-    feature.getAttribute("a_name").toString must be("this is a name?")
+    feature.getAttribute("a_name").toString must be("this is a name¾")
     feature.getAttribute("a_number") must be(42.00)
     feature.getAttribute("a_bool") must be(java.lang.Boolean.TRUE)
 

@@ -98,8 +98,8 @@ trait TestBase
       out.close()
       file
     }.toList.filter{_.getName.endsWith(".shp")}.map { f =>
-
       val store = new ShapefileDataStore(new URL("File", "", f.getAbsolutePath))
+      store.setTryCPGFile(true)
 
       try {
         val shapeFeatureSource: SimpleFeatureSource = store.getFeatureSource

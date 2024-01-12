@@ -192,8 +192,7 @@ class NumberRep(soqlName: String) extends ShapefileRep[SoQLNumber](soqlName: Str
 class TextRep(soqlName: String) extends ShapefileRep[SoQLText](soqlName: String) with DBFDatum {
   def toAttrBindings: Seq[Class[_]] = Seq(classOf[String])
   def toAttrValues(soql: SoQLText): Seq[AnyRef] = {
-    val src = scala.io.Source.fromBytes(soql.value.getBytes("US-ASCII"), "UTF-8").mkString
-    Seq(new String(src))
+    Seq(soql.value)
   }
 }
 
