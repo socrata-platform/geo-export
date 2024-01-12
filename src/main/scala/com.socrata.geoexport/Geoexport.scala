@@ -2,7 +2,7 @@ package com.socrata.geoexport
 
 import java.util.concurrent.Executors
 import javax.servlet.http.HttpServletRequest
-import org.geotools.factory.FactoryRegistry
+import org.geotools.util.factory.FactoryRegistry
 import org.geotools.referencing.ReferencingFactoryFinder
 import org.slf4j.LoggerFactory
 

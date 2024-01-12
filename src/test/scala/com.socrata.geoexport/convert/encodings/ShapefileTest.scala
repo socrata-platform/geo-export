@@ -9,7 +9,8 @@ import com.rojoma.json.v3.ast._
 import com.rojoma.json.v3.io.JsonReader
 import com.rojoma.json.v3.util.JsonUtil
 import com.socrata.soql.types._
-import com.vividsolutions.jts.geom._
+import org.locationtech.jts.geom._
+import com.vividsolutions.jts.{geom => vgeom}
 import org.apache.commons.io.IOUtils
 import org.geotools.data.shapefile.ShapefileDataStore
 import org.geotools.data.simple.{SimpleFeatureIterator, SimpleFeatureSource, SimpleFeatureCollection}
@@ -23,6 +24,8 @@ import scala.xml.{NodeSeq, XML, Node}
 import com.socrata.geoexport.encoders.ShapefileEncoder
 import com.socrata.soql.SoQLPackIterator
 import com.rojoma.simplearm.v2._
+
+import com.socrata.geoexport.intermediates.shapefile.GeoDatum
 
 class GeoIterator(sfi: SimpleFeatureIterator) extends Iterator [SimpleFeature] with AutoCloseable {
   def hasNext: Boolean = sfi.hasNext()
@@ -98,7 +101,7 @@ class ShapefileTest extends TestBase {
 
 
   private def verifyFeature(feature: SimpleFeature) = {
-    feature.getAttribute("a_name").toString must be("this is a name?")
+    feature.getAttribute("a_name").toString must be("this is a name¾")
     feature.getAttribute("a_number") must be(42.00)
     feature.getAttribute("a_bool") must be(java.lang.Boolean.TRUE)
 
@@ -135,7 +138,7 @@ class ShapefileTest extends TestBase {
 
 
   test("can convert non geometry soql values to shp") {
-    val p = wkt("POINT (0 1)").asInstanceOf[Point]
+    val p = wkt("POINT (0 1)").asInstanceOf[vgeom.Point]
 
     val soqlSchema = simpleSchema :+ (("a_point", SoQLPoint))
     val items = simpleRows :+ SoQLPoint(p)
@@ -155,7 +158,7 @@ class ShapefileTest extends TestBase {
 
 
   test("can convert a stream of a point soqlpack to shp") {
-    val p = wkt("POINT (0 1)").asInstanceOf[Point]
+    val p = wkt("POINT (0 1)").asInstanceOf[vgeom.Point]
 
     val soqlSchema = simpleSchema :+ (("a_point", SoQLPoint))
     val items = simpleRows :+ SoQLPoint(p)
@@ -175,7 +178,7 @@ class ShapefileTest extends TestBase {
   }
 
   test("can convert a stream of a line soqlpack to shp") {
-    val line = wkt("LINESTRING (30 10, 10 30, 40 40)").asInstanceOf[LineString]
+    val line = wkt("LINESTRING (30 10, 10 30, 40 40)").asInstanceOf[vgeom.LineString]
 
     val soqlSchema = simpleSchema :+ (("a_line", SoQLLine))
     val items = simpleRows :+ SoQLLine(line)
@@ -189,12 +192,12 @@ class ShapefileTest extends TestBase {
         features.size must be(1)
         val feature = features(0)
         val shpLine = feature.getDefaultGeometry.asInstanceOf[MultiLineString]
-        shpLine.getGeometryN(0).getCoordinates must be(line.getCoordinates)
+        shpLine.getGeometryN(0).getCoordinates must be(GeoDatum.vgeom2geom(line).getCoordinates)
     }
   }
 
   test("can convert a stream of a polygon soqlpack to shp") {
-    val poly = wkt("POLYGON ((30 10, 10 20, 20 40, 40 40, 30 10))").asInstanceOf[Polygon]
+    val poly = wkt("POLYGON ((30 10, 10 20, 20 40, 40 40, 30 10))").asInstanceOf[vgeom.Polygon]
 
     val soqlSchema = simpleSchema :+ (("a_poly", SoQLPolygon))
     val items = simpleRows :+ SoQLPolygon(poly)
@@ -209,12 +212,12 @@ class ShapefileTest extends TestBase {
         val feature = features(0)
         val shpPoly = feature.getDefaultGeometry.asInstanceOf[MultiPolygon]
 
-        shpPoly.getGeometryN(0).getCoordinates must be(poly.getCoordinates)
+        shpPoly.getGeometryN(0).getCoordinates must be(GeoDatum.vgeom2geom(poly).getCoordinates)
     }
   }
 
   test("can convert a stream of a multipoint soqlpack to shp") {
-    val points = wkt("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))").asInstanceOf[MultiPoint]
+    val points = wkt("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))").asInstanceOf[vgeom.MultiPoint]
 
     val soqlSchema = simpleSchema :+ (("a_multipoint", SoQLMultiPoint))
     val items = simpleRows :+ SoQLMultiPoint(points)
@@ -236,7 +239,7 @@ class ShapefileTest extends TestBase {
   }
 
   test("can convert a stream of a MultiLine soqlpack to shp") {
-    val lines = wkt("MULTILINESTRING ((10 10, 20 20, 10 40), (40 40, 30 30, 40 20, 30 10))").asInstanceOf[MultiLineString]
+    val lines = wkt("MULTILINESTRING ((10 10, 20 20, 10 40), (40 40, 30 30, 40 20, 30 10))").asInstanceOf[vgeom.MultiLineString]
 
     val soqlSchema = simpleSchema :+ (("a_multipoly", SoQLMultiLine))
     val items = simpleRows :+ SoQLMultiLine(lines)
@@ -250,14 +253,14 @@ class ShapefileTest extends TestBase {
         val feature = features(0)
         val shpLines = feature.getDefaultGeometry.asInstanceOf[MultiLineString]
 
-        lines.getGeometryN(0).getCoordinates must be(shpLines.getGeometryN(0).getCoordinates)
-        lines.getGeometryN(1).getCoordinates must be(shpLines.getGeometryN(1).getCoordinates)
+        shpLines.getGeometryN(0).getCoordinates must be(GeoDatum.vgeom2geom(lines).getGeometryN(0).getCoordinates)
+        shpLines.getGeometryN(1).getCoordinates must be(GeoDatum.vgeom2geom(lines).getGeometryN(1).getCoordinates)
 
     }
   }
 
   test("can convert a stream of a MultiPolygon soqlpack to shp") {
-    val expectedPolys = wkt("MULTIPOLYGON (((30 20, 10 40, 45 40, 30 20)), ((15 5, 5 10, 10 20, 40 10, 15 5)))").asInstanceOf[MultiPolygon]
+    val expectedPolys = wkt("MULTIPOLYGON (((30 20, 10 40, 45 40, 30 20)), ((15 5, 5 10, 10 20, 40 10, 15 5)))").asInstanceOf[vgeom.MultiPolygon]
     val soqlSchema = simpleSchema :+ (("a_multipoly", SoQLMultiPolygon))
     val items = simpleRows :+ SoQLMultiPolygon(expectedPolys)
     val packed = pack(soqlSchema, List(items.toArray))
@@ -271,20 +274,20 @@ class ShapefileTest extends TestBase {
         val feature = features(0)
         val actualPolys = feature.getDefaultGeometry.asInstanceOf[MultiPolygon]
 
-        actualPolys.getGeometryN(0).getCoordinates must be(expectedPolys.getGeometryN(0).getCoordinates)
-        actualPolys.getGeometryN(1).getCoordinates must be(expectedPolys.getGeometryN(1).getCoordinates)
+        actualPolys.getGeometryN(0).getCoordinates must be(GeoDatum.vgeom2geom(expectedPolys).getGeometryN(0).getCoordinates)
+        actualPolys.getGeometryN(1).getCoordinates must be(GeoDatum.vgeom2geom(expectedPolys).getGeometryN(1).getCoordinates)
 
     }
   }
 
 
   test("can convert multiple streams of soqlpack a multilayer to shp") {
-    val expectedPoints = wkt("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))").asInstanceOf[MultiPoint]
+    val expectedPoints = wkt("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))").asInstanceOf[vgeom.MultiPoint]
     val soqlPointSchema = simpleSchema :+ (("a_multipoint", SoQLMultiPoint))
     val pointRows = simpleRows :+ SoQLMultiPoint(expectedPoints)
     val packedMultipoints = pack(soqlPointSchema, List(pointRows.toArray))
 
-    val expectedPolys = wkt("MULTIPOLYGON (((30 20, 10 40, 45 40, 30 20)), ((15 5, 5 10, 10 20, 40 10, 15 5)))").asInstanceOf[MultiPolygon]
+    val expectedPolys = wkt("MULTIPOLYGON (((30 20, 10 40, 45 40, 30 20)), ((15 5, 5 10, 10 20, 40 10, 15 5)))").asInstanceOf[vgeom.MultiPolygon]
     val soqlPolySchema = simpleSchema :+ (("a_multipoly", SoQLMultiPolygon))
     val polyRows = simpleRows :+ SoQLMultiPolygon(expectedPolys)
     val packedPolys = pack(soqlPolySchema, List(polyRows.toArray))
@@ -298,12 +301,12 @@ class ShapefileTest extends TestBase {
 
         val actualPointFeature = pointFeatures(0)
         val actualMultiPoint = actualPointFeature.getDefaultGeometry.asInstanceOf[MultiPoint]
-        multiPointCoords(actualMultiPoint) must be(multiPointCoords(expectedPoints))
+        multiPointCoords(actualMultiPoint) must be(multiPointCoords(GeoDatum.vgeom2geom(expectedPoints)))
 
         val actualPolyFeature = polyFeatures(0)
         val actualPoly = actualPolyFeature.getDefaultGeometry.asInstanceOf[MultiPolygon]
-        actualPoly.getGeometryN(0).getCoordinates must be(expectedPolys.getGeometryN(0).getCoordinates)
-        actualPoly.getGeometryN(1).getCoordinates must be(expectedPolys.getGeometryN(1).getCoordinates)
+        actualPoly.getGeometryN(0).getCoordinates must be(GeoDatum.vgeom2geom(expectedPolys).getGeometryN(0).getCoordinates)
+        actualPoly.getGeometryN(1).getCoordinates must be(GeoDatum.vgeom2geom(expectedPolys).getGeometryN(1).getCoordinates)
 
         verifyFeature(actualPointFeature)
         verifyFeature(actualPolyFeature)
