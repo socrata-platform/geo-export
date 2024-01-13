@@ -229,9 +229,10 @@ object ShapefileEncoder extends GeoEncoder {
             IOUtils.copy(fis, zipStream)
             zipStream.closeEntry()
             // I cannot for the life of me figure out if it's possible
-            // to get geotools to emit a shapefile.  No combination of
-            // setting an encoding and/or setting the "try cpg file"
-            // setting seems to do it.  So, hackhackhack.
+            // to get geotools to emit a cpg file in a shapefile.  No
+            // combination of setting an encoding and/or setting the
+            // "try cpg file" setting seems to do it.  So,
+            // hackhackhack.
             if(file.getName.endsWith(".dbf")) {
               // The CPG file describes the encoding of text values in
               // the DBF file, which is why we're hooking this in at
