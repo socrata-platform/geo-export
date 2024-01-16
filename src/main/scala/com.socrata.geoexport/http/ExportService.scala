@@ -1,16 +1,15 @@
 package com.socrata.geoexport.http
 import com.socrata.soql.SoQLPackIterator
-import java.io.{OutputStream, _}
-import java.net.URLDecoder
-import java.nio.charset.StandardCharsets.UTF_8
 
+import java.io.{OutputStream, _}
+import java.nio.charset.StandardCharsets.UTF_8
 import com.rojoma.json.v3.ast._
 import com.rojoma.json.v3.codec.JsonEncode
 import com.rojoma.json.v3.io.JsonReader
-import com.rojoma.json.v3.util.JsonUtil
+import com.rojoma.json.v3.util.{AutomaticJsonCodec, AutomaticJsonCodecBuilder, JsonUtil}
 import com.socrata.geoexport.UnmanagedCuratedServiceClient
 import com.socrata.geoexport.conversions.Converter
-import com.socrata.geoexport.encoders.{KMLEncoder, ShapefileEncoder, KMZEncoder, GeoJSONEncoder}
+import com.socrata.geoexport.encoders.{GeoJSONEncoder, KMLEncoder, KMZEncoder, ShapefileEncoder}
 import com.socrata.geoexport.encoders.geotypes._
 import com.socrata.geoexport.http.ExportService._
 import com.socrata.http.client.{RequestBuilder, Response}
@@ -20,15 +19,10 @@ import com.socrata.http.server.{HttpRequest, HttpResponse, HttpService}
 import org.apache.commons.io.IOUtils
 import org.slf4j.LoggerFactory
 import com.socrata.http.server.implicits._
-import com.socrata.http.server.responses._
 import com.socrata.http.server.util.RequestId.ReqIdHeader
 import com.socrata.geoexport.encoders.GeoEncoder
-import javax.servlet.http.HttpServletResponse.{
-  SC_OK => ScOk,
-  SC_NOT_FOUND => ScNotFound,
-  SC_BAD_GATEWAY => ScBadGateway
-}
 
+import javax.servlet.http.HttpServletResponse.{SC_NOT_FOUND => ScNotFound, SC_OK => ScOk}
 import scala.util.{Failure, Success, Try}
 
 object ExportService {
@@ -42,8 +36,7 @@ object ExportService {
 
   private def isValidFourByFour(s: String) = s.matches(FourbyFour) || s.matches(NbeResourceName)
 
-  def toLayerNames(fourByFours: String): Either[HttpResponse, Seq[String]] = {
-    val layers = fourByFours.split(",")
+  def validateFourByFours(layers: Seq[String]): Either[HttpResponse, Seq[String]] = {
     layers.partition(isValidFourByFour(_)) match {
       case (_valid, invalid) if invalid.size > 0 =>
         Left(BadRequest ~> Json(JsonUtil.renderJson(Map(
@@ -62,11 +55,22 @@ object ExportService {
       fbf
     }
   }
+
+  object LayerWithQuery {
+    implicit val codec = AutomaticJsonCodecBuilder[LayerWithQuery]
+  }
+
+  case class LayerWithQuery(uid: String, query: Option[String], context: Option[String], copy: Option[String])
+
+  object QueryBody {
+    implicit val codec = AutomaticJsonCodecBuilder[QueryBody]
+  }
+
+  case class QueryBody(layersWithQueries: Seq[LayerWithQuery], query: Option[String], context: Option[String], copy: Option[String])
 }
 
 class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleResource {
   lazy val log = LoggerFactory.getLogger(getClass)
-
 
   private def mergeUpstreamErrors(errors: Seq[LayerFailure]): HttpResponse = {
     val statusCode = errors.map{ case (status, _) => status }.max
@@ -83,19 +87,20 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
   }
 
   private def getUpstreamLayers(req: HttpRequest,
-                                fxfs: Seq[String]): Either[HttpResponse, Seq[Response with Closeable]] = {
-    fxfs.map { fbf =>
-      val soql = req.queryParameter("query").getOrElse(s"select * limit ${Int.MaxValue}")
-      val copy = req.queryParameter("copy").getOrElse("published")
-      val context = req.queryParameter("context").getOrElse("{}")
+                                layers: Seq[LayerWithQuery]): Either[HttpResponse, Seq[Response with Closeable]] = {
+    val defaultSoql = s"select * limit ${Int.MaxValue}"
+    val defaultCopy = "published"
+    val defaultContext = "{}"
+
+    layers.map { layer =>
       val reqBuilder = { base: RequestBuilder =>
         base
-          .path(Seq("resource", s"${resourceNameify(fbf)}.soqlpack"))
-          .addParameter(("$query", soql))
-          .addParameter(("$$copy", copy))
-          .addParameter(("$$context", context))
+          .path(Seq("resource", s"${resourceNameify(layer.uid)}.soqlpack"))
+          .addParameter(("$query", layer.query.getOrElse(defaultSoql)))
+          .addParameter(("$$copy", layer.copy.getOrElse(defaultCopy)))
+          .addParameter(("$$context", layer.context.getOrElse(defaultContext)))
           .addHeader(ReqIdHeader -> req.requestId)
-          .addHeader("X-Socrata-Lens-Uid" -> fbf)
+          .addHeader("X-Socrata-Lens-Uid" -> layer.uid)
           .get
       }
       Try(sodaClient.execute(reqBuilder)) match {
@@ -122,13 +127,75 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
     }
   }
 
+  private def parseQueryBody(req: HttpRequest, baseUids: Seq[String]): Either[HttpResponse, Seq[LayerWithQuery]] = {
+    req.reader match {
+      case Left(_) => Left(BadRequest ~> Json(JsonUtil.renderJson(Map(
+        errorKey -> "Invalid or unparsable Content-Type or MimeType"
+      ))))
+      case Right(reader: Reader) =>
+        JsonUtil.readJson[QueryBody](reader) match {
+          case Left(e) =>
+            log.warn(s"Unable to parse the QueryBody! ${e}")
+            Left(BadRequest ~> Json(JsonUtil.renderJson(Map(
+              errorKey -> "Could not parse the QUERY body"
+            ))))
+          case Right(queryBody: QueryBody) =>
+            Right(baseUids.map(fxf => {
+              LayerWithQuery(
+                fxf,
+                queryBody.query,
+                queryBody.context,
+                queryBody.copy
+              )
+            }) ++ queryBody.layersWithQueries)
+        }
+    }
+  }
+
+  private def handleGetParameters(req: HttpRequest, baseUids: Seq[String]): Either[HttpResponse, Seq[LayerWithQuery]] = {
+    JsonUtil.parseJson[Seq[LayerWithQuery]](req.queryParameter("layersWithQueries").getOrElse("[]")) match {
+      case Right(extraLayers: Seq[LayerWithQuery]) =>
+        Right(baseUids.map(fxf => {
+          LayerWithQuery(
+            fxf,
+            req.queryParameter("query"),
+            req.queryParameter("context"),
+            req.queryParameter("copy")
+          )
+        }) ++ extraLayers)
+      case Left(_) =>
+        log.warn(s"Unable to parse layersWithQueries parameter: ${req.queryParameter("layersWithQueries")}")
+        Left(BadRequest ~> Json(JsonUtil.renderJson(Map(
+          errorKey -> s"""Could not parse the layersWithQueries parameter"""
+        ))))
+    }
+  }
+
+  private def parseParametersAndBody(req: HttpRequest, baseUids: Seq[String]): Either[HttpResponse, Seq[LayerWithQuery]] = {
+    req.method match {
+      case "QUERY" => parseQueryBody(req, baseUids)
+      case "GET" => handleGetParameters(req, baseUids)
+      case otherMethod => Left(MethodNotAllowed ~> Json(JsonUtil.renderJson(Map(
+        errorKey -> s"""Method $otherMethod is not accepted, only GET or QUERY"""
+      ))))
+    }
+  }
+
   private def proxy(req: HttpRequest,
                     fourByFours: String): Either[HttpResponse, Seq[Response with Closeable]] = {
-    toLayerNames(fourByFours) match {
-      case Right(layers) => getUpstreamLayers(req, layers)
-      case Left(reason) =>
-        log.warn(s"Received bad 4x4s ${fourByFours}")
-        Left(reason)
+    val baseUids = fourByFours.split(",")
+    parseParametersAndBody(req, baseUids) match {
+      case Right(layersWithQueries) =>
+        val allUids = layersWithQueries.map(_.uid)
+        validateFourByFours(allUids) match {
+          case Right(_) =>
+            getUpstreamLayers(req, layersWithQueries)
+          case Left(reason) =>
+            log.warn(s"Received bad 4x4s: ${allUids}")
+            Left(reason)
+        }
+      case Left(err) =>
+        Left(err)
     }
   }
 
@@ -192,6 +259,10 @@ class ExportService(sodaClient: UnmanagedCuratedServiceClient) extends SimpleRes
   def service(fxfs: TypedPathComponent[String]): SimpleResource = {
     new SimpleResource {
       override def get: HttpService = {
+        req => handleRequest(req, fxfs)
+      }
+
+      override def query: HttpService = {
         req => handleRequest(req, fxfs)
       }
     }
