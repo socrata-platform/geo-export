@@ -70,3 +70,11 @@ object BuildInfo {
 
   Seq(target)
 }
+
+assembly/assemblyMergeStrategy ~= { old =>
+  {
+    case x if x.endsWith("module-info.class") => MergeStrategy.discard // J9 module stuff
+    case "plugin.xml" | "plugin.properties" => MergeStrategy.discard // IDE plugin stuff
+    case x => old(x)
+  }
+}
