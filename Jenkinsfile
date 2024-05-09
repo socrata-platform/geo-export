@@ -73,7 +73,6 @@ pipeline {
     stage('Publish') {
       when {
         not { expression { isPr } }
-        not { expression { return params.RELEASE_BUILD } }
       }
       steps {
         script {
@@ -92,7 +91,6 @@ pipeline {
     stage('Deploy') {
       when {
         not { expression { isPr } }
-        not { expression { return params.RELEASE_BUILD } }
       }
       steps {
         script {
