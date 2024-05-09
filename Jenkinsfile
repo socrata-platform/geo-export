@@ -108,8 +108,7 @@ pipeline {
   post {
     failure {
       script {
-        //if (!isPr) { testing override
-        if (false) {
+        if (!isPr) {
           teamsMessage(
             message: "[${currentBuild.fullDisplayName}](${env.BUILD_URL}) has failed in stage ${lastStage}",
             webhookCredentialID: WEBHOOK_ID
