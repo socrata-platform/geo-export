@@ -3,7 +3,7 @@
 String service = 'geo-export'
 String project_wd = '.'
 boolean isPr = env.CHANGE_ID != null
-boolean lastStage
+String lastStage
 
 def sbtbuild = new com.socrata.SBTBuild(steps, service, project_wd)
 def dockerize = new com.socrata.Dockerize(steps, service, BUILD_NUMBER)
@@ -24,7 +24,7 @@ pipeline {
     label params.AGENT
   }
   environment {
-    WEBHOOK_ID = 'WEBHOOK_IQ'
+    WEBHOOK_ID = 'WORKFLOW_IQ'
     SCALA_VERSION = '2.12'
   }
   stages {
@@ -108,10 +108,11 @@ pipeline {
   post {
     failure {
       script {
-        if (!isPr) {
-          teamsMessage(
+        boolean buildingMain = env.JOB_NAME == "${service}/main"
+        if (buildingMain || params.RELEASE_BUILD) {
+          teamsWorkflowMessage(
             message: "[${currentBuild.fullDisplayName}](${env.BUILD_URL}) has failed in stage ${lastStage}",
-            webhookCredentialID: WEBHOOK_ID
+            workflowCredentialID: WEBHOOK_ID
           )
         }
       }
