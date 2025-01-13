@@ -41,9 +41,3 @@ format: an export format (currently only one of {shp, kml, kmz, geojson})
 export the comma separated list of datasets (identified by their uid)
 as a merged file in the format specified. note that this list of datasets
 doesn't need to be related in any way, they just need to have one shape column.
-
-## Releases
-
-To tag a release to be built and deployed to RC:
-
-1. On main, run `sbt release`. This will create two commits to bump the version and create a git tag for the release version and then push them to the remote repo.
