@@ -16,7 +16,7 @@ fi
 # Duct tape to fix disk space issues caused
 # by large exports - because shapefiles
 # buffer to disk
-ulimit -f 25000000
+ulimit -f "${MAX_FILE_SIZE_LIMIT_KB:-25000000}"
 
 exec su socrata -c "exec /usr/bin/java \
     -Xmx${JAVA_XMX} \
