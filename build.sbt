@@ -78,3 +78,5 @@ assembly/assemblyMergeStrategy ~= { old =>
     case x => old(x)
   }
 }
+
+assembly/assemblyJarName := s"${name.value}-assembly.jar"
