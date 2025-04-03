@@ -1,15 +1,20 @@
-@Library('socrata-pipeline-library@3.0.0') _
+@Library('socrata-pipeline-library@testing') _
 
 commonPipeline(
     defaultBuildWorker: 'build-worker',
     jobName: 'geo-export',
     language: 'scala',
-    languageVersion: '2.12',
+    languageOptions: [
+	version: '2.11',
+	crossCompile: true,
+	multiProjectBuild: true,
+    ],
     projects: [
         [
             name: 'geo-export',
             deploymentEcosystem: 'marathon-mesos',
             type: 'service',
+            compile: true  // Sane default
         ]
     ],
     teamsChannelWebhookId: 'WORKFLOW_IQ',
