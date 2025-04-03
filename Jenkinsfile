@@ -7,7 +7,7 @@ commonPipeline(
     languageOptions: [
 	version: '2.11',
 	crossCompile: true,
-	multiProjectBuild: true,
+	multiProjectBuild: false,
     ],
     projects: [
         [
