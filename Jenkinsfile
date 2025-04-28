@@ -1,12 +1,10 @@
-@Library('socrata-pipeline-library@generalize-sbt-to-work-for-multiple-projects') _
+@Library('socrata-pipeline-library@6.0.0') _
 
 commonPipeline(
-    defaultBuildWorker: 'build-worker',
     jobName: 'geo-export',
     language: 'scala',
     languageOptions: [
 	    crossCompile: true,
-        isMultiProjectRepository: false,
     ],
     projects: [
         [
@@ -15,9 +13,9 @@ commonPipeline(
             type: 'service',
             compiled: true,
             paths: [
-                dockerBuildContext: 'docker'
-            ]
-        ]
+                dockerBuildContext: 'docker',
+            ],
+        ],
     ],
     teamsChannelWebhookId: 'WORKFLOW_IQ',
 )
