@@ -1,0 +1,21 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: geo-export
+  description: |
+    Handles exporting entire datasets which have a geo column as one of several
+    formats. These formats currently include KML, KMZ and ESRI Shapefile. It
+    takes a request to merge one or more dataset IDs in a particular format
+    (kml, kmz, shp, geojson), asks soda-fountain for those datasets, and then
+    expresses those datasets as layers in a manner applicable for the format.
+  links:
+  - title: Ops Doc
+    url: "https://socrata.atlassian.net/wiki/spaces/ONCALL/pages/2158919953/OpsDoc+-+Geo-Export"
+  annotations:
+    github.com/project-slug: socrata-platform/geo-export
+    backstage.io/techdocs-ref: dir:.
+    infrastructure: apps-marathon
+spec:
+  type: service
+  owner: egress
+  lifecycle: production
