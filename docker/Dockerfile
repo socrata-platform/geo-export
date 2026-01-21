@@ -1,4 +1,4 @@
-FROM socrata/java8-focal
+FROM socrata/java8-jammy
 
 RUN apt-get -y update && apt-get -y install jq
 
