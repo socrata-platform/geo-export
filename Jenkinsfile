@@ -1,4 +1,4 @@
-@Library('socrata-pipeline-library@9.7.0') _
+@Library('socrata-pipeline-library@9.9.1') _
 
 commonPipeline(
     jobName: 'geo-export',
@@ -9,12 +9,12 @@ commonPipeline(
     projects: [
         [
             name: 'geo-export',
-            deploymentEcosystem: 'marathon-mesos',
-            type: 'service',
             compiled: true,
+            deploymentEcosystem: 'ecs',
             paths: [
-                dockerBuildContext: 'docker'
-            ]
+                dockerBuildContext: 'docker',
+            ],
+            type: 'service',
         ]
     ],
     teamsChannelWebhookId: 'WORKFLOW_EGRESS_AUTOMATION',
