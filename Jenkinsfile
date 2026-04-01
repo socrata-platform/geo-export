@@ -1,19 +1,21 @@
-@Library('socrata-pipeline-library@9.9.2') _
+@Library('socrata-pipeline-library@10.2.1') _
 
 commonPipeline(
     jobName: 'geo-export',
-    language: 'scala',
     languageOptions: [
-        crossCompile: true,
+        scala: [
+            crossCompile: true,
+        ],
     ],
     projects: [
         [
             name: 'geo-export',
             compiled: true,
             deploymentEcosystem: 'ecs',
-            paths: [
-                dockerBuildContext: 'docker',
+            docker: [
+                buildContext: 'docker',
             ],
+            language: 'scala',
             type: 'service',
         ]
     ],
