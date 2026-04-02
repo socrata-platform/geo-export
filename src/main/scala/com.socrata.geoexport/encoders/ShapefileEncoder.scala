@@ -62,6 +62,11 @@ object ShapefileEncoder extends GeoEncoder {
     projExt
   )
 
+  private implicit object DataStoreResource extends Resource[DataStore] {
+    override def close(ds: DataStore) =
+      ds.dispose()
+  }
+
   /**
    * For any poor souls reading this code:
    * Note that this does not create any files, it simply returns a
@@ -178,7 +183,6 @@ object ShapefileEncoder extends GeoEncoder {
     layer: SoQLPackIterator,
     featureType: SimpleFeatureType,
     file: File,
-    dataStore: DataStore,
     reps:Seq[ShapeRep[_ <: SoQLValue]]) = {
 
     var fid = 0
@@ -210,13 +214,13 @@ object ShapefileEncoder extends GeoEncoder {
         "url" -> file.toURI.toURL,
         "charset" -> StandardCharsets.UTF_8
       )
-      val dataStore = shapefileFactory.createNewDataStore(meta.asJava)
+      val dataStore = rs.open(shapefileFactory.createNewDataStore(meta.asJava))
       // split the SoQLSchema into a potentially longer ShapeSchema
       val reps = toIntermediaryReps(layer.schema)
       // build the feature type out of a schema that is representable by a ShapeFile
       val featureType = buildFeatureType(reps)
       dataStore.createSchema(featureType)
-      addFeatures(layer, featureType, file, dataStore, reps)
+      addFeatures(layer, featureType, file, reps)
     }
   }
 
